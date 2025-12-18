@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — Disaster Alert</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #1e3c72, #2a5298, #0f2027);
+      background-size: 400% 400%;
+      animation: gradientBG 12s ease infinite;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Poppins", sans-serif;
+      padding: 20px;
+    }
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* -------- WRAPPER (Shake target — prevents flicker) -------- */
+    .card-wrapper {
+      will-change: transform;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+      perspective: 1000px;
+    }
+
+    /* -------- THE CARD (Blur + GPU enabled) -------- */
+    .login-card {
+      width: 460px;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(16px);
+      border-radius: 22px;
+      padding: 45px 35px;
+      color: #fff;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+      position: relative;
+      overflow: hidden;
+      animation: fadeIn 0.7s ease-out, floatCard 4s ease-in-out infinite;
+
+      transform: translateZ(0);
+      will-change: opacity, transform;
+      backface-visibility: hidden;
+      perspective: 1000px;
+    }
+
+    @keyframes fadeIn {
+      from {opacity:0; transform: translateY(20px);}
+      to {opacity:1; transform: translateY(0);}
+    }
+    @keyframes floatCard {
+      0%,100%{transform:translateY(0);}
+      50%{transform:translateY(-8px);}
+    }
+
+    /* -------- SHAKE applied on wrapper -------- */
+    .shake-wrapper {
+      animation: shakeCard 0.45s ease both;
+    }
+
+    @keyframes shakeCard {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-8px); }
+      80% { transform: translateX(8px); }
+      100% { transform: translateX(0); }
+    }
+
+    .switch-login {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 25px;
+      gap: 10px;
+    }
+    .switch-login button {
+      flex: 1;
+      padding: 10px 0;
+      border-radius: 12px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 16px;
+      position: relative;
+    }
+    .switch-login button.active { background-color: #ffffff; color: #2a5298; }
+    .switch-login button.inactive { background-color: rgba(255,255,255,0.2); color: #fff; }
+
+    .title { font-size: 36px; font-weight: 700; text-align: center; margin-bottom: 10px; }
+    .subtitle { font-size: 17px; text-align: center; opacity: 0.9; margin-bottom: 30px; }
+
+    .icon-input { position: relative; display: flex; align-items: center; margin-bottom: 20px; }
+    .icon-input i.input-icon { position: absolute; left: 15px; font-size: 20px; opacity: 0.8; }
+    .icon-input input {
+      padding-left: 50px;
+      height: 52px;
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 12px;
+      color: #fff;
+      font-size:16px;
+    }
+    .icon-input input:focus {
+      background: rgba(255,255,255,0.22);
+      border-color: #00f0ff;
+      box-shadow:0 0 12px #00f0ff;
+      outline:none;
+    }
+
+    .toggle-pass {
+      position: absolute;
+      right: 15px;
+      cursor: pointer;
+      opacity: 0.8;
+      font-size: 18px;
+    }
+
+    .btn-login {
+      width: 100%;
+      height: 52px;
+      border-radius: 12px;
+      font-size: 19px;
+      font-weight: 600;
+      background: #ffffff;
+      color: #2a5298;
+      border: none;
+      margin-top: 10px;
+      transition: 0.3s;
+    }
+    .btn-login:hover { background: #dcdcdc; transform: translateY(-2px); }
+
+    .alert {
+      font-size: 16px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      text-align: center;
+      opacity: 1 !important;
+      transition: transform 0.6s ease, opacity 0.6s ease;
+    }
+    .alert.slide-up { transform: translateY(-20px); opacity: 0 !important; }
+  </style>
+</head>
+
+<body>
+
+  <div class="card-wrapper">
+
+    <div class="login-card" id="loginCard">
+
+      <div class="switch-login">
+        <button id="userBtn" class="inactive">User Login</button>
+        <button id="adminBtn" class="active">Admin Login</button>
+      </div>
+
+      <div class="title" id="loginTitle">Admin Login</div>
+      <div class="subtitle" id="loginSubtitle">Enter credentials to access the dashboard</div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} auto-alert">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="post" action="/admin_login" id="loginForm">
+        <div class="icon-input">
+          <i class="fa fa-user-tie input-icon"></i> <!-- Replaced envelope with admin icon -->
+          <input type="email" name="email" class="form-control" placeholder="Admin Email" required>
+        </div>
+
+        <div class="icon-input">
+          <i class="fa fa-lock input-icon"></i>
+          <input type="password" name="password" class="form-control" placeholder="Password" required>
+          <i class="fa fa-eye toggle-pass" id="togglePassword"></i>
+        </div>
+
+        <button type="submit" class="btn-login" id="loginSubmit">Admin Login</button>
+      </form>
+
+    </div>
+
+  </div>
+
+  <script>
+    document.getElementById('userBtn').addEventListener('click', () => {
+      window.location.href = '/login';
+    });
+
+    const togglePass = document.getElementById("togglePassword");
+    const passwordInput = document.querySelector("input[name='password']");
+
+    togglePass.addEventListener("mousedown", e => e.preventDefault());
+    togglePass.addEventListener("click", () => {
+      passwordInput.type = (passwordInput.type === "password") ? "text" : "password";
+      togglePass.classList.toggle("fa-eye-slash");
+      togglePass.classList.toggle("fa-eye");
+    });
+
+    window.onload = () => {
+      const alerts = document.querySelectorAll('.auto-alert');
+      const wrapper = document.querySelector('.card-wrapper');
+
+      if (alerts.length > 0) {
+        setTimeout(() => {
+          wrapper.classList.add('shake-wrapper');
+          setTimeout(() => wrapper.classList.remove('shake-wrapper'), 500);
+        }, 200);
+      }
+
+      setTimeout(() => {
+        alerts.forEach(alert => {
+          alert.classList.add('slide-up');
+          setTimeout(() => alert.remove(), 600);
+        });
+      }, 3500);
+    };
+  </script>
+
+</body>
+</html>

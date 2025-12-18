@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Theme Made By www.w3schools.com - No Copyright -->
+    <title>DISASTER PREDICTOR</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<style>
+@import url("https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700");
+
+/* ================= ROOT (LIGHT THEME) ================= */
+:root{
+  --bg-main:#f5f7fb;
+
+  --glass:rgba(255,255,255,0.75);
+  --glass-soft:rgba(255,255,255,0.92);
+  --glass-border:rgba(0,0,0,0.08);
+
+  --primary:#4f46e5;
+  --primary-dark:#4338ca;
+
+  --sidebar-blue:rgba(79,70,229,0.92);
+  --sidebar-blue-soft:rgba(79,70,229,0.75);
+
+  --text:#0f172a;
+  --muted:#64748b;
+}
+
+/* ================= DARK THEME VARIABLES ================= */
+body.dark{
+  --bg-main:#0b1020;
+
+  --glass:rgba(20,25,45,0.85);
+  --glass-soft:rgba(24,30,55,0.95);
+  --glass-border:rgba(255,255,255,0.08);
+
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+}
+
+/* ================= BASE ================= */
+html, body{
+  height:100%;
+  margin:0;
+  font-family:"Poppins",sans-serif;
+  background:var(--bg-main);
+  color:var(--text);
+  transition:background .3s,color .3s;
+}
+
+body{
+  display:flex;
+  flex-direction:column;
+}
+
+.theme-toggle{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 18px;
+  border-radius:12px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  border:none;
+  font-size:14px;
+  font-weight:500;
+  cursor:pointer;
+  transition:.3s;
+}
+
+.theme-toggle i{
+  font-size:16px;
+}
+
+.theme-toggle:hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 20px rgba(79,70,229,.35);
+}
+
+/* ================= TEXT ================= */
+p{
+  font-size:15px;
+  font-weight:400;
+  line-height:1.7;
+  color:var(--muted);
+  margin:0;
+}
+
+a{
+  color:inherit;
+  text-decoration:none !important;
+  transition:.25s;
+}
+
+/* ================= TOP CONTROLS ================= */
+.top-controls{
+  position:sticky;
+  top:0;
+  z-index:1050;
+  width:100%;
+  background:var(--glass);
+  backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--glass-border);
+  box-shadow:0 8px 22px rgba(0,0,0,.06);
+  padding:12px 18px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+
+/* ================= BUTTONS ================= */
+.top-controls .btn,
+.theme-toggle{
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  border:none;
+  border-radius:12px;
+  font-weight:500;
+  padding:8px 18px;
+  cursor:pointer;
+  transition:.3s;
+}
+
+.top-controls .btn:hover,
+.theme-toggle:hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 20px rgba(79,70,229,.35);
+}
+
+/* ================= SIDEBAR ================= */
+#sidebar{
+  width:250px;
+  position:fixed;
+  top:0;
+  left:0;
+  height:100vh;
+  background:linear-gradient(180deg,var(--sidebar-blue),var(--sidebar-blue-soft));
+  backdrop-filter:blur(24px);
+  box-shadow:20px 0 45px rgba(79,70,229,.35);
+  transition:.3s;
+  z-index:1040;
+  display:flex;
+  flex-direction:column;
+}
+
+#sidebar.active{ margin-left:-250px; }
+
+#sidebar .sidebar-header{
+  padding:20px;
+  text-align:center;
+  font-size:18px;
+  font-weight:600;
+  color:#fff;
+  background:linear-gradient(135deg,#6366f1,#4338ca);
+}
+
+/* ================= SIDEBAR LINKS ================= */
+#sidebar ul.components{
+  padding:20px 0;
+  list-style:none;
+  margin:0;
+}
+
+#sidebar ul li a{
+  padding:12px 20px;
+  font-size:14.5px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:#fff;
+  margin:6px 14px;
+  border-radius:14px;
+  transition:.3s;
+  white-space:nowrap;
+}
+
+#sidebar ul li a:hover{
+  background:rgba(255,255,255,.18);
+  transform:translateX(6px);
+}
+
+#sidebar ul li.active>a{
+  background:rgba(255,255,255,.28);
+  font-weight:500;
+  box-shadow:inset 4px 0 0 #fff;
+}
+
+/* ================= CONTENT ================= */
+#content{
+  margin-left:250px;
+  padding:26px;
+  flex:1;
+  transition:.3s;
+}
+
+#sidebar.active + #content{
+  margin-left:0;
+}
+
+/* ================= CARD ================= */
+.card{
+  border:none;
+  border-radius:22px;
+  background:var(--glass-soft);
+  backdrop-filter:blur(16px);
+  box-shadow:0 16px 40px rgba(0,0,0,.08);
+  padding:18px;
+  margin-bottom:18px;
+  transition:.3s;
+}
+
+.card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 20px 44px rgba(0,0,0,.12);
+}
+
+/* ================= MAP ================= */
+#map{
+  margin-top:16px;
+  height:450px;
+  width:100%;
+  border-radius:18px;
+  box-shadow:0 12px 30px rgba(0,0,0,.12);
+}
+
+/* ================= FOOTER ================= */
+footer{
+  width:100%;
+  background:var(--glass);
+  backdrop-filter:blur(14px);
+  border-top:1px solid var(--glass-border);
+  text-align:center;
+  padding:14px;
+  font-size:13px;
+  color:var(--muted);
+  margin-top:auto;
+}
+
+/* ================= RESPONSIVE ================= */
+@media(max-width:768px){
+  #sidebar{ margin-left:-250px; }
+  #sidebar.active{ margin-left:0; }
+
+  #content{
+    margin-left:0;
+    padding:18px;
+  }
+
+  .top-controls{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:10px;
+  }
+
+  #map{ height:350px; }
+}
+</style>
+
+
+
+  </head>
+
+  <body onload="speaker.speak();">
+    <div class="wrapper">
+      <!-- Sidebar  -->
+      <nav id="sidebar">
+        <div class="sidebar-header">
+          <h3>Disaster Prediction</h3>
+        </div>
+
+        <ul class="list-unstyled components">
+          <li>
+            <a href="{{ url_for('index') }}">Home</a>
+          </li>
+
+          <li>
+            <a href="{{ url_for('earthquake') }}"
+              >Earthquake Prediction <span class="badge bg-success rounded-pill"><i class="fa fa-check-circle" aria-hidden="true"></i></span></a
+            >
+          </li>
+          <li class="active">
+            <a href="{{ url_for('flood') }}">Flood Prediction <span class="badge bg-success rounded-pill"><i class="fa fa-check-circle" aria-hidden="true"></i></span></a>
+          </li>
+<li>
+  <a href="/feedback">
+    Feedback & Issues
+    <span class="badge bg-primary rounded-pill">
+      <i class="fa fa-comments"></i>
+    </span>
+  </a>
+</li>
+
+                        <li>
+  <a href="{{ url_for('help_page') }}">
+    Help / User Guide
+    <span class="badge bg-info rounded-pill">
+      <i class="fa fa-question-circle"></i>
+    </span>
+  </a>
+</li>
+<li>
+  <a href="{{ url_for('safety_tips') }}">
+    Safety Tips
+    <span class="badge bg-success rounded-pill">
+      <i class="fa fa-shield"></i>
+    </span>
+  </a>
+</li>
+<li>
+  <a href="{{ url_for('emergency') }}">
+    Emergency Contacts
+    <span class="badge bg-danger rounded-pill">
+      <i class="fa fa-phone"></i>
+    </span>
+  </a>
+</li>
+
+
+<li>
+  <a href="{{ url_for('about') }}">
+    About System
+    <span class="badge bg-primary rounded-pill">
+      <i class="fa fa-info-circle"></i>
+    </span>
+  </a>
+</li>
+
+
+          <li>
+  <a href="{{ url_for('settings') }}">
+    Settings
+    <span class="badge bg-secondary rounded-pill">
+      <i class="fa fa-cog"></i>
+    </span>
+  </a>
+</li>
+
+<!-- LOGOUT (BOTTOM) -->
+<li class="mt-auto">
+  <a href="{{ url_for('logout') }}" onclick="return confirmLogout();">
+    Logout
+    <span class="badge bg-danger rounded-pill">
+      <i class="fa fa-sign-out"></i>
+    </span>
+  </a>
+</li>
+        </ul>
+      </nav>
+
+      <!-- Page Content  -->
+      <div id="content">
+        <nav
+          class="navbar card navbar-expand-lg navbar-light bg-light justify-content-between"
+        >
+          <div class="container-fluid">
+            <button type="button" id="sidebarCollapse" class="btn btn-primary">
+              <i class="fa fa-bars"></i>
+              <span>Toggle Sidebar</span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+              <ul class="nav navbar-nav ml-auto">
+                <li class="nav-item">
+                  <div id="google_translate_element"></div>
+
+                  <script type="text/javascript">
+                    function googleTranslateElementInit() {
+                      new google.translate.TranslateElement(
+                        {
+                          pageLanguage: "en",
+                          layout:
+                            google.translate.TranslateElement.InlineLayout
+                              .SIMPLE,
+                        },
+                        "google_translate_element"
+                      );
+                    }
+                  </script>
+
+                  <script
+                    type="text/javascript"
+                    src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+                  ></script>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Wrapper -->
+<div class="wrapper">
+
+  <!-- Sidebar -->
+
+
+  <!-- Main Content -->
+
+
+    <!-- Flood Prediction Result Section -->
+<div class="container mt-4">
+  <div class="card shadow-lg border-0 rounded-4 p-4">
+    <div class="card-body">
+
+      <!-- Server-Predicted Flood Result -->
+      <div class="results text-center mb-4">
+        {% if predictions %}
+          {% set pred_value = predictions[0][0] %}
+          {% set flood_status = predictions[0][1] %}
+
+<h3 id="live_flood_heading"
+    class="fw-bold
+      {% if flood_status == 'Flood Predicted' or flood_status == 'Real Flood Detected' %}
+         text-danger
+      {% else %}
+         text-success
+      {% endif %}
+">
+  {{ flood_status }}
+</h3>
+
+
+          <p class="text-secondary mt-2">
+            <b>Predicted River Level:</b> {{ pred_value }} m <br>
+            <b>Entered Rainfall:</b> {{ rainfall_input }} mm <br>
+            <b>Timestamp:</b> {{ timestamp }}
+          </p>
+
+          <!-- ==========================
+               MANUAL FLOOD ALERT BUTTON
+               ========================== -->
+          {% if lat and lon %}
+          <form method="POST" action="/manual_flood_alert" class="mt-3">
+            <input type="hidden" name="lat" value="{{ lat }}">
+            <input type="hidden" name="lon" value="{{ lon }}">
+            <input type="hidden" name="rainfall" value="{{ rainfall_input }}">
+            <input type="hidden" name="river" value="{{ pred_value }}">
+            <input type="hidden" name="place" value="Flood Location">
+
+            <button type="submit" class="btn btn-warning btn-lg w-100">
+              🚨 Send Manual Flood Alert
+            </button>
+          </form>
+          {% endif %}
+
+        {% else %}
+          <p class="text-muted">Enter rainfall to get prediction</p>
+        {% endif %}
+      </div>
+          <!-- Real-Time Weather -->
+          <div class="border-top pt-3">
+            <h5 class="text-primary mb-2 text-center">🌍 Real-Time Weather & Flood Risk</h5>
+            <div class="text-center">
+              <p id="timestamp" class="text-secondary small"></p>
+              <p id="location" class="fw-semibold">Fetching your location...</p>
+              <p id="weather">Loading weather data...</p>
+              <p id="rainfall">Rainfall: --</p>
+              <h5 id="risk" class="fw-bold text-secondary">Calculating flood risk...</h5>
+            </div>
+          </div>
+
+          <!-- Map -->
+          <div class="mt-4">
+            <h5 class="text-primary mb-3 text-center">🗺️ Real-Time Flood Map</h5>
+            <div id="map"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Flood Reference Images -->
+    <div class="container mt-4">
+      <div class="row g-2">
+        {% for i in range(1,6) %}
+        <div class="col-6 mb-2 py-2">
+          <div class="shadow-sm card graph-img">
+            <img src="{{url_for('static',filename='flood/f' ~ i ~ '.jpg')}}" class="img-fluid" />
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Footer -->
+
+
+  </div>
+</div>
+
+<!-- jQuery + Bootstrap -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Sidebar Toggle -->
+<script>
+  $(document).ready(function () {
+    $("#sidebarCollapse").on("click", function () {
+      $("#sidebar").toggleClass("active");
+    });
+  });
+</script>
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+const apiKey = "fb116bebc392ccc8ab251927edcb55d6";
+
+/* ---------------- SERVER DATA ---------------- */
+const serverLat = {{ lat|tojson if lat else 'null' }};
+const serverLon = {{ lon|tojson if lon else 'null' }};
+const serverRainfall = {{ rainfall_amt|tojson if rainfall_amt else 'null' }};
+const serverFloodStatus = "{{ flood_status }}";
+
+/* ---------------- UI LOADING STATE ---------------- */
+function setLoadingState() {
+    document.getElementById("live_flood_heading").innerText = "Loading flood data...";
+    document.getElementById("live_flood_heading").className = "fw-bold text-info";
+
+    document.getElementById("location").innerText = "📍 Detecting location...";
+    document.getElementById("risk").innerText = "⏳ Fetching real-time data...";
+    document.getElementById("risk").className = "fw-bold text-secondary";
+
+    document.getElementById("weather").innerText = "—";
+    document.getElementById("rainfall").innerText = "—";
+    document.getElementById("timestamp").innerText =
+        `🕒 ${new Date().toLocaleString()}`;
+}
+
+/* ---------------- INITIAL LOAD ---------------- */
+setLoadingState();
+
+/* ---------------- MAP INIT ---------------- */
+const map = L.map("map").setView([20, 77], 5);
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19
+}).addTo(map);
+
+/* ---------------- WEATHER OVERLAYS ---------------- */
+const rainLayer = L.tileLayer(
+    `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${apiKey}`,
+    { opacity: 0.55 }
+);
+
+const snowLayer = L.tileLayer(
+    `https://tile.openweathermap.org/map/snow_new/{z}/{x}/{y}.png?appid=${apiKey}`,
+    { opacity: 0.6 }
+);
+
+const cloudsLayer = L.tileLayer(
+    `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${apiKey}`,
+    { opacity: 0.5 }
+);
+
+rainLayer.addTo(map);
+
+L.control.layers({}, {
+    "🌧️ Rain": rainLayer,
+    "❄️ Snow": snowLayer,
+    "☁️ Clouds": cloudsLayer
+}).addTo(map);
+
+let marker;
+
+/* ---------------- HELPERS ---------------- */
+function validCoords(lat, lon) {
+    return lat !== null && lon !== null &&
+           !isNaN(lat) && !isNaN(lon) &&
+           lat >= -90 && lat <= 90 &&
+           lon >= -180 && lon <= 180;
+}
+
+function getFloodStatus(precipitation) {
+    if (precipitation > 30)
+        return { heading: "Real Flood Detected", riskText: "🚨 Flood Risk: Very High", colorClass: "text-danger", markerColor: "red" };
+    else if (precipitation > 20)
+        return { heading: "Flood Warning", riskText: "⚠️ Flood Risk: Moderate", colorClass: "text-warning", markerColor: "orange" };
+    else if (precipitation > 5)
+        return { heading: "Low Risk", riskText: "🟡 Flood Risk: Low", colorClass: "text-info", markerColor: "yellow" };
+    else
+        return { heading: "No Flood", riskText: "✅ Flood Risk: None", colorClass: "text-success", markerColor: "green" };
+}
+
+/* ---------------- REVERSE GEOCODING ---------------- */
+function fetchLocationName(lat, lon) {
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
+        .then(res => res.json())
+        .then(data => {
+            const place =
+                data.address?.city ||
+                data.address?.town ||
+                data.address?.village ||
+                data.address?.state ||
+                "Unknown location";
+
+            document.getElementById("location").innerHTML =
+                `📍 ${place}<br><small>Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}</small>`;
+        })
+        .catch(() => {
+            document.getElementById("location").innerHTML =
+                `📍 Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`;
+        });
+}
+
+/* ---------------- WEATHER + FLOOD LOGIC ---------------- */
+function fetchWeather(lat, lon, callback=null) {
+    if (!validCoords(lat, lon)) return;
+
+    fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`)
+        .then(res => res.json())
+        .then(data => {
+            const weatherDesc = data.weather?.[0]?.description || "N/A";
+            const temp = data.main?.temp ?? 0;
+            const humidity = data.main?.humidity ?? 0;
+            const rain = data.rain?.["1h"] ?? data.rain?.["3h"] ?? 0;
+            const snow = data.snow?.["1h"] ?? data.snow?.["3h"] ?? 0;
+
+            const precipitation = (rain + snow) || (serverRainfall ?? 0);
+            const status = getFloodStatus(precipitation);
+
+            if (!callback) {
+                const head = document.getElementById("live_flood_heading");
+                head.innerText = status.heading;
+                head.className = `fw-bold ${status.colorClass}`;
+
+                document.getElementById("weather").innerText =
+                    `🌦️ ${weatherDesc}, 🌡️ ${temp}°C, 💧 ${humidity}%`;
+
+                document.getElementById("rainfall").innerText =
+                    `🌧️ Precipitation (last hour): ${precipitation} mm`;
+
+                document.getElementById("timestamp").innerText =
+                    `🕒 ${new Date().toLocaleString()}`;
+
+                const risk = document.getElementById("risk");
+                risk.innerText = `Real-Time Status: ${status.riskText}`;
+                risk.className = `fw-bold ${status.colorClass}`;
+
+                fetchLocationName(lat, lon);
+
+                const icon = L.icon({
+                    iconUrl:
+                        status.markerColor === "red" ? "https://maps.google.com/mapfiles/ms/icons/red-dot.png" :
+                        status.markerColor === "orange" ? "https://maps.google.com/mapfiles/ms/icons/orange-dot.png" :
+                        status.markerColor === "yellow" ? "https://maps.google.com/mapfiles/ms/icons/yellow-dot.png" :
+                        "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+                    iconSize: [32, 32]
+                });
+
+                if (marker) map.removeLayer(marker);
+
+                marker = L.marker([lat, lon], { icon })
+                    .addTo(map)
+                    .bindPopup(`
+                        <b>Flood Status</b><br>
+                        ${status.riskText}<br>
+                        ${weatherDesc}<br>
+                        🌡️ ${temp}°C<br>
+                        💧 ${humidity}%<br>
+                        🌧️ ${precipitation} mm
+                    `)
+                    .openPopup();
+
+                map.setView([lat, lon], 12);
+            } else {
+                callback({ weatherDesc, temp, humidity, precipitation, status });
+            }
+        })
+        .catch(err => console.error(err));
+}
+
+/* ---------------- MAP CLICK POPUP ---------------- */
+map.on("click", e => {
+    const { lat, lng } = e.latlng;
+    fetchWeather(lat, lng, data => {
+        L.popup()
+            .setLatLng([lat, lng])
+            .setContent(`
+                <b>Flood Status</b><br>
+                ${data.status.riskText}<br>
+                ${data.weatherDesc}<br>
+                🌡️ ${data.temp}°C<br>
+                💧 ${data.humidity}%<br>
+                🌧️ ${data.precipitation} mm<br>
+                📍 Lat: ${lat.toFixed(6)}, Lon: ${lng.toFixed(6)}
+            `)
+            .openOn(map);
+    });
+});
+
+/* ---------------- AUTO EXECUTION ---------------- */
+function updateFlood() {
+    setLoadingState(); // 🔥 THIS IS THE FIX
+
+    if (validCoords(serverLat, serverLon)) {
+        fetchWeather(serverLat, serverLon);
+    } else if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
+            () => {
+                document.getElementById("risk").innerText = "⚠️ Location access denied.";
+            }
+        );
+    }
+}
+
+updateFlood();
+setInterval(updateFlood, 20000);
+
+    function confirmLogout() {
+    return confirm("Are you sure you want to logout?");
+    // If user clicks "OK", it returns true and logout proceeds
+    // If user clicks "Cancel", it returns false and logout is cancelled
+  }
+  const toggleBtn = document.getElementById("themeToggle");
+const icon = document.getElementById("themeIcon");
+
+toggleBtn.addEventListener("click", () => {
+  document.body.classList.toggle("dark");
+
+  if(document.body.classList.contains("dark")){
+    icon.classList.remove("fa-moon-o");
+    icon.classList.add("fa-sun-o");
+    localStorage.setItem("theme","dark");
+  }else{
+    icon.classList.remove("fa-sun-o");
+    icon.classList.add("fa-moon-o");
+    localStorage.setItem("theme","light");
+  }
+});
+
+/* Load saved theme */
+if(localStorage.getItem("theme") === "dark"){
+  document.body.classList.add("dark");
+  icon.classList.remove("fa-moon-o");
+  icon.classList.add("fa-sun-o");
+}
+
+</script>
+
+
+
+<script src="{{url_for('static', filename='script.js')}}"></script>
+    <footer>
+      <p>Copyright 2024 | Soham Garud</p>
+    </footer>
+</body>
+</html>

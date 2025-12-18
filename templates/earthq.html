@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Theme Made By www.w3schools.com - No Copyright -->
+    <title>DISASTER PREDICTOR</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<style>
+@import url("https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700");
+
+/* ================= ROOT (LIGHT MODE) ================= */
+:root{
+  --bg-main:#f5f7fb;
+
+  --glass-soft:rgba(255,255,255,0.88);
+  --glass:rgba(255,255,255,0.78);
+  --glass-border:rgba(0,0,0,0.08);
+
+  --primary:#4f46e5;
+  --primary-dark:#4338ca;
+  --success:#16a34a;
+  --success-dark:#15803d;
+
+  --text:#0f172a;
+  --muted:#64748b;
+}
+
+/* ================= DARK MODE ================= */
+body.dark{
+  --bg-main:#0b1120;
+
+  --glass-soft:rgba(15,23,42,0.95);
+  --glass:rgba(15,23,42,0.88);
+  --glass-border:rgba(255,255,255,0.12);
+
+  --primary:#818cf8;
+  --primary-dark:#6366f1;
+
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+}
+
+/* ================= GLOBAL ================= */
+html{
+  font-size:87%;
+}
+
+html, body{
+  height:100%;
+  margin:0;
+  font-family:"Poppins",sans-serif;
+  background:var(--bg-main);
+  color:var(--text);
+  line-height:1.6;
+  display:flex;
+  flex-direction:column;
+  transition:background .3s,color .3s;
+}
+
+a{
+  text-decoration:none;
+  color:inherit;
+}
+
+/* ================= NAVBAR ================= */
+.navbar{
+  padding:10px 16px;
+  background:var(--glass);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--glass-border);
+  box-shadow:0 6px 18px rgba(0,0,0,.08);
+  border-radius:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+/* ================= THEME TOGGLE BUTTON ================= */
+.theme-toggle{
+  cursor:pointer;
+  font-size:14px;
+  padding:7px 12px;
+  border-radius:10px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  border:none;
+  transition:.25s ease;
+}
+
+.theme-toggle:hover{
+  transform:translateY(-1px);
+  box-shadow:0 6px 14px rgba(0,0,0,.25);
+}
+
+/* ================= LAYOUT ================= */
+.wrapper{
+  display:flex;
+  flex:1;
+}
+
+/* ================= SIDEBAR ================= */
+#sidebar{
+  width:220px;
+  height:100vh;
+  position:fixed;
+  top:0;
+  left:0;
+  background:linear-gradient(180deg,var(--primary),var(--primary-dark));
+  box-shadow:18px 0 38px rgba(0,0,0,.35);
+  display:flex;
+  flex-direction:column;
+  z-index:1000;
+}
+
+/* Sidebar Header */
+#sidebar .sidebar-header{
+  padding:16px;
+  font-size:15px;
+  font-weight:600;
+  text-align:center;
+  color:#fff;
+}
+
+/* Sidebar Menu */
+#sidebar ul{
+  list-style:none;
+  padding:8px;
+  margin:0;
+}
+
+#sidebar ul li a{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 12px;
+  font-size:13px;
+  color:#fff;
+  border-radius:10px;
+  margin-bottom:6px;
+  transition:.25s ease;
+}
+
+#sidebar ul li a:hover{
+  background:rgba(255,255,255,.18);
+  transform:translateX(3px);
+}
+
+#sidebar ul li.active a{
+  background:rgba(255,255,255,.28);
+}
+
+/* ================= CONTENT ================= */
+#content{
+  margin-left:220px;
+  padding:22px 24px;
+  flex:1;
+}
+
+/* ================= HEADINGS ================= */
+h1{font-size:23px}
+h2{font-size:20px}
+h3{font-size:18px}
+h4{font-size:16px}
+h5{font-size:14px}
+
+/* ================= CARDS ================= */
+.card{
+  background:var(--glass-soft);
+  backdrop-filter:blur(16px);
+  border-radius:16px;
+  border:1px solid var(--glass-border);
+  padding:18px;
+  margin-bottom:14px;
+  box-shadow:0 10px 28px rgba(0,0,0,.12);
+}
+
+/* ================= INPUTS ================= */
+input,
+select,
+textarea{
+  width:100%;
+  font-size:14px;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid var(--glass-border);
+  background:var(--glass);
+  color:var(--text);
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  outline:none;
+  border-color:var(--primary);
+  box-shadow:0 0 0 2px rgba(99,102,241,.25);
+}
+
+/* ================= BUTTONS ================= */
+.btn{
+  font-size:13px;
+  padding:8px 14px;
+  border-radius:10px;
+  border:none;
+  cursor:pointer;
+  transition:.25s;
+}
+
+.btn-primary{
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;
+}
+
+/* ================= FOOTER ================= */
+.app-footer{
+  background:var(--glass);
+  backdrop-filter:blur(12px);
+  border-top:1px solid var(--glass-border);
+  text-align:center;
+  padding:10px;
+  font-size:12px;
+  color:var(--muted);
+}
+
+/* ================= MOBILE ================= */
+@media(max-width:768px){
+  #sidebar{
+    left:-220px;
+  }
+  #sidebar.active{
+    left:0;
+  }
+  #content{
+    margin-left:0;
+    padding:18px;
+  }
+}
+</style>
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <!-- Sidebar  -->
+      <nav id="sidebar">
+        <div class="sidebar-header">
+          <h3>Disaster Prediction</h3>
+        </div>
+
+        <ul class="list-unstyled components">
+          <li>
+            <a href="{{ url_for('index') }}">Home</a>
+          </li>
+
+          <li class="active">
+            <a href="{{ url_for('earthquake') }}"
+              >Earthquake Prediction <span class="badge bg-success rounded-pill"><i class="fa fa-check-circle" aria-hidden="true"></i></span></a
+            >
+          </li>
+          <li>
+            <a href="{{ url_for('flood') }}">Flood Prediction <span class="badge bg-success rounded-pill"><i class="fa fa-check-circle" aria-hidden="true"></i></span></a>
+          </li>
+
+
+          <li>
+  <a href="/feedback">
+    Feedback & Issues
+    <span class="badge bg-primary rounded-pill">
+      <i class="fa fa-comments"></i>
+    </span>
+  </a>
+</li>
+
+                          <li>
+  <a href="{{ url_for('help_page') }}">
+    Help / User Guide
+    <span class="badge bg-info rounded-pill">
+      <i class="fa fa-question-circle"></i>
+    </span>
+  </a>
+</li>
+<li>
+  <a href="{{ url_for('safety_tips') }}">
+    Safety Tips
+    <span class="badge bg-success rounded-pill">
+      <i class="fa fa-shield"></i>
+    </span>
+  </a>
+</li>
+<li>
+  <a href="{{ url_for('emergency') }}">
+    Emergency Contacts
+    <span class="badge bg-danger rounded-pill">
+      <i class="fa fa-phone"></i>
+    </span>
+  </a>
+</li>
+
+
+<li>
+  <a href="{{ url_for('about') }}">
+    About System
+    <span class="badge bg-primary rounded-pill">
+      <i class="fa fa-info-circle"></i>
+    </span>
+  </a>
+</li>
+
+
+            <li>
+  <a href="{{ url_for('settings') }}">
+    Settings
+    <span class="badge bg-secondary rounded-pill">
+      <i class="fa fa-cog"></i>
+    </span>
+  </a>
+</li>
+
+<!-- LOGOUT (BOTTOM) -->
+<li class="mt-auto">
+  <a href="{{ url_for('logout') }}" onclick="return confirmLogout();">
+    Logout
+    <span class="badge bg-danger rounded-pill">
+      <i class="fa fa-sign-out"></i>
+    </span>
+  </a>
+</li>
+        </ul>
+      </nav>
+
+      <!-- Page Content  -->
+      <div id="content">
+        <nav class="navbar card navbar-expand-lg navbar-light bg-light justify-content-between"  >
+
+          <div class="container-fluid">
+            <button type="button" id="sidebarCollapse" class="btn btn-primary">
+              <i class="fa fa-bars"></i>
+              <span>Toggle Sidebar</span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+              <ul class="nav navbar-nav ml-auto">
+
+
+              <li class="nav-item mr-3">
+    <div id="google_translate_element"></div>
+  </li>
+
+   <li class="nav-item ms-3">
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <i class="fa fa-moon-o"></i>
+      <span class="d-none d-md-inline">Theme</span>
+    </button>
+  </li>
+
+
+                  <script type="text/javascript">
+                    function googleTranslateElementInit() {
+                      new google.translate.TranslateElement(
+                        {
+                          pageLanguage: "en",
+                          layout:
+                            google.translate.TranslateElement.InlineLayout
+                              .SIMPLE,
+                        },
+                        "google_translate_element"
+                      );
+                    }
+                  </script>
+
+                  <script
+                    type="text/javascript"
+                    src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+                  ></script>
+
+              </ul>
+            </div>
+          </div>
+        </nav>
+
+        <div class="row">
+          <div class="col-xl-6">
+            <div class="card shadow-sm px-4">
+              <div class="card-body row">
+                <div class="col-xl-7">
+                <h5 class="card-title">Earthquake Prediction</h5>
+                <h6 class="card-subtitle mb-2 text-muted">
+                  Earthquake Prediction
+                </h6>
+              </div>
+              <div class="col-xl-5 mb-4">
+                <button class="btn btn-success">
+                    <a href="{{ url_for('earthgraphs') }}">View Graphical Model Analysis</a>
+                </button>
+              </div>
+                <form action="{{ url_for('predict')}}" method="POST" class="mt-2">
+                  <div class="mb-3">
+                    <label for="lat" class="form-label">Latitude:</label>
+                    <input
+                      type="text"
+                      name="lat"
+                      id="lat"
+                      class="form-control"
+                      placeholder="12.972"
+                    />
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="lon">Longitude:</label>
+                    <input
+                      type="text"
+                      name="lon"
+                      id="lon"
+                      class="form-control"
+                      placeholder="79.159"
+                    />
+                  </div>
+
+                  <div class="mb-3">
+    <label for="date">Date (Optional):</label>
+    <input
+        type="text"
+        name="date"
+        id="date"
+        class="form-control"
+        placeholder="Leave empty to use current date & time automatically"
+    />
+</div>
+
+
+
+                  <br />
+
+                  <input
+                    type="submit"
+                    class="btn btn-primary mb-3"
+                    id="submit"
+                    value="Submit"
+                  />
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-6">
+            <div class="card px-4 shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">Real Time Data</h5>
+                <h6 class="card-subtitle mb-4 text-muted">
+                  Real-time earthquake data from the United States Geological
+                  Survey (USGS)
+                </h6>
+                <div class="mt-2">
+                  <div style="width: 100%; height: 390px" id="map"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <script>
+
+      document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form");
+    const latInput = document.getElementById("lat");
+    const lonInput = document.getElementById("lon");
+
+    form.addEventListener("submit", function (e) {
+        let lat = latInput.value.trim();
+        let lon = lonInput.value.trim();
+        let valid = true;
+        let errorMessage = "";
+
+        // Regex to match decimal numbers (including negative)
+        const decimalRegex = /^-?\d+(\.\d+)?$/;
+
+        // Latitude validation: must be -90 to 90
+        if (!lat || !decimalRegex.test(lat) || parseFloat(lat) < -90 || parseFloat(lat) > 90) {
+            valid = false;
+            errorMessage += "Please enter a valid Latitude (-90 to 90).\n";
+        }
+
+        // Longitude validation: must be -180 to 180
+        if (!lon || !decimalRegex.test(lon) || parseFloat(lon) < -180 || parseFloat(lon) > 180) {
+            valid = false;
+            errorMessage += "Please enter a valid Longitude (-180 to 180).\n";
+        }
+
+        if (!valid) {
+            e.preventDefault(); // prevent form submission
+            alert(errorMessage);
+        }
+    });
+});
+
+
+      $(document).ready(function () {
+        $("#sidebarCollapse").on("click", function () {
+          $("#sidebar").toggleClass("active");
+        });
+      });
+
+          function confirmLogout() {
+    return confirm("Are you sure you want to logout?");
+    // If user clicks "OK", it returns true and logout proceeds
+    // If user clicks "Cancel", it returns false and logout is cancelled
+  }
+    </script>
+
+    <p class="hints" style="visibility: hidden"></p>
+    <div>
+      <p class="output" style="visibility: hidden">
+        <em>...diagnostic messages</em>
+      </p>
+    </div>
+
+
+    <script src="{{url_for('static', filename='script.js')}}"></script>
+
+    <script>
+      var map;
+      function initMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+          zoom: 2,
+          center: new google.maps.LatLng(2.8, -187.3),
+          mapTypeId: "terrain",
+        });
+
+        // Create a <script> tag and set the USGS URL as the source.
+        var script = document.createElement("script");
+        // This example uses a local copy of the GeoJSON stored at
+        // http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojsonp
+        script.src =
+          "https://developers.google.com/maps/documentation/javascript/examples/json/earthquake_GeoJSONP.js";
+        document.getElementsByTagName("head")[0].appendChild(script);
+      }
+
+      // Loop through the results array and place a marker for each
+      // set of coordinates.
+      window.eqfeed_callback = function (results) {
+        for (var i = 0; i < results.features.length; i++) {
+          var coords = results.features[i].geometry.coordinates;
+          var latLng = new google.maps.LatLng(coords[1], coords[0]);
+          var marker = new google.maps.Marker({
+            position: latLng,
+            map: map,
+          });
+        }
+      };
+
+      function toggleTheme(){
+  document.body.classList.toggle("dark");
+}
+    </script>
+    <script
+      async
+      defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBs4yUs1YswCjM7pQdMh5XzyXSKw1A22HI&callback=initMap"
+    ></script>
+     <footer class="app-footer">
+    Copyright © 2024 | Soham Garud
+  </footer>
+  </body>
+
+</html>

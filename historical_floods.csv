@@ -1,0 +1,995 @@
+date,area,latitude,longitude,severity,description
+03-11-2025,Colombia,5.139883,-71.854705,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+20-10-2025,Ecuador,-3.13567,-77.178891,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+09-09-2025,Kerala India,10.650052,74.947483,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+01-09-2025,UK (Yorkshire),54.988913,-0.486644,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+13-07-2025,Chennai India,14.585057,80.381842,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+05-07-2025,France (Occitanie),44.266701,4.168804,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+23-06-2025,Bangladesh,24.2974,91.451759,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+15-06-2025,Myanmar,21.367475,96.094267,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+10-06-2025,Kerala India,8.621478,75.320234,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+05-06-2025,UK (Yorkshire),54.798311,-2.19653,High,Flash floods following extreme storms — reported impact in nearby communities.
+02-06-2025,Western Germany,49.421088,7.17504,Low,Dam release and downstream flooding — reported impact in nearby communities.
+16-05-2025,Canada (British Columbia),51.851528,-127.475061,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+09-05-2025,Ecuador,-1.580707,-77.663728,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+05-05-2025,Sichuan China,30.720967,103.560871,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+29-04-2025,Emilia-Romagna Italy,46.082024,14.06813,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+25-04-2025,Louisiana USA,32.261965,-92.849657,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+04-04-2025,Emilia-Romagna Italy,43.716939,12.27019,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+18-03-2025,Canada (British Columbia),53.877119,-127.100158,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+17-03-2025,Peru,-9.802437,-74.472945,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+12-03-2025,Haiti,17.483824,-69.678994,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+12-03-2025,Canada (British Columbia),53.681114,-127.282591,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+08-03-2025,France (Occitanie),44.64834,3.111675,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+05-02-2025,Nepal,28.029578,84.40102,Low,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+26-01-2025,Bangladesh,23.796121,89.706587,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+25-01-2025,Mexico,22.542187,-103.027413,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+23-01-2025,Sri Lanka,8.068945,79.304241,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+12-01-2025,Mumbai India,19.992328,73.397433,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+25-12-2024,Mumbai India,17.747814,73.172992,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+21-12-2024,Chennai India,12.001637,81.194603,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+26-11-2024,Mekong Delta Vietnam,10.254092,105.788889,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+10-11-2024,Venice Italy,45.472804,11.185373,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+31-10-2024,Western Germany,52.632515,10.24695,High,Dam release and downstream flooding — reported impact in nearby communities.
+27-10-2024,Western Germany,51.01327,4.742583,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+05-10-2024,Myanmar,20.68665,96.700049,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+29-09-2024,Sichuan China,30.532142,101.920337,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+24-09-2024,Louisiana USA,31.709396,-91.188033,High,Flash floods following extreme storms — reported impact in nearby communities.
+24-09-2024,UK (Yorkshire),53.226338,-2.369388,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+23-09-2024,Emilia-Romagna Italy,42.616097,13.190622,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+13-09-2024,Kansai Japan,33.284983,135.058342,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+12-09-2024,Mekong Delta Vietnam,9.36191,107.258064,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+07-09-2024,Sichuan China,31.975094,101.963723,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+07-09-2024,Assam India,26.83873,91.185493,Low,Flash floods following extreme storms — reported impact in nearby communities.
+03-09-2024,Colombia,4.017251,-76.094117,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+20-08-2024,Mumbai India,18.800948,69.424818,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+30-07-2024,Myanmar,21.123679,95.782895,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+30-06-2024,Haiti,19.494,-71.846451,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+22-06-2024,Kerala India,9.055191,73.450465,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+18-06-2024,Ecuador,-2.065353,-78.534605,High,Dam release and downstream flooding — reported impact in nearby communities.
+04-06-2024,Mekong Delta Vietnam,10.349175,107.780676,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+03-06-2024,Sichuan China,29.384702,104.531231,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+28-05-2024,Libya,32.660919,19.62348,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+17-05-2024,Thailand,14.994382,98.9183,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+14-05-2024,Sichuan China,31.535676,104.685671,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+03-05-2024,Ecuador,-1.943528,-78.514854,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+26-04-2024,Haiti,19.164167,-71.635837,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+26-04-2024,Pakistan,31.461196,70.057147,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+15-04-2024,Mexico,22.440575,-102.338385,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+31-03-2024,Ecuador,-1.84651,-77.314463,High,Flash floods following extreme storms — reported impact in nearby communities.
+25-03-2024,Emilia-Romagna Italy,42.507535,14.344325,High,Flash floods following extreme storms — reported impact in nearby communities.
+18-03-2024,Sri Lanka,8.904945,78.543459,Low,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+12-03-2024,Mexico,24.463906,-105.869503,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+10-03-2024,Kerala India,10.197078,77.852967,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+10-02-2024,Thailand,14.881409,99.337116,Low,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+01-02-2024,Ecuador,-1.018674,-76.14904,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+31-01-2024,Peru,-8.527119,-73.254989,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+26-01-2024,Mumbai India,19.906336,71.593574,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+26-01-2024,Libya,33.287386,23.951045,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+17-01-2024,Chennai India,12.905753,79.073254,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+10-01-2024,Libya,31.988774,18.710839,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+17-12-2023,Chennai India,13.061798,80.446691,High,Dam release and downstream flooding — reported impact in nearby communities.
+15-12-2023,Western Germany,52.479572,6.11571,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+09-12-2023,Sichuan China,29.786311,102.069651,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+09-12-2023,Mumbai India,20.977191,72.786709,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+08-12-2023,UK (Yorkshire),52.130595,-0.73406,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+23-11-2023,Thailand,15.061506,100.239864,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+15-11-2023,Assam India,26.25665,93.694539,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+29-10-2023,Western Germany,50.248164,6.971098,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+18-10-2023,Libya,31.395656,17.954008,High,Dam release and downstream flooding — reported impact in nearby communities.
+01-10-2023,Emilia-Romagna Italy,44.850201,11.901236,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+30-09-2023,Assam India,26.129501,93.629752,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+23-09-2023,Mexico,24.45656,-99.707611,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+21-09-2023,Myanmar,21.242709,96.373491,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+04-09-2023,Nepal,27.782111,83.542448,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+02-09-2023,Mumbai India,18.54624,73.647601,Low,Dam release and downstream flooding — reported impact in nearby communities.
+29-08-2023,Sri Lanka,6.868959,79.620104,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+13-08-2023,Assam India,24.048185,91.82127,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+05-08-2023,Shaanxi China,34.027752,107.538655,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+02-08-2023,Philippines,12.96214,119.587673,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+14-07-2023,Nepal,27.635767,84.349591,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+05-07-2023,Sichuan China,31.406222,104.75527,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+10-06-2023,Mexico,26.278843,-104.807255,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+10-06-2023,Colombia,5.208951,-73.546033,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+23-05-2023,Somalia,1.801157,44.909115,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+20-05-2023,Ecuador,-2.412881,-79.705535,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+20-05-2023,Thailand,16.06906,100.092175,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+17-05-2023,Louisiana USA,29.637174,-93.419721,High,Dam release and downstream flooding — reported impact in nearby communities.
+05-05-2023,Northern Territory Australia,-23.594624,131.868962,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+28-04-2023,Assam India,26.26428,91.283383,Low,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+25-04-2023,France (Occitanie),44.123906,3.48738,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+20-04-2023,Western Germany,48.537068,5.385404,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+17-04-2023,Venice Italy,45.345504,12.734032,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+12-04-2023,Mekong Delta Vietnam,9.516133,104.18118,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+11-04-2023,Venice Italy,46.944198,13.631543,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+09-04-2023,Sri Lanka,8.181933,83.325122,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+04-04-2023,Kerala India,10.714167,77.536262,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+23-03-2023,Kerala India,11.973298,78.020072,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+20-03-2023,Sichuan China,30.180192,101.871228,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+15-03-2023,Sri Lanka,6.873798,80.014638,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+21-02-2023,Peru,-9.239464,-74.002971,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+15-02-2023,Chennai India,13.854399,75.997886,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+31-01-2023,UK (Yorkshire),53.100274,-1.22813,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+12-01-2023,Myanmar,22.105782,97.456569,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+06-01-2023,Venice Italy,44.8856,15.137236,Low,Flash floods following extreme storms — reported impact in nearby communities.
+10-12-2022,Kansai Japan,35.37756,132.763926,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+29-11-2022,Sichuan China,31.789459,106.348474,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+12-11-2022,Colombia,3.276219,-72.55606,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+07-11-2022,Venice Italy,45.125531,13.453954,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+02-11-2022,Chennai India,12.532395,79.263265,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+28-10-2022,Western Germany,49.996298,7.386539,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+09-10-2022,Colombia,4.535074,-71.950335,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+04-10-2022,Haiti,21.121332,-73.103703,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+29-09-2022,Chennai India,13.70451,77.915363,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+23-08-2022,Chennai India,14.523973,78.116907,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+14-08-2022,Myanmar,22.568523,93.590412,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+14-08-2022,UK (Yorkshire),53.626928,-1.525731,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+08-08-2022,Emilia-Romagna Italy,45.877701,11.219618,Low,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+07-08-2022,Sichuan China,30.312709,101.811786,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+22-07-2022,Mekong Delta Vietnam,10.25746,107.730714,Low,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+17-07-2022,Myanmar,22.510954,97.235123,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+13-07-2022,Emilia-Romagna Italy,44.248522,10.803575,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+05-07-2022,Sri Lanka,8.108715,81.928098,Low,Flash floods following extreme storms — reported impact in nearby communities.
+13-06-2022,Mumbai India,17.372618,72.794378,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+13-06-2022,Thailand,16.43551,98.351356,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+03-06-2022,Libya,32.536938,21.852669,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+30-05-2022,Western Germany,51.384733,5.630465,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+24-05-2022,Kerala India,9.639361,77.985683,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+16-05-2022,Sichuan China,31.185818,102.532311,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+04-04-2022,Canada (British Columbia),54.992408,-128.946862,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+26-03-2022,Haiti,18.828186,-74.641243,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+23-03-2022,Kansai Japan,34.58427,133.630137,High,Dam release and downstream flooding — reported impact in nearby communities.
+21-03-2022,Nepal,29.615934,84.997147,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+15-03-2022,Sri Lanka,6.731411,80.481311,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+01-03-2022,Pakistan,29.516942,70.395565,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+26-02-2022,Sri Lanka,7.723044,80.960165,Low,Flash floods following extreme storms — reported impact in nearby communities.
+19-02-2022,Sri Lanka,8.9041,82.16872,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+21-01-2022,Myanmar,21.921444,96.025471,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+12-01-2022,Bangladesh,22.448461,92.565647,High,Flash floods following extreme storms — reported impact in nearby communities.
+07-01-2022,Philippines,14.05914,121.070237,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+06-01-2022,Philippines,12.977376,120.614485,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+18-12-2021,Colombia,6.094024,-73.488935,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+13-12-2021,Colombia,2.79218,-72.053234,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+09-12-2021,Mekong Delta Vietnam,9.771204,108.167971,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+04-12-2021,Peru,-9.791368,-74.535527,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+01-12-2021,Mumbai India,18.90104,71.744082,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+30-11-2021,Sri Lanka,7.886102,82.952101,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+20-11-2021,Philippines,12.217076,122.629898,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+08-11-2021,Mexico,24.587637,-102.122114,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+30-10-2021,Ecuador,-2.750624,-75.858498,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+30-10-2021,Pakistan,31.153661,68.518321,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+29-10-2021,Ecuador,-2.194812,-78.268818,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+24-10-2021,Northern Territory Australia,-23.886872,133.210403,High,Flash floods following extreme storms — reported impact in nearby communities.
+12-10-2021,Myanmar,22.537772,95.400584,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+10-10-2021,Mumbai India,18.914714,73.483776,High,Flash floods following extreme storms — reported impact in nearby communities.
+28-09-2021,Sichuan China,29.057109,106.116811,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+22-09-2021,Haiti,17.557154,-72.592908,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+19-09-2021,Chennai India,13.161335,77.273399,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+08-09-2021,Thailand,16.180908,103.205534,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+03-09-2021,UK (Yorkshire),54.967782,-1.167469,High,Dam release and downstream flooding — reported impact in nearby communities.
+03-09-2021,Somalia,1.437388,45.037743,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+27-08-2021,France (Occitanie),44.921109,5.970226,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+12-08-2021,Mumbai India,17.597414,74.593331,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+20-07-2021,Louisiana USA,29.427718,-92.604473,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+10-07-2021,Northern Territory Australia,-21.611625,133.660616,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+04-07-2021,Shaanxi China,35.060189,106.277202,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+30-06-2021,Sichuan China,30.323609,106.477518,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+26-06-2021,Somalia,-0.649987,45.236758,Low,Dam release and downstream flooding — reported impact in nearby communities.
+25-06-2021,Nepal,28.586949,83.660325,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+16-06-2021,Northern Territory Australia,-23.771601,133.814167,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+06-06-2021,UK (Yorkshire),52.205572,-2.448163,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+24-05-2021,Myanmar,21.326835,97.229403,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+22-05-2021,Kerala India,10.53656,77.755902,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+03-05-2021,Kansai Japan,36.324732,133.463482,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+27-04-2021,Ecuador,-0.915798,-77.690273,Low,Flash floods following extreme storms — reported impact in nearby communities.
+20-04-2021,Bangladesh,23.232299,90.919756,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+19-04-2021,Ecuador,-3.632258,-78.997411,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+01-04-2021,Mexico,24.1781,-103.108721,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+29-03-2021,Emilia-Romagna Italy,43.193983,10.228717,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+20-03-2021,Mexico,23.89205,-102.664469,Low,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+10-03-2021,Northern Territory Australia,-22.594474,135.650545,High,Flash floods following extreme storms — reported impact in nearby communities.
+05-03-2021,Canada (British Columbia),53.024708,-128.641951,High,Dam release and downstream flooding — reported impact in nearby communities.
+27-02-2021,Somalia,1.727846,44.124161,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+25-02-2021,Sri Lanka,8.903383,81.129984,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+16-02-2021,Thailand,17.932525,99.391201,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+09-02-2021,France (Occitanie),42.385034,1.680138,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+30-01-2021,Libya,31.114274,20.82277,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+22-01-2021,Libya,32.600917,18.600367,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+09-01-2021,Shaanxi China,35.895316,106.829848,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+29-12-2020,Myanmar,21.437026,95.676512,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+23-11-2020,Sichuan China,30.119994,100.430681,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+10-11-2020,Kerala India,11.258111,77.587494,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+03-11-2020,Colombia,5.953059,-73.324235,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+08-10-2020,Mexico,22.929488,-102.636454,Low,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+01-10-2020,Mumbai India,19.867032,71.513619,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+16-09-2020,Sichuan China,29.227849,102.688522,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+15-09-2020,Assam India,28.256207,91.245187,Low,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+24-08-2020,Kerala India,10.615048,82.179097,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+14-08-2020,Pakistan,31.10293,69.423019,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+25-07-2020,Nepal,29.131744,83.702009,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+22-07-2020,Assam India,28.065775,93.610749,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+20-07-2020,Sri Lanka,7.40779,80.612877,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+12-07-2020,Peru,-7.983491,-76.240604,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+03-07-2020,Kansai Japan,35.349844,138.198307,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+28-06-2020,Kansai Japan,34.671662,136.011735,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+23-06-2020,Sichuan China,30.772869,105.789456,High,Dam release and downstream flooding — reported impact in nearby communities.
+22-06-2020,Somalia,3.171013,46.73949,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+29-05-2020,Canada (British Columbia),52.664396,-126.937211,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+24-05-2020,Kerala India,10.925416,77.620264,High,Dam release and downstream flooding — reported impact in nearby communities.
+19-05-2020,Bangladesh,23.402436,92.46356,Low,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+05-05-2020,Bangladesh,24.595193,91.352758,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+05-05-2020,Northern Territory Australia,-24.412846,134.029645,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+03-05-2020,Shaanxi China,35.583815,108.722897,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+03-05-2020,Mumbai India,18.474293,75.656117,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+22-04-2020,Northern Territory Australia,-23.71942,133.41523,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+13-04-2020,UK (Yorkshire),53.145924,-4.295049,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+09-04-2020,Sichuan China,31.280052,103.2228,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+03-04-2020,Kansai Japan,34.658547,134.367863,Low,Dam release and downstream flooding — reported impact in nearby communities.
+27-03-2020,Colombia,4.860069,-70.61435,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+21-03-2020,Mumbai India,19.056984,71.373906,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+19-02-2020,Thailand,15.294362,101.175515,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+15-02-2020,Haiti,19.737223,-71.1795,High,Flash floods following extreme storms — reported impact in nearby communities.
+10-01-2020,Somalia,1.489408,43.263496,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+07-01-2020,Peru,-9.431236,-74.487117,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+04-01-2020,Chennai India,14.035825,81.040328,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+01-01-2020,Bangladesh,23.83297,89.349819,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+30-12-2019,Western Germany,51.140753,10.802525,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+30-11-2019,Venice Italy,44.160496,13.624186,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+29-11-2019,Pakistan,31.570347,67.06032,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+29-11-2019,Kansai Japan,33.974478,132.383195,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+22-11-2019,Kerala India,9.853938,75.13513,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+10-11-2019,Sichuan China,31.283915,102.379537,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+05-11-2019,Ecuador,-0.94809,-78.300156,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+04-11-2019,Venice Italy,45.250118,12.641649,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+30-10-2019,Philippines,12.349199,120.910273,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+27-10-2019,Pakistan,29.304408,70.068809,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+25-10-2019,Libya,32.677072,19.762132,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+19-10-2019,Thailand,17.754586,103.307365,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+10-10-2019,Bangladesh,21.829208,89.87273,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+24-09-2019,Mumbai India,19.145802,72.29973,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+23-09-2019,Emilia-Romagna Italy,45.349273,10.995235,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+20-09-2019,Pakistan,31.424853,68.542247,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+16-08-2019,Bangladesh,23.868461,92.376396,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+16-08-2019,Emilia-Romagna Italy,44.366452,12.788677,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+21-07-2019,Pakistan,30.312621,70.777813,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+18-07-2019,Western Germany,51.417659,5.811384,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+06-07-2019,Somalia,1.510937,46.530287,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+21-05-2019,Philippines,12.094802,122.746421,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+02-05-2019,Pakistan,31.117395,69.794039,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+10-04-2019,Kerala India,8.537454,75.606421,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+05-04-2019,Northern Territory Australia,-24.091758,132.486385,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+01-04-2019,Western Germany,50.539034,8.638995,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+24-03-2019,Philippines,13.426797,121.470711,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+17-03-2019,Philippines,13.3933,120.974949,High,Flash floods following extreme storms — reported impact in nearby communities.
+09-03-2019,Colombia,6.212915,-72.782574,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+22-02-2019,Northern Territory Australia,-23.954977,136.125989,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+20-02-2019,Ecuador,-2.453849,-77.891489,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+01-02-2019,Venice Italy,47.593982,11.164479,Low,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+26-01-2019,Thailand,12.628733,99.455919,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+16-01-2019,Nepal,29.002797,84.403914,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+12-01-2019,Bangladesh,24.071146,89.494022,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+08-01-2019,Sichuan China,30.027381,104.665204,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+31-12-2018,Libya,31.835343,24.146954,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+29-12-2018,Libya,32.322134,19.348577,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+24-12-2018,Peru,-9.357122,-74.59133,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+16-12-2018,Peru,-10.914918,-75.858631,High,Flash floods following extreme storms — reported impact in nearby communities.
+08-12-2018,Mexico,23.965763,-101.089482,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+28-11-2018,Mumbai India,20.381479,72.909206,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+21-11-2018,Mumbai India,20.261704,73.95613,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+04-11-2018,Assam India,26.444967,92.139585,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+31-10-2018,Western Germany,51.23198,7.18575,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+28-10-2018,Nepal,28.683594,84.514483,Low,Dam release and downstream flooding — reported impact in nearby communities.
+23-10-2018,Haiti,18.877688,-72.695757,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+21-10-2018,Somalia,2.090711,45.097697,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+06-10-2018,Sri Lanka,8.364075,81.874117,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+03-10-2018,UK (Yorkshire),53.775645,1.664306,High,Flash floods following extreme storms — reported impact in nearby communities.
+26-09-2018,Myanmar,23.581674,97.476555,High,Dam release and downstream flooding — reported impact in nearby communities.
+24-09-2018,Canada (British Columbia),54.645776,-128.083012,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+08-09-2018,Louisiana USA,30.466689,-91.626618,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+07-09-2018,Kansai Japan,35.249627,135.297008,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+04-09-2018,Peru,-11.183736,-74.454115,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+27-08-2018,Venice Italy,43.747843,12.167991,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+21-08-2018,Northern Territory Australia,-23.373073,133.541349,High,Flash floods following extreme storms — reported impact in nearby communities.
+20-08-2018,Thailand,15.682856,102.471095,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+12-08-2018,Thailand,15.862027,103.212416,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+31-07-2018,Philippines,13.793285,120.569232,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+26-07-2018,Northern Territory Australia,-23.706071,135.127736,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+24-07-2018,Bangladesh,25.713387,90.604803,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+10-07-2018,Emilia-Romagna Italy,44.581935,12.695062,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+30-06-2018,France (Occitanie),43.968587,4.717877,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+20-06-2018,Mexico,24.717551,-100.972097,Low,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+10-06-2018,Kansai Japan,34.75153,138.877863,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+05-06-2018,Sri Lanka,8.713744,79.792864,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+15-05-2018,Mumbai India,19.049479,71.554888,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+11-05-2018,Kerala India,11.064852,78.823374,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+09-05-2018,Colombia,4.878307,-73.073694,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+21-04-2018,Sri Lanka,9.174841,83.114067,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+14-04-2018,Kansai Japan,34.539515,136.065476,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+07-04-2018,Canada (British Columbia),54.282304,-127.513229,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+25-03-2018,Pakistan,29.384764,68.495653,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+25-03-2018,France (Occitanie),42.726943,4.107288,Low,Flash floods following extreme storms — reported impact in nearby communities.
+07-03-2018,Libya,31.711823,20.322324,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+03-03-2018,Western Germany,50.765983,6.922032,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+18-01-2018,Northern Territory Australia,-21.556056,134.820879,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+07-01-2018,Chennai India,14.20875,80.193609,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+27-12-2017,UK (Yorkshire),53.899651,-2.304313,Low,Flash floods following extreme storms — reported impact in nearby communities.
+20-12-2017,Somalia,3.125581,45.260437,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+10-12-2017,Kansai Japan,34.383522,135.511725,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+30-11-2017,France (Occitanie),42.933878,4.794214,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+30-10-2017,Northern Territory Australia,-23.600668,134.997081,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+29-10-2017,UK (Yorkshire),53.981866,-1.176769,Low,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+23-10-2017,Libya,32.508253,17.512825,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+22-10-2017,Colombia,4.326743,-72.851169,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+21-10-2017,Sri Lanka,6.901443,78.702373,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+20-10-2017,Mexico,23.421057,-100.316711,High,Dam release and downstream flooding — reported impact in nearby communities.
+17-10-2017,Northern Territory Australia,-23.727305,132.470098,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+11-10-2017,Somalia,1.21931,45.447416,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+02-10-2017,Libya,32.286767,18.933626,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+02-10-2017,Assam India,25.712394,92.251163,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+19-09-2017,Colombia,4.614502,-71.754723,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+12-09-2017,Myanmar,22.528974,94.374877,Low,Flash floods following extreme storms — reported impact in nearby communities.
+09-09-2017,Emilia-Romagna Italy,43.264561,13.678973,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+17-08-2017,Canada (British Columbia),53.503234,-128.171575,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+16-08-2017,Colombia,4.205947,-75.556115,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+16-08-2017,Somalia,2.020494,45.738442,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+31-07-2017,Philippines,13.817984,120.999933,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+28-07-2017,Nepal,27.947578,86.045525,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+29-06-2017,Bangladesh,24.057015,89.360636,Low,Dam release and downstream flooding — reported impact in nearby communities.
+23-06-2017,Nepal,27.789284,86.863015,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+11-06-2017,Assam India,25.371005,92.059728,High,Dam release and downstream flooding — reported impact in nearby communities.
+07-06-2017,Emilia-Romagna Italy,44.613435,14.865194,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+09-05-2017,Somalia,2.728791,48.088261,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+08-05-2017,Emilia-Romagna Italy,43.865225,11.444527,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+04-05-2017,Haiti,17.513343,-70.727671,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+27-04-2017,Western Germany,50.276859,6.066784,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+23-03-2017,Louisiana USA,31.283053,-93.089987,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+23-03-2017,Kerala India,10.543819,77.561951,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+16-03-2017,Mumbai India,16.576594,76.314114,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+07-03-2017,Mumbai India,17.57128,74.017784,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+06-03-2017,Louisiana USA,29.585732,-91.117846,High,Dam release and downstream flooding — reported impact in nearby communities.
+04-03-2017,Venice Italy,44.419567,13.378035,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+02-03-2017,Emilia-Romagna Italy,43.717256,10.620007,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+26-02-2017,Venice Italy,44.196937,11.276142,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+09-02-2017,France (Occitanie),44.307754,3.375971,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+04-02-2017,Philippines,13.21058,123.024293,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+20-01-2017,Thailand,17.37076,102.267833,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+15-01-2017,Colombia,5.899094,-73.462955,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+31-12-2016,Louisiana USA,30.965787,-92.395288,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+26-12-2016,Mekong Delta Vietnam,9.895691,106.986212,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+23-12-2016,Shaanxi China,34.334228,106.762878,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+24-11-2016,Emilia-Romagna Italy,44.282284,13.648221,High,Flash floods following extreme storms — reported impact in nearby communities.
+03-11-2016,France (Occitanie),42.505095,3.554318,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+01-11-2016,Louisiana USA,31.060105,-92.978043,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+09-10-2016,UK (Yorkshire),53.602662,-1.77601,Low,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+03-10-2016,Libya,31.009601,22.183099,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+27-09-2016,Myanmar,21.290637,96.548705,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+21-09-2016,Venice Italy,45.370634,9.824059,Low,Dam release and downstream flooding — reported impact in nearby communities.
+21-09-2016,Louisiana USA,31.855597,-93.98127,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+05-09-2016,Pakistan,31.21592,70.1652,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+25-08-2016,UK (Yorkshire),54.784322,-1.870083,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+15-08-2016,Ecuador,-2.65342,-77.817869,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+14-08-2016,Somalia,2.701266,45.234823,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+09-08-2016,Pakistan,30.361803,67.758534,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+21-07-2016,Peru,-9.211367,-76.136018,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+21-07-2016,Bangladesh,25.151144,91.838906,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+08-07-2016,Sichuan China,30.982119,103.704614,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+15-06-2016,Colombia,4.198693,-72.664177,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+29-05-2016,Pakistan,32.102264,68.745646,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+28-05-2016,Nepal,30.078828,83.435674,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+26-05-2016,Haiti,19.08843,-71.916389,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+22-05-2016,Kansai Japan,33.736177,135.818399,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+10-05-2016,Bangladesh,23.253485,91.684598,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+04-05-2016,Kansai Japan,36.990198,134.638742,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+08-04-2016,Western Germany,51.179969,5.211766,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+05-04-2016,Kerala India,9.927373,77.72549,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+31-03-2016,Kansai Japan,34.220262,135.531075,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+28-03-2016,Sichuan China,30.236515,106.570032,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+25-03-2016,Sichuan China,29.947481,104.105637,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+24-03-2016,Peru,-10.179628,-73.604043,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+22-03-2016,Colombia,4.026517,-74.130916,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+19-03-2016,Mexico,23.831021,-101.489294,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+09-03-2016,Assam India,25.523608,95.601411,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+05-03-2016,Sri Lanka,7.856677,82.55439,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+18-02-2016,Mumbai India,17.239795,73.639687,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+08-02-2016,Somalia,2.743287,46.751158,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+07-02-2016,Shaanxi China,33.358676,106.781544,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+07-02-2016,Louisiana USA,31.321903,-92.580115,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+04-02-2016,Northern Territory Australia,-23.432873,134.633088,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+02-02-2016,Haiti,21.040152,-72.113568,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+30-01-2016,Bangladesh,23.63392,88.583476,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+19-01-2016,France (Occitanie),43.824894,2.008092,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+05-01-2016,Bangladesh,22.340144,91.51938,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+03-01-2016,Mexico,22.490774,-102.38996,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+22-11-2015,Haiti,19.32704,-72.428475,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+11-11-2015,Kansai Japan,35.626978,137.090333,Low,Dam release and downstream flooding — reported impact in nearby communities.
+25-10-2015,Nepal,27.835978,84.689818,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+21-10-2015,Chennai India,13.953825,79.781665,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+15-10-2015,Somalia,1.419933,48.036873,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+13-10-2015,Northern Territory Australia,-22.827679,134.145013,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+10-10-2015,Bangladesh,23.17548,91.134062,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+10-10-2015,Peru,-10.771191,-73.672643,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+26-09-2015,Louisiana USA,30.956785,-89.303923,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+23-09-2015,Kerala India,9.633963,74.007945,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+03-09-2015,France (Occitanie),42.634927,5.457163,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+07-08-2015,Emilia-Romagna Italy,43.90505,13.921613,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+23-07-2015,Western Germany,51.869457,7.540792,Low,Flash floods following extreme storms — reported impact in nearby communities.
+04-07-2015,Kansai Japan,37.005959,132.382102,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+26-06-2015,Shaanxi China,34.380928,109.125453,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+04-06-2015,France (Occitanie),43.879927,3.361912,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+02-06-2015,Mexico,24.10093,-102.606262,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+31-05-2015,Assam India,26.819154,95.986243,Low,Dam release and downstream flooding — reported impact in nearby communities.
+28-05-2015,Shaanxi China,34.646898,109.815879,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+22-05-2015,Assam India,27.869905,93.492007,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+19-05-2015,Peru,-8.913309,-73.774425,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+17-04-2015,Sichuan China,29.015671,104.975515,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+05-04-2015,Kerala India,11.417394,76.696399,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+30-03-2015,Canada (British Columbia),54.052833,-129.52427,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+12-03-2015,Nepal,28.733396,83.501068,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+09-03-2015,Haiti,19.661075,-70.553457,Low,Flash floods following extreme storms — reported impact in nearby communities.
+06-03-2015,Kansai Japan,35.120918,135.494532,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+22-02-2015,Nepal,30.192587,85.085264,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+14-02-2015,Nepal,27.403508,80.893915,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+08-02-2015,Somalia,2.31395,46.652646,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+05-02-2015,Kerala India,9.087169,76.871371,High,Dam release and downstream flooding — reported impact in nearby communities.
+15-01-2015,Colombia,5.991404,-75.153419,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+06-01-2015,Sichuan China,31.028188,107.314004,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+04-01-2015,Mexico,23.906079,-104.467923,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+17-12-2014,Assam India,26.825667,91.614264,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+09-12-2014,Western Germany,50.288482,4.790008,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+08-12-2014,UK (Yorkshire),55.013098,-1.336525,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+30-11-2014,Thailand,16.690482,101.753411,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+21-11-2014,UK (Yorkshire),54.445484,1.695782,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+15-11-2014,France (Occitanie),45.781743,3.612871,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+15-11-2014,Thailand,15.341383,101.872046,Low,Dam release and downstream flooding — reported impact in nearby communities.
+05-11-2014,Pakistan,31.571931,68.430426,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+27-10-2014,UK (Yorkshire),53.457285,-2.752516,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+23-10-2014,Ecuador,-2.561567,-77.858712,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+08-09-2014,Colombia,6.298443,-73.642814,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+28-08-2014,Haiti,18.932884,-72.750502,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+02-08-2014,Haiti,21.16776,-72.218572,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+31-07-2014,UK (Yorkshire),54.122719,-2.789946,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+27-07-2014,Assam India,24.359126,90.980635,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+21-07-2014,Mexico,24.094472,-103.569373,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+20-07-2014,Nepal,27.114471,86.756191,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+07-07-2014,Mekong Delta Vietnam,11.011765,105.282753,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+01-07-2014,Philippines,15.439785,121.62991,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+25-06-2014,Mumbai India,19.870265,70.996266,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+16-06-2014,Mumbai India,19.93366,72.637792,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+15-06-2014,Chennai India,11.882404,79.768948,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+05-06-2014,Haiti,19.302509,-70.872347,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+24-05-2014,Thailand,15.815106,101.420831,High,Dam release and downstream flooding — reported impact in nearby communities.
+20-05-2014,Thailand,15.490872,100.687129,High,Flash floods following extreme storms — reported impact in nearby communities.
+13-05-2014,Thailand,16.258579,104.731999,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+08-05-2014,Kansai Japan,35.277994,134.470645,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+03-05-2014,Libya,32.442725,20.75183,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+28-04-2014,UK (Yorkshire),55.875261,-2.582882,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+10-04-2014,Somalia,1.396257,44.587512,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+26-03-2014,Haiti,18.154356,-72.111289,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+24-02-2014,Mexico,23.518852,-103.004456,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+10-02-2014,Pakistan,30.205115,68.665258,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+03-02-2014,Mekong Delta Vietnam,10.087013,106.172888,High,Dam release and downstream flooding — reported impact in nearby communities.
+03-02-2014,Kerala India,9.419975,76.748381,High,Dam release and downstream flooding — reported impact in nearby communities.
+01-02-2014,Sichuan China,31.522608,106.63242,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+25-01-2014,Somalia,2.860417,43.471904,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+21-01-2014,Sri Lanka,6.454734,78.130587,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+20-01-2014,Shaanxi China,33.620736,107.701212,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+16-01-2014,UK (Yorkshire),54.05603,-0.075064,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+25-12-2013,Peru,-9.892053,-75.506693,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+08-12-2013,Thailand,16.383908,101.261873,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+03-12-2013,Ecuador,0.290956,-76.634702,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+28-11-2013,Canada (British Columbia),53.755445,-125.729922,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+15-11-2013,Libya,32.228104,19.045123,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+11-11-2013,Haiti,20.206621,-70.962141,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+08-11-2013,Venice Italy,46.696556,10.973589,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+28-10-2013,Sichuan China,30.796214,106.112711,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+17-10-2013,UK (Yorkshire),53.264672,-1.6849,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+12-09-2013,Kansai Japan,33.157186,137.099515,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+19-08-2013,Louisiana USA,31.619021,-90.29775,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+05-08-2013,Northern Territory Australia,-24.295661,135.931657,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+01-08-2013,Philippines,13.740173,120.899384,High,Flash floods following extreme storms — reported impact in nearby communities.
+01-08-2013,Philippines,12.844712,124.430201,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+23-07-2013,Pakistan,31.325724,68.479745,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+22-07-2013,Canada (British Columbia),53.282407,-127.081649,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+20-07-2013,UK (Yorkshire),53.88659,-1.782616,High,Dam release and downstream flooding — reported impact in nearby communities.
+20-07-2013,Bangladesh,24.398223,90.990228,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+18-07-2013,Northern Territory Australia,-25.089572,131.401902,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+05-07-2013,Western Germany,51.185865,7.401685,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+24-06-2013,Emilia-Romagna Italy,45.256057,12.384858,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+23-06-2013,Emilia-Romagna Italy,43.556482,13.44176,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+21-06-2013,Nepal,28.440472,83.146599,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+16-06-2013,Emilia-Romagna Italy,44.493072,10.978473,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+03-06-2013,Nepal,28.032459,82.444495,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+28-05-2013,Mekong Delta Vietnam,9.242216,104.838729,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+01-04-2013,Libya,33.57117,19.752714,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+24-03-2013,Sri Lanka,7.887029,80.735612,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+18-03-2013,Libya,31.626161,20.045022,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+13-03-2013,Libya,32.12451,20.813697,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+01-03-2013,Shaanxi China,34.19469,110.405299,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+07-02-2013,Haiti,17.274167,-69.560212,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+02-02-2013,Pakistan,29.938914,69.180685,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+30-01-2013,Western Germany,51.267287,9.657276,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+27-01-2013,Northern Territory Australia,-22.171532,134.631754,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+25-01-2013,Sichuan China,30.351046,103.65128,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+23-01-2013,Mekong Delta Vietnam,9.781036,107.227356,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+25-12-2012,Canada (British Columbia),54.91617,-129.489012,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+18-12-2012,Thailand,16.86801,96.648117,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+25-11-2012,France (Occitanie),41.139155,2.681357,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+19-11-2012,Thailand,16.172635,99.861086,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+16-11-2012,Colombia,5.203308,-72.838468,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+13-11-2012,Somalia,1.214544,46.025323,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+06-11-2012,Sri Lanka,6.810706,81.414261,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+02-11-2012,Colombia,4.860675,-71.184199,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+12-10-2012,Sichuan China,30.126797,106.246577,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+02-10-2012,Louisiana USA,29.271165,-89.931491,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+06-09-2012,Peru,-8.544624,-72.962253,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+17-08-2012,Mumbai India,17.841651,71.989004,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+29-07-2012,Ecuador,-3.001313,-80.886371,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+20-07-2012,Emilia-Romagna Italy,44.909452,11.39677,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+02-07-2012,Philippines,14.726337,120.168873,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+30-06-2012,Northern Territory Australia,-22.745998,134.847087,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+08-06-2012,Assam India,26.255725,94.541287,Low,Flash floods following extreme storms — reported impact in nearby communities.
+23-05-2012,Peru,-9.29876,-74.412632,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+13-05-2012,Emilia-Romagna Italy,44.014712,11.855269,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+21-04-2012,Emilia-Romagna Italy,43.301585,12.787879,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+16-04-2012,Pakistan,30.804117,70.384758,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+06-04-2012,Sri Lanka,6.266654,81.076995,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+05-04-2012,Assam India,25.756718,91.572796,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+02-04-2012,Kansai Japan,34.653665,136.837953,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+20-03-2012,Emilia-Romagna Italy,44.122898,12.561728,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+09-03-2012,Western Germany,51.013517,7.893196,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+28-02-2012,Mekong Delta Vietnam,8.663121,105.432852,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+12-02-2012,Philippines,12.161256,121.453829,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+06-02-2012,Venice Italy,47.598108,11.406928,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+02-02-2012,Thailand,16.236598,99.58268,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+18-01-2012,Canada (British Columbia),52.820968,-128.62825,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+18-01-2012,Western Germany,50.792698,7.571575,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+16-01-2012,Somalia,1.31137,47.17234,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+08-01-2012,Libya,31.430927,21.626557,High,Flash floods following extreme storms — reported impact in nearby communities.
+31-12-2011,Shaanxi China,33.946353,109.536249,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+28-11-2011,Pakistan,29.889936,69.467911,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+26-11-2011,Pakistan,31.198471,69.455077,High,Dam release and downstream flooding — reported impact in nearby communities.
+18-11-2011,Emilia-Romagna Italy,44.543618,9.40544,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+25-10-2011,Assam India,26.561636,91.93232,Low,Flash floods following extreme storms — reported impact in nearby communities.
+23-10-2011,Somalia,3.220025,45.872663,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+15-10-2011,Sichuan China,30.713186,101.413841,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+14-10-2011,Haiti,18.918484,-72.885023,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+08-10-2011,Shaanxi China,34.491385,110.298886,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+05-10-2011,Ecuador,-1.759634,-78.899886,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+25-09-2011,Assam India,27.22257,96.559629,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+17-08-2011,Sichuan China,29.590791,104.759655,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+08-08-2011,Colombia,3.929418,-73.649416,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+03-08-2011,Venice Italy,45.960147,14.614608,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+17-07-2011,Philippines,14.474205,120.503558,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+15-06-2011,Sichuan China,31.102104,106.228853,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+05-06-2011,Kerala India,9.628068,78.033426,High,Dam release and downstream flooding — reported impact in nearby communities.
+13-05-2011,Mekong Delta Vietnam,10.221099,105.839655,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+28-04-2011,Sri Lanka,9.403851,82.599943,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+28-04-2011,Northern Territory Australia,-21.735275,133.922895,High,Dam release and downstream flooding — reported impact in nearby communities.
+16-04-2011,Venice Italy,46.436848,11.180307,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+11-04-2011,Bangladesh,25.889803,89.187553,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+30-03-2011,Chennai India,14.283914,79.658587,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+26-03-2011,Chennai India,11.015258,80.13702,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+20-03-2011,UK (Yorkshire),55.3505,-3.046631,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+19-02-2011,Shaanxi China,34.447722,106.954752,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+18-02-2011,Libya,31.03238,19.853131,High,Dam release and downstream flooding — reported impact in nearby communities.
+07-02-2011,Shaanxi China,33.777851,107.220574,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+07-02-2011,Colombia,3.692917,-75.537621,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+06-02-2011,Thailand,16.049894,103.080503,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+09-01-2011,Chennai India,12.653398,79.232069,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+30-12-2010,Thailand,15.737366,99.530706,High,Dam release and downstream flooding — reported impact in nearby communities.
+24-12-2010,Haiti,18.803264,-75.246905,High,Dam release and downstream flooding — reported impact in nearby communities.
+19-12-2010,Somalia,1.040357,47.028018,High,Dam release and downstream flooding — reported impact in nearby communities.
+16-12-2010,France (Occitanie),44.769396,2.645677,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+10-12-2010,Canada (British Columbia),52.530817,-126.980696,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+07-12-2010,Mekong Delta Vietnam,9.273649,103.636619,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+22-11-2010,Myanmar,22.454956,94.57399,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+22-11-2010,Libya,33.07512,19.846114,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+15-11-2010,Louisiana USA,31.522596,-90.353539,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+07-11-2010,Louisiana USA,29.604981,-93.058695,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+25-10-2010,Venice Italy,46.031455,13.978555,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+20-10-2010,Chennai India,14.088993,79.405362,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+19-10-2010,Sichuan China,30.971523,105.037294,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+04-10-2010,Pakistan,31.554597,69.446378,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+26-09-2010,Mexico,23.702356,-101.273639,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+25-09-2010,Mexico,25.279468,-102.926354,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+25-09-2010,Shaanxi China,36.670116,108.813572,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+13-09-2010,Shaanxi China,35.80881,111.909139,High,Flash floods following extreme storms — reported impact in nearby communities.
+03-09-2010,Mexico,22.622396,-105.035085,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+28-08-2010,Peru,-10.963032,-73.122318,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+14-08-2010,Canada (British Columbia),53.784909,-129.362055,Low,Flash floods following extreme storms — reported impact in nearby communities.
+20-07-2010,Ecuador,-3.068151,-80.164085,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+27-06-2010,Shaanxi China,34.74568,109.400493,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+21-06-2010,Libya,31.135077,21.095777,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+14-06-2010,Assam India,27.307081,92.719428,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+11-06-2010,UK (Yorkshire),53.199361,-1.986641,Low,Dam release and downstream flooding — reported impact in nearby communities.
+11-06-2010,Western Germany,51.101099,8.475982,High,Dam release and downstream flooding — reported impact in nearby communities.
+01-06-2010,Emilia-Romagna Italy,45.035692,10.35544,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+19-05-2010,Emilia-Romagna Italy,44.210353,10.082246,High,Flash floods following extreme storms — reported impact in nearby communities.
+28-04-2010,Haiti,18.599513,-72.659281,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+26-04-2010,Northern Territory Australia,-23.432608,134.352547,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+20-04-2010,Colombia,5.204677,-73.676601,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+26-03-2010,Mekong Delta Vietnam,9.857054,108.337563,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+22-03-2010,Somalia,0.895906,45.881747,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+14-02-2010,Chennai India,13.202996,81.042358,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+12-02-2010,Philippines,14.18404,119.280262,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+09-02-2010,Western Germany,52.572572,7.528529,High,Flash floods following extreme storms — reported impact in nearby communities.
+21-01-2010,Venice Italy,45.764966,12.120285,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+05-01-2010,Western Germany,51.547689,9.184545,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+04-01-2010,Pakistan,30.50168,72.253493,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+05-12-2009,UK (Yorkshire),54.151448,0.056125,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+28-11-2009,Northern Territory Australia,-23.540144,132.328487,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+27-11-2009,Venice Italy,45.545001,12.22161,High,Flash floods following extreme storms — reported impact in nearby communities.
+21-11-2009,Somalia,2.354702,42.752947,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+20-11-2009,Kansai Japan,34.227882,134.484405,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+04-11-2009,Mekong Delta Vietnam,10.842862,106.714443,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+03-11-2009,Thailand,15.161593,98.721928,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+23-10-2009,Assam India,25.134886,92.442163,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+29-09-2009,Haiti,17.790725,-69.848725,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+15-09-2009,Kerala India,7.976104,75.611367,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+08-09-2009,Kerala India,11.693187,75.633176,Low,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+03-09-2009,Mumbai India,20.623505,75.571517,Low,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+02-08-2009,Ecuador,-2.306145,-79.163394,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+07-07-2009,Libya,32.581009,20.402526,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+25-06-2009,Western Germany,48.346079,8.30148,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+19-06-2009,Philippines,14.430852,121.947512,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+15-06-2009,Mumbai India,20.475355,74.264651,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+05-06-2009,Bangladesh,24.204987,91.698633,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+24-04-2009,Venice Italy,45.336351,12.062267,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+17-04-2009,Assam India,25.62349,89.013437,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+12-04-2009,Sichuan China,30.433844,102.230053,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+08-04-2009,Mexico,22.464583,-106.861193,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+30-03-2009,Western Germany,51.863879,10.215785,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+04-03-2009,Peru,-9.056459,-75.243905,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+11-02-2009,Canada (British Columbia),53.921084,-128.177349,Low,Flash floods following extreme storms — reported impact in nearby communities.
+23-01-2009,Kerala India,10.970068,77.143523,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+13-01-2009,Canada (British Columbia),53.51557,-129.128369,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+01-01-2009,France (Occitanie),43.592091,3.293922,Low,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+15-12-2008,Colombia,4.536215,-73.945978,Low,Flash floods following extreme storms — reported impact in nearby communities.
+15-12-2008,Mekong Delta Vietnam,10.576284,105.779633,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+12-12-2008,Somalia,2.415573,44.728192,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+06-12-2008,Peru,-9.962878,-74.404622,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+20-11-2008,Emilia-Romagna Italy,45.812278,14.022372,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+15-11-2008,Ecuador,-0.772776,-80.821509,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+06-11-2008,France (Occitanie),43.489852,4.505999,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+02-11-2008,Ecuador,-2.546504,-77.164003,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+21-10-2008,Mumbai India,18.855036,72.918029,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+08-10-2008,Chennai India,11.660889,82.5227,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+06-10-2008,Thailand,16.542574,103.842323,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+01-10-2008,Emilia-Romagna Italy,44.288407,14.266295,Low,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+15-09-2008,Colombia,4.912656,-71.483044,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+13-09-2008,France (Occitanie),43.190613,3.454023,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+30-08-2008,Ecuador,-2.470162,-80.168035,High,Dam release and downstream flooding — reported impact in nearby communities.
+09-08-2008,Emilia-Romagna Italy,42.174857,12.329681,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+19-07-2008,Myanmar,21.269627,94.332678,Low,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+10-07-2008,Kerala India,12.41933,76.989977,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+17-06-2008,UK (Yorkshire),54.726178,1.315025,Low,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+11-06-2008,Philippines,12.805267,122.705008,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+24-05-2008,Canada (British Columbia),52.984229,-129.627634,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+18-05-2008,Northern Territory Australia,-23.450616,136.23618,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+06-05-2008,Assam India,24.674475,91.862138,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+02-05-2008,UK (Yorkshire),54.059883,-0.376366,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+01-05-2008,Kansai Japan,33.319399,132.762658,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+08-04-2008,Northern Territory Australia,-23.81454,135.726724,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+31-03-2008,Myanmar,23.143869,94.140538,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+05-03-2008,Philippines,12.712582,121.994071,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+04-02-2008,Colombia,4.124466,-74.006165,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+03-02-2008,Assam India,26.793101,92.43568,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+25-01-2008,Mumbai India,18.915867,73.88471,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+16-01-2008,Mexico,22.695165,-102.768931,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+21-12-2007,Emilia-Romagna Italy,44.071462,9.227226,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+17-12-2007,Peru,-9.321257,-74.899922,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+20-11-2007,Kansai Japan,36.305011,135.863301,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+17-11-2007,Bangladesh,21.578145,89.488267,High,Flash floods following extreme storms — reported impact in nearby communities.
+12-11-2007,Colombia,4.53767,-74.609475,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+09-11-2007,France (Occitanie),43.644883,2.72174,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+08-11-2007,Pakistan,29.514887,68.768267,High,Dam release and downstream flooding — reported impact in nearby communities.
+22-10-2007,Ecuador,-2.492986,-76.90475,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+19-10-2007,Mumbai India,16.372768,73.894513,High,Dam release and downstream flooding — reported impact in nearby communities.
+17-10-2007,Venice Italy,43.63766,9.939296,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+28-09-2007,Sri Lanka,8.43289,82.392971,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+27-09-2007,Chennai India,12.530842,84.107999,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+22-09-2007,Somalia,2.424,45.274306,High,Flash floods following extreme storms — reported impact in nearby communities.
+21-07-2007,Haiti,20.255659,-72.993044,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+19-07-2007,Sichuan China,31.10881,102.718798,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+18-07-2007,Bangladesh,22.675813,93.181139,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+15-07-2007,Somalia,2.170105,46.145428,Low,Dam release and downstream flooding — reported impact in nearby communities.
+01-07-2007,Pakistan,29.302557,69.70397,Low,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+26-06-2007,Haiti,17.776201,-72.312462,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+05-06-2007,Colombia,4.053612,-72.183279,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+28-05-2007,Nepal,29.142194,85.039555,Low,Flash floods following extreme storms — reported impact in nearby communities.
+27-05-2007,Philippines,12.317532,121.460167,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+12-05-2007,Assam India,26.523079,92.52147,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+16-04-2007,Northern Territory Australia,-22.551234,131.260429,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+07-04-2007,Pakistan,30.371697,67.607553,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+31-03-2007,Venice Italy,42.821055,13.548354,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+11-03-2007,Libya,30.977278,20.640315,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+28-02-2007,Western Germany,51.976007,6.931967,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+23-02-2007,Kerala India,10.138003,76.580047,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+21-02-2007,Mumbai India,17.698331,71.470962,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+20-02-2007,Sichuan China,31.735464,104.08185,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+17-02-2007,Mexico,23.439592,-100.852145,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+24-01-2007,Emilia-Romagna Italy,44.908214,12.399824,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+24-01-2007,UK (Yorkshire),54.442723,0.444629,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+21-12-2006,Shaanxi China,33.213018,107.298296,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+10-12-2006,Kerala India,8.877872,77.469498,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+06-12-2006,Kansai Japan,33.917511,133.316018,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+01-12-2006,Louisiana USA,29.98268,-92.38395,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+27-11-2006,Philippines,12.751782,120.340689,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+18-11-2006,Chennai India,13.326501,79.424582,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+14-11-2006,Mekong Delta Vietnam,9.276035,105.348987,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+11-11-2006,Peru,-10.638084,-77.126396,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+09-11-2006,Pakistan,30.868618,69.622354,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+08-11-2006,Peru,-7.056967,-77.943332,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+05-11-2006,Venice Italy,42.78983,13.95276,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+28-10-2006,Myanmar,21.323806,94.659014,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+16-10-2006,Philippines,12.587889,119.429214,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+07-10-2006,Sri Lanka,8.050801,78.768783,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+29-09-2006,UK (Yorkshire),53.760445,-0.526849,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+24-09-2006,Canada (British Columbia),53.262083,-127.345861,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+17-09-2006,Kansai Japan,34.94504,135.88454,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+10-09-2006,Emilia-Romagna Italy,43.749935,12.984275,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+07-09-2006,Western Germany,49.716741,3.841152,Low,Flash floods following extreme storms — reported impact in nearby communities.
+05-09-2006,Sri Lanka,6.663405,81.671693,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+01-09-2006,France (Occitanie),42.999031,3.821145,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+23-08-2006,Haiti,17.747606,-74.579671,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+19-08-2006,Kerala India,7.569712,75.970994,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+14-08-2006,Northern Territory Australia,-24.689605,133.68132,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+12-08-2006,Ecuador,-3.8105,-77.061535,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+18-07-2006,Nepal,28.476729,83.975666,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+18-07-2006,Mekong Delta Vietnam,8.983089,106.574979,High,Dam release and downstream flooding — reported impact in nearby communities.
+19-06-2006,Nepal,27.818129,85.257087,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+05-06-2006,UK (Yorkshire),54.724027,-1.826453,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+29-05-2006,Philippines,13.00237,124.211018,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+28-05-2006,Assam India,24.751986,89.601791,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+18-05-2006,Mekong Delta Vietnam,9.803521,106.321048,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+13-05-2006,Libya,31.577277,21.640214,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+10-05-2006,Shaanxi China,35.556453,109.909772,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+06-05-2006,Ecuador,-1.802882,-78.138766,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+05-05-2006,Venice Italy,47.502304,14.128049,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+25-04-2006,Libya,32.732782,23.472739,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+12-04-2006,Pakistan,30.403481,69.331422,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+09-04-2006,Northern Territory Australia,-24.126358,135.592669,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+25-03-2006,Kerala India,10.010264,78.560176,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+24-03-2006,Pakistan,31.575714,68.359759,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+23-03-2006,Peru,-9.742223,-74.065802,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+17-03-2006,Libya,33.686017,18.209977,High,Dam release and downstream flooding — reported impact in nearby communities.
+12-03-2006,Peru,-9.449042,-75.309725,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+08-03-2006,Chennai India,14.106763,81.15949,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+26-02-2006,Thailand,16.040865,100.716525,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+14-02-2006,Nepal,30.082042,85.44646,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+08-02-2006,Kerala India,10.899942,73.975534,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+31-01-2006,Myanmar,22.509757,91.544417,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+27-01-2006,Pakistan,28.972695,71.969465,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+24-12-2005,Sichuan China,32.204711,101.921288,Low,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+14-12-2005,Peru,-9.290154,-75.320711,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+10-12-2005,Mumbai India,18.101318,74.058327,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+07-12-2005,Mekong Delta Vietnam,9.866933,104.652646,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+05-12-2005,Peru,-9.169206,-76.107204,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+01-12-2005,Kerala India,9.084178,76.49252,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+23-11-2005,Nepal,28.413318,86.638656,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+12-11-2005,Myanmar,23.652164,96.251866,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+09-11-2005,Haiti,18.887958,-74.342273,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+01-11-2005,Mexico,22.226988,-103.719525,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+17-10-2005,Pakistan,29.83554,68.177643,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+15-10-2005,Thailand,16.6558,101.630686,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+24-09-2005,Colombia,4.136404,-74.761058,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+30-08-2005,Somalia,2.486914,44.565119,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+29-08-2005,Libya,31.831111,18.406911,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+15-08-2005,Libya,31.653817,17.232389,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+12-08-2005,Mumbai India,19.284383,69.815098,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+28-07-2005,Assam India,25.465408,91.684621,Low,Flash floods following extreme storms — reported impact in nearby communities.
+27-07-2005,Colombia,3.603924,-74.368867,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+24-06-2005,Kerala India,10.209395,77.48865,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+19-06-2005,Bangladesh,24.808183,88.840141,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+06-06-2005,UK (Yorkshire),52.974503,-2.031179,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+19-05-2005,Northern Territory Australia,-23.681566,134.391373,High,Dam release and downstream flooding — reported impact in nearby communities.
+18-05-2005,Mumbai India,19.146052,74.620517,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+12-05-2005,Northern Territory Australia,-24.539722,132.970911,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+30-04-2005,Mumbai India,20.55254,74.947837,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+20-04-2005,Somalia,3.431173,46.164064,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+18-04-2005,Nepal,28.155968,83.573763,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+07-04-2005,Peru,-8.431071,-74.593413,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+07-04-2005,Sichuan China,30.895468,103.845096,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+17-03-2005,Mekong Delta Vietnam,10.899606,107.803457,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+07-03-2005,UK (Yorkshire),53.711637,-2.104117,High,Dam release and downstream flooding — reported impact in nearby communities.
+06-03-2005,Mumbai India,18.186486,71.653985,Low,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+25-02-2005,Venice Italy,46.15176,12.981895,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+19-02-2005,Pakistan,30.99942,70.287618,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+14-02-2005,Louisiana USA,30.757816,-93.401459,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+14-02-2005,Myanmar,20.390544,97.848876,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+11-02-2005,Sri Lanka,6.949867,78.744273,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+05-02-2005,Sri Lanka,6.583139,78.829182,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+01-02-2005,Western Germany,53.978881,8.579362,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+19-01-2005,Mexico,22.538225,-104.712876,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+06-01-2005,Assam India,26.291761,89.918647,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+29-12-2004,Philippines,13.376414,121.566604,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+22-12-2004,Thailand,16.038655,101.655411,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+01-12-2004,UK (Yorkshire),52.960782,-2.012919,High,Flash floods following extreme storms — reported impact in nearby communities.
+30-11-2004,Northern Territory Australia,-23.746921,134.585561,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+25-11-2004,Mexico,23.599788,-104.305817,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+08-11-2004,UK (Yorkshire),53.559675,-2.111331,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+06-11-2004,Bangladesh,23.687753,89.054118,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+03-11-2004,Ecuador,-2.062135,-77.13909,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+27-10-2004,UK (Yorkshire),54.024452,0.021547,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+09-10-2004,Sri Lanka,8.234496,83.078855,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+05-10-2004,Haiti,17.942982,-73.033229,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+11-09-2004,Mumbai India,17.985034,72.261479,High,Flash floods following extreme storms — reported impact in nearby communities.
+09-09-2004,Northern Territory Australia,-24.230258,132.680691,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+08-09-2004,Mekong Delta Vietnam,10.783342,106.341738,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+24-08-2004,Bangladesh,23.454612,89.269396,Low,Flash floods following extreme storms — reported impact in nearby communities.
+12-08-2004,Mumbai India,19.47973,72.841407,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+11-08-2004,Ecuador,-1.658019,-77.605424,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+11-08-2004,Western Germany,49.950601,10.848573,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+13-07-2004,Louisiana USA,30.885712,-91.934026,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+12-07-2004,Thailand,16.178051,100.405027,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+04-07-2004,France (Occitanie),43.43032,8.666361,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+04-07-2004,Thailand,16.129723,99.636025,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+02-07-2004,UK (Yorkshire),54.070457,-1.624457,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+29-06-2004,Louisiana USA,32.070086,-91.815325,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+19-06-2004,Somalia,0.431768,47.065309,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+13-06-2004,Chennai India,13.415014,79.14797,Low,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+12-06-2004,Kansai Japan,34.889385,134.966459,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+03-06-2004,Sichuan China,29.468933,100.837164,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+31-05-2004,Ecuador,-2.023561,-77.731079,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+28-05-2004,UK (Yorkshire),51.664326,3.157523,Low,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+19-05-2004,Somalia,3.243472,45.080406,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+18-05-2004,Mekong Delta Vietnam,9.820977,104.494219,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+10-05-2004,Philippines,10.841575,120.261871,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+07-05-2004,Shaanxi China,32.347929,108.860229,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+03-05-2004,Thailand,14.299124,99.302349,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+01-05-2004,Kansai Japan,34.348612,134.625839,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+11-04-2004,Louisiana USA,31.933854,-94.189647,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+11-04-2004,Myanmar,21.22805,99.333654,High,Flash floods following extreme storms — reported impact in nearby communities.
+09-04-2004,France (Occitanie),42.612415,4.329388,High,Dam release and downstream flooding — reported impact in nearby communities.
+31-03-2004,Western Germany,51.411203,8.960488,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+10-03-2004,Northern Territory Australia,-24.960884,135.246793,Low,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+10-03-2004,Haiti,18.347223,-73.330376,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+05-03-2004,Haiti,18.286366,-71.137909,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+05-03-2004,Philippines,14.372389,121.367315,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+03-02-2004,Kansai Japan,33.619161,130.800974,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+03-02-2004,Libya,33.346085,16.956615,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+03-02-2004,Emilia-Romagna Italy,45.175198,12.801641,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+20-01-2004,Western Germany,49.272458,6.972127,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+19-01-2004,Venice Italy,44.981439,11.040733,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+15-01-2004,Assam India,25.942623,90.397124,Low,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+05-01-2004,Canada (British Columbia),53.662562,-127.154456,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+03-01-2004,Myanmar,21.733304,98.017315,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+02-01-2004,Chennai India,13.603822,81.238523,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+24-12-2003,Philippines,12.233473,124.436966,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+04-11-2003,Libya,33.577894,19.289295,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+03-11-2003,Kerala India,10.790144,75.798169,High,Dam release and downstream flooding — reported impact in nearby communities.
+23-10-2003,Sichuan China,31.31111,104.989551,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+23-10-2003,Chennai India,11.000771,82.815385,Low,Flash floods following extreme storms — reported impact in nearby communities.
+21-10-2003,Ecuador,-0.065746,-77.575927,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+20-10-2003,Canada (British Columbia),53.162452,-127.370773,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+08-10-2003,Ecuador,-0.191235,-77.070209,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+01-10-2003,Mumbai India,19.655633,73.366394,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+12-09-2003,Mumbai India,19.252442,72.327158,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+03-09-2003,UK (Yorkshire),54.718317,-3.904851,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+16-08-2003,Libya,33.948956,21.756548,High,Flash floods following extreme storms — reported impact in nearby communities.
+13-08-2003,Bangladesh,23.086597,89.946295,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+07-08-2003,Myanmar,21.197793,97.297387,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+04-08-2003,Shaanxi China,35.340332,107.360227,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+19-07-2003,Philippines,13.049061,119.653428,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+08-07-2003,Mexico,23.75408,-104.012403,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+18-06-2003,Emilia-Romagna Italy,45.646978,12.344832,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+14-06-2003,Canada (British Columbia),53.180456,-127.059894,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+13-05-2003,Canada (British Columbia),53.802134,-130.050549,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+28-04-2003,UK (Yorkshire),53.717849,0.126844,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+15-04-2003,Shaanxi China,33.075397,109.88483,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+08-04-2003,Chennai India,14.349611,79.209196,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+15-03-2003,Peru,-8.367455,-76.846465,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+03-02-2003,Myanmar,20.915869,94.938383,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+26-01-2003,Chennai India,12.319441,77.563377,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+15-01-2003,Peru,-8.189418,-76.02113,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+11-01-2003,Assam India,26.224219,95.018331,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+05-01-2003,Northern Territory Australia,-24.280523,134.752868,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+02-01-2003,Northern Territory Australia,-22.59904,136.807521,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+15-11-2002,Western Germany,51.19612,7.291583,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+03-11-2002,UK (Yorkshire),53.866991,-0.775191,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+01-11-2002,Western Germany,50.630125,5.431854,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+22-10-2002,Mumbai India,19.798381,72.31845,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+17-10-2002,Kansai Japan,34.972292,134.248951,High,Dam release and downstream flooding — reported impact in nearby communities.
+08-10-2002,Shaanxi China,33.284213,108.56305,Low,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+25-09-2002,Mumbai India,18.426722,71.04179,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+17-09-2002,Somalia,1.967259,45.996758,Low,Dam release and downstream flooding — reported impact in nearby communities.
+14-09-2002,Haiti,18.64326,-72.246512,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+04-09-2002,Libya,31.830593,21.143013,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+29-08-2002,Canada (British Columbia),54.49278,-125.8072,Low,Flash floods following extreme storms — reported impact in nearby communities.
+22-08-2002,Libya,30.684629,19.435732,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+16-08-2002,Kerala India,9.316747,75.916908,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+07-08-2002,Western Germany,50.680328,7.435669,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+28-07-2002,Mumbai India,20.641524,72.779075,High,Dam release and downstream flooding — reported impact in nearby communities.
+20-07-2002,Pakistan,28.767817,69.622051,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+09-07-2002,Libya,31.831469,18.729912,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+08-07-2002,Mekong Delta Vietnam,10.190574,105.774569,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+05-07-2002,Colombia,5.309367,-74.040248,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+30-06-2002,Sichuan China,28.979306,104.727212,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+12-06-2002,Emilia-Romagna Italy,43.390396,12.686092,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+27-05-2002,Pakistan,28.691862,68.136295,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+22-05-2002,Kansai Japan,34.05356,134.386505,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+22-04-2002,UK (Yorkshire),54.521672,-3.242678,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+09-04-2002,Shaanxi China,34.789535,108.03945,High,Dam release and downstream flooding — reported impact in nearby communities.
+08-04-2002,Somalia,1.563714,47.67918,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+08-04-2002,Assam India,25.409526,93.607203,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+03-04-2002,Pakistan,30.157619,70.993265,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+02-04-2002,Sichuan China,30.319732,102.194825,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+26-03-2002,Pakistan,30.586317,69.20003,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+14-03-2002,UK (Yorkshire),54.194452,-2.180577,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+05-03-2002,Colombia,5.961108,-73.460585,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+23-01-2002,Western Germany,49.72096,8.681519,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+12-01-2002,Libya,32.222298,20.881647,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+12-01-2002,Emilia-Romagna Italy,44.956989,10.666752,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+26-12-2001,Pakistan,30.774988,68.368065,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+25-12-2001,Western Germany,50.811718,10.769564,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+12-12-2001,Mumbai India,20.541649,72.539036,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+30-11-2001,Emilia-Romagna Italy,46.274083,10.670923,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+20-11-2001,Bangladesh,23.076231,93.271047,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+03-11-2001,Mexico,24.047431,-103.398387,High,Dam release and downstream flooding — reported impact in nearby communities.
+03-11-2001,Haiti,17.867263,-72.678678,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+22-10-2001,Colombia,3.643547,-73.939747,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+15-10-2001,Libya,32.484065,20.017658,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+13-10-2001,Western Germany,51.421942,7.345477,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+09-10-2001,Chennai India,14.17401,81.184407,Low,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+29-09-2001,Somalia,2.021346,47.077294,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+26-09-2001,Myanmar,22.431235,96.725679,Low,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+03-09-2001,Haiti,18.915757,-71.674519,Low,Flash floods following extreme storms — reported impact in nearby communities.
+13-08-2001,Haiti,19.067638,-72.416643,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+08-07-2001,Sri Lanka,7.848073,81.998449,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+01-07-2001,Mexico,24.667046,-100.862742,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+23-06-2001,Ecuador,-1.289737,-77.044667,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+19-06-2001,Bangladesh,25.21345,91.346218,High,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+23-05-2001,Thailand,15.966996,101.885236,Low,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+20-05-2001,Louisiana USA,30.901619,-92.144921,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+15-05-2001,Ecuador,-2.457917,-76.88981,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+11-05-2001,Chennai India,13.14233,79.300295,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+03-05-2001,Somalia,3.626113,46.469352,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+25-04-2001,Western Germany,51.113197,5.772046,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+19-04-2001,France (Occitanie),44.249392,1.38442,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+09-04-2001,Somalia,1.475721,46.177074,High,Flash floods in mountainous catchments — reported impact in nearby communities.
+06-04-2001,Western Germany,50.262613,8.683525,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+28-03-2001,Northern Territory Australia,-24.472825,133.514772,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+25-03-2001,Bangladesh,24.50041,91.531437,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+15-03-2001,Bangladesh,24.619229,89.397784,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+12-03-2001,Bangladesh,23.776822,88.475512,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+10-03-2001,Sri Lanka,7.403626,81.58564,Medium,Riverbank collapse and inundation of settlements — reported impact in nearby communities.
+26-02-2001,Shaanxi China,34.108692,108.259678,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+04-02-2001,Emilia-Romagna Italy,42.68063,11.323649,High,Monsoon-related widespread flooding — reported impact in nearby communities.
+22-01-2001,Western Germany,51.470891,8.603348,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+25-12-2000,Somalia,1.822044,44.343196,High,Flash floods following extreme storms — reported impact in nearby communities.
+29-11-2000,Colombia,3.752679,-71.158719,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+29-11-2000,Haiti,18.104961,-70.741159,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+16-11-2000,Myanmar,21.708078,95.215499,Low,Flash floods in mountainous catchments — reported impact in nearby communities.
+15-11-2000,Mexico,23.325291,-103.681035,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+13-11-2000,Mekong Delta Vietnam,10.711953,105.3046,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+06-11-2000,Kerala India,9.778365,79.515122,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+03-11-2000,Kansai Japan,35.720456,135.891896,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+07-10-2000,Bangladesh,23.764474,87.4368,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+23-09-2000,Nepal,28.978828,83.585062,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+29-08-2000,Colombia,5.157757,-71.011617,Low,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+12-08-2000,Haiti,19.170957,-71.840525,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+16-07-2000,Sri Lanka,7.22955,82.316741,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+14-07-2000,Shaanxi China,34.129251,110.329312,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+07-07-2000,UK (Yorkshire),52.693665,-3.34341,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+05-07-2000,Sichuan China,29.378663,105.445231,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+04-07-2000,Peru,-7.893005,-75.049502,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+21-06-2000,Shaanxi China,35.504983,108.931907,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+07-06-2000,Haiti,18.370937,-71.236399,High,Flash floods following extreme storms — reported impact in nearby communities.
+10-05-2000,Sichuan China,30.92293,104.800281,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+05-05-2000,Somalia,0.698715,46.433096,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+20-04-2000,Bangladesh,23.37732,90.02375,Low,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
+16-04-2000,Mexico,23.876462,-105.42272,Medium,Flash floods following extreme storms — reported impact in nearby communities.
+31-03-2000,Emilia-Romagna Italy,43.27307,11.960712,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+27-03-2000,Sichuan China,30.775223,101.792884,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
+26-03-2000,Libya,32.777926,19.334833,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
+13-03-2000,Myanmar,21.028708,95.298813,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+26-02-2000,Colombia,3.735553,-71.079576,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
+19-02-2000,Mumbai India,19.201225,72.233592,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+13-02-2000,Pakistan,32.436048,71.978111,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
+12-02-2000,Mumbai India,19.153368,71.585774,High,Coastal flooding and storm surge impact — reported impact in nearby communities.
+10-02-2000,Northern Territory Australia,-26.12424,135.196068,Low,River overflow and levee breaches after intense rains — reported impact in nearby communities.
+05-02-2000,Myanmar,20.365537,96.057844,Low,Coastal flooding and storm surge impact — reported impact in nearby communities.
+26-01-2000,Kansai Japan,34.658173,137.874837,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
+24-01-2000,Northern Territory Australia,-25.87267,135.141133,Medium,Dam release and downstream flooding — reported impact in nearby communities.
+10-01-2000,Canada (British Columbia),53.813747,-128.096111,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
+2025-12-14,Navi Mumbai,19.0166,72.9986,Low,Earthquake was strong

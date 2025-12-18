@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌎 Earthquake Monitoring Dashboard</title>
+
+<!-- Bootstrap & FontAwesome -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #0f172a, #1e293b, #0f2027);
+    color: #fff;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+h2 { text-align: center; margin-bottom: 20px; font-weight: 700; font-size: 2rem; }
+.btn-back { display: inline-block; margin-bottom: 25px; background-color: #0d6efd; color: #fff; font-weight: 600; border-radius: 8px; padding: 8px 15px; text-decoration: none; text-align: center; transition: 0.3s; }
+.btn-back:hover { background-color: #0b5ed7; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+#map { width: 100%; max-width: 1200px; height: 500px; border-radius: 15px; margin-bottom: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.table-wrapper { width: 100%; max-width: 1200px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); margin-bottom: 30px; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; color: #fff; }
+thead th { background: rgba(220,53,69,0.8); color: #fff; text-align: center; font-weight: 600; padding: 10px; border-radius: 5px; }
+tbody tr { background: rgba(255,255,255,0.05); transition: transform 0.3s, background 0.3s; }
+tbody tr:hover { background: rgba(220,53,69,0.2); transform: scale(1.02); }
+.btn-alert { font-size: 0.85rem; padding: 5px 10px; font-weight: 600; border-radius: 8px; transition: 0.3s; }
+.btn-alert:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+.chart-container { width: 100%; max-width: 1200px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); margin-bottom: 50px; }
+</style>
+</head>
+<body>
+
+<h2>🌎 Earthquake Monitoring Dashboard</h2>
+<a href="/admin/dashboard" class="btn-back"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
+
+<div id="map"></div>
+
+<div class="table-wrapper">
+<h4 class="text-center">Live Earthquake Data & Users</h4>
+<table class="table table-bordered table-striped table-hover text-center">
+<thead>
+<tr>
+  <th>Type</th>
+  <th>Latitude</th>
+  <th>Longitude</th>
+  <th>Magnitude</th>
+  <th>Depth (km)</th>
+  <th>Time</th>
+  <th>Status</th>
+  <th>Alert</th>
+</tr>
+</thead>
+<tbody id="quakeTable"></tbody>
+</table>
+</div>
+
+<div class="chart-container">
+<h4 class="text-center">Earthquake Risk Distribution</h4>
+<canvas id="quakeChart" height="120"></canvas>
+</div>
+
+<script>
+// Leaflet map setup
+const map = L.map("map").setView([20,0],2);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution:'&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+let markers = {};
+let userMarker = null;
+
+// Send alert
+async function sendAlert(lat, lon, btn){
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fa fa-spinner fa-spin"></i> Sending...`;
+    try{
+        const res = await fetch("/api/send_alert", {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body: JSON.stringify({lat,lon})
+        });
+        const result = await res.json();
+        alert(result.message);
+    } catch(e){ alert("Failed to send alert"); }
+    finally{
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa fa-bell"></i> Alert`;
+    }
+}
+
+// Load earthquakes & users
+async function loadEarthquakesAndUsers(){
+    try{
+        const table = document.getElementById("quakeTable");
+        table.innerHTML = "";
+
+        for(const key in markers) map.removeLayer(markers[key]);
+        markers = {};
+        if(userMarker) map.removeLayer(userMarker);
+
+        const res = await fetch("/api/get_users_earthquakes");
+        const data = await res.json();
+        const users = data.users || [];
+        const earthquakes = data.earthquakes || [];
+
+        let riskCounts = { "High Risk":0, "Moderate Risk":0, "Low Risk":0, "Minor":0 };
+
+        // USERS
+        for(const u of users){
+            if(u.latitude && u.longitude){
+                const marker = L.marker([u.latitude,u.longitude], {
+                    icon:L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/64/64113.png', iconSize:[25,25]})
+                }).addTo(map).bindPopup(`<b>${u.name}</b>`);
+                table.innerHTML += `<tr class="table-primary">
+                    <td>User: ${u.name}</td>
+                    <td>${u.latitude}</td>
+                    <td>${u.longitude}</td>
+                    <td>-</td><td>-</td><td>-</td><td>User Location</td><td>-</td>
+                </tr>`;
+                if(!userMarker) userMarker = marker;
+            }
+        }
+
+        // EARTHQUAKES
+        for(const eq of earthquakes){
+            const lat = eq.eq_lat || 0;
+            const lon = eq.eq_lon || 0;
+            const mag = eq.magnitude || 0;
+            const depth = eq.depth || 0;
+            const time = eq.time ? new Date(eq.time).toLocaleString() : "N/A";
+            const status = mag>=6?"High Risk":mag>=4?"Moderate Risk":mag>0?"Low Risk":"Minor";
+            const color = mag>=6?"red":mag>=4?"orange":mag>0?"green":"blue";
+            const radius = mag>0?mag*2+2:4;
+            riskCounts[status]++;
+
+            const markerKey = `${lat}_${lon}`;
+            if(!markers[markerKey]){
+                const marker = L.circleMarker([lat,lon], {color, fillColor: color, fillOpacity:0.8, radius})
+                    .addTo(map)
+                    .bindPopup(`<b>Magnitude:</b> ${mag}<br><b>Depth:</b> ${depth} km<br><b>Status:</b> ${status}`);
+                markers[markerKey] = marker;
+            }
+
+            table.innerHTML += `<tr>
+                <td>Earthquake</td>
+                <td>${lat}</td>
+                <td>${lon}</td>
+                <td>${mag}</td>
+                <td>${depth}</td>
+                <td>${time}</td>
+                <td>${status}</td>
+                <td><button class="btn btn-warning btn-alert" onclick="sendAlert(${lat},${lon},this)"><i class="fa fa-bell"></i> Alert</button></td>
+            </tr>`;
+        }
+
+        // Fit map
+        const group = new L.featureGroup([...Object.values(markers), ...(userMarker?[userMarker]:[])]);
+        if(group.getLayers().length>0) map.fitBounds(group.getBounds().pad(0.2));
+
+        // Chart
+        const ctx = document.getElementById("quakeChart").getContext("2d");
+        new Chart(ctx,{
+            type:'bar',
+            data:{
+                labels:["High Risk","Moderate Risk","Low Risk","Minor"],
+                datasets:[{
+                    label:'Number of Earthquakes',
+                    data:[riskCounts["High Risk"], riskCounts["Moderate Risk"], riskCounts["Low Risk"], riskCounts["Minor"]],
+                    backgroundColor:['rgba(255,0,0,0.8)','rgba(255,165,0,0.8)','rgba(0,123,255,0.8)','rgba(128,128,128,0.8)'],
+                    borderRadius:10
+                }]
+            },
+            options:{
+                responsive:true,
+                plugins:{legend:{display:false},title:{display:true,text:'Earthquakes by Risk',color:'#fff',font:{size:18}}},
+                scales:{y:{beginAtZero:true,ticks:{color:'#fff'},grid:{color:'rgba(255,255,255,0.15)'}},
+                        x:{ticks:{color:'#fff'},grid:{display:false}}}
+            }
+        });
+
+    }catch(err){ console.error(err); }
+}
+
+loadEarthquakesAndUsers();
+setInterval(loadEarthquakesAndUsers, 60000);
+</script>
+
+</body>
+</html>

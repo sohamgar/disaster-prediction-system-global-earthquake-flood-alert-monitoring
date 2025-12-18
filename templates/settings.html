@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Profile & Settings</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-main: linear-gradient(135deg, #eef2ff, #f8fafc);
+      --card-bg: rgba(255,255,255,0.85);
+      --text-main: #0f172a;
+      --muted: #64748b;
+      --primary-gradient: linear-gradient(135deg,#6366f1,#4338ca);
+      --danger-color: #ef4444;
+      --input-border: rgba(0,0,0,0.15);
+    }
+
+    [data-theme="dark"] {
+      --bg-main: radial-gradient(circle at top,#1a2b4f,#060b18 80%);
+      --card-bg: rgba(255,255,255,0.08);
+      --text-main: #ffffff;
+      --muted: #cbd5f5;
+      --input-border: rgba(255,255,255,0.25);
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg-main);
+      font-family: "Poppins", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      transition: background 0.3s ease;
+    }
+
+    .glass-card {
+      width: 100%;
+      max-width: 720px;
+      padding: 40px 35px;
+      border-radius: 25px;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      color: var(--text-main);
+      position: relative;
+    }
+
+    .theme-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+
+    .avatar-wrapper {
+      position: relative;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: var(--primary-gradient);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 36px;
+      font-weight: 600;
+      overflow: hidden;
+      border: 3px solid rgba(255,255,255,0.4);
+      transition: transform 0.2s ease;
+    }
+
+    .avatar:hover { transform: scale(1.05); }
+
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .edit-icon {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      background: var(--primary-gradient);
+      color: #fff;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      border: 2px solid #fff;
+    }
+
+    .remove-avatar-btn {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #fff;
+      background: var(--danger-color);
+      border: none;
+      padding: 4px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+    }
+    .remove-avatar-btn:hover { opacity: 0.9; }
+
+    .profile-info { display: flex; flex-direction: column; justify-content: center; }
+    .profile-info h5 { margin: 0; font-weight: 600; font-size: 20px; }
+    .profile-info span { color: var(--muted); font-size: 14px; }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      margin: 25px 0 12px;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      padding-bottom: 5px;
+    }
+
+    .form-control {
+      border-radius: 12px;
+      background: rgba(255,255,255,0.2);
+      color: var(--text-main);
+      border: 1px solid var(--input-border);
+      padding: 10px 14px;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .form-control::placeholder { color: var(--muted); }
+
+    .form-control:focus {
+      box-shadow: none;
+      outline: none;
+      background: rgba(255,255,255,0.3);
+      border-color: var(--primary-gradient);
+    }
+
+    .btn-primary { border-radius: 12px; background: var(--primary-gradient); border: none; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-danger { border-radius: 12px; }
+    hr { opacity: 0.15; margin: 25px 0; }
+
+    input[type=file] { display: none; }
+
+    /* Flash animation */
+    .fade-out {
+      animation: fadeOut 1s forwards;
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<button class="btn btn-outline-secondary btn-sm theme-btn" id="themeToggle">
+  <i class="fa fa-moon-o"></i>
+</button>
+
+<div class="glass-card">
+
+  <!-- Back Button -->
+  <a href="{{ url_for('index') }}" class="btn btn-outline-secondary mb-4">
+    <i class="fa fa-arrow-left me-1"></i> Back
+  </a>
+
+  <!-- Profile Header -->
+  <div class="profile-header">
+    <!-- Avatar Upload -->
+    <div class="avatar-wrapper">
+      <form method="post" action="{{ url_for('update_avatar') }}" enctype="multipart/form-data">
+        <label class="avatar-wrapper">
+          <div class="avatar" id="avatarPreview">
+            {% if avatar %}
+              <img src="{{ url_for('static', filename='uploads/avatars/' + avatar) }}">
+
+            {% else %}
+              {{ username[0]|upper }}
+            {% endif %}
+          </div>
+          <div class="edit-icon"><i class="fa fa-camera"></i></div>
+          <input type="file" name="avatar" accept="image/*" onchange="previewAvatar(event)">
+        </label>
+        <button class="btn btn-primary btn-sm mt-2 w-100">
+          <i class="fa fa-upload me-1"></i> Save Photo
+        </button>
+      </form>
+      <form method="post" action="{{ url_for('remove_avatar') }}">
+        <button type="submit" class="remove-avatar-btn">Remove Avatar</button>
+      </form>
+    </div>
+
+    <div class="profile-info">
+      <h5>{{ username }}</h5>
+      <span>User Account</span>
+    </div>
+  </div>
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} flash-message">
+        <i class="fa fa-info-circle me-1"></i> {{ message }}
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- PROFILE INFO -->
+  <div class="section-title">Profile Information</div>
+  <form method="post" action="{{ url_for('update_profile') }}">
+    <div class="row row-cols-2 g-3">
+      <div class="col">
+        <label>Full Name</label>
+        <input class="form-control" name="full_name" value="{{ full_name }}" placeholder="Enter full name" required>
+      </div>
+      <div class="col">
+        <label>Email</label>
+        <input type="email" class="form-control" name="email" value="{{ email }}" placeholder="Enter email" required>
+      </div>
+      <div class="col">
+        <label>Phone</label>
+        <input class="form-control" name="phone" value="{{ phone }}" placeholder="Enter phone number">
+      </div>
+      <div class="col">
+        <label>Latitude</label>
+        <input class="form-control" name="latitude" value="{{ latitude }}" placeholder="Enter latitude">
+      </div>
+      <div class="col">
+        <label>Longitude</label>
+        <input class="form-control" name="longitude" value="{{ longitude }}" placeholder="Enter longitude">
+      </div>
+    </div>
+    <button class="btn btn-primary w-100 mt-3">
+      <i class="fa fa-user me-1"></i> Update Profile
+    </button>
+  </form>
+
+  <hr>
+
+  <!-- SECURITY -->
+  <div class="section-title">Security</div>
+  <form method="post" action="{{ url_for('update_password') }}">
+    <div class="row row-cols-2 g-3">
+      <div class="col">
+        <label>Old Password</label>
+        <input type="password" class="form-control" name="old_password" placeholder="Enter old password" required>
+      </div>
+      <div class="col">
+        <label>New Password</label>
+        <input type="password" class="form-control" name="new_password" placeholder="Enter new password" required>
+      </div>
+      <div class="col">
+        <label>Confirm Password</label>
+        <input type="password" class="form-control" name="confirm_password" placeholder="Confirm new password" required>
+      </div>
+    </div>
+    <button class="btn btn-primary w-100 mt-3">
+      <i class="fa fa-lock me-1"></i> Update Password
+    </button>
+  </form>
+
+  <!-- LOGOUT -->
+  <button class="btn btn-danger w-100 mt-4" data-bs-toggle="modal" data-bs-target="#logoutModal">
+    <i class="fa fa-sign-out me-1"></i> Logout
+  </button>
+
+</div>
+
+<!-- Logout Modal -->
+<div class="modal fade" id="logoutModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Logout</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to logout?
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Avatar Preview
+  function previewAvatar(event){
+    const reader = new FileReader();
+    reader.onload = () => {
+      document.getElementById("avatarPreview").innerHTML = `<img src="${reader.result}">`;
+    };
+    reader.readAsDataURL(event.target.files[0]);
+  }
+
+  // Theme Toggle
+  const toggleBtn = document.getElementById("themeToggle");
+  const icon = toggleBtn.querySelector("i");
+  function setTheme(theme){
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+    icon.className = theme === "dark" ? "fa fa-sun-o" : "fa fa-moon-o";
+  }
+  toggleBtn.onclick = () => {
+    const t = localStorage.getItem("theme") || "light";
+    setTheme(t === "light" ? "dark" : "light");
+  };
+  setTheme(localStorage.getItem("theme") || "light");
+
+  // Auto dismiss flash messages
+  window.addEventListener('DOMContentLoaded', () => {
+    const flashes = document.querySelectorAll('.flash-message');
+    flashes.forEach(flash => {
+      setTimeout(() => {
+        flash.classList.add('fade-out');
+        setTimeout(() => flash.remove(), 1000); // remove from DOM after fade
+      }, 4000); // 4 seconds visible
+    });
+  });
+</script>
+</body>
+</html>

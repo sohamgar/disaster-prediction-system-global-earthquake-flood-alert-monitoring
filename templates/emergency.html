@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Emergency Contacts – India</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<style>
+:root{
+  --bg:#f5f7fb;
+  --glass:rgba(255,255,255,0.75);
+  --glass-soft:rgba(255,255,255,0.9);
+  --border:rgba(0,0,0,0.08);
+  --text:#0f172a;
+  --muted:#475569;
+  --primary:#4f46e5;
+  --primary-dark:#4338ca;
+}
+
+body.dark{
+  --bg:#0b1120;
+  --glass:rgba(15,23,42,0.85);
+  --glass-soft:rgba(15,23,42,0.95);
+  --border:rgba(255,255,255,0.12);
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:var(--bg);
+  font-family:"Poppins",sans-serif;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  transition:.3s;
+}
+
+.glass-card{
+  width:100%;
+  max-width:880px;
+  background:var(--glass);
+  backdrop-filter:blur(22px);
+  border-radius:28px;
+  border:1px solid var(--border);
+  box-shadow:0 30px 70px rgba(0,0,0,.25);
+  padding:36px;
+  color:var(--text);
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:26px;
+}
+
+.header h2{
+  margin:0;
+  font-size:28px;
+  font-weight:700;
+}
+
+.toggle{
+  font-size:22px;
+  cursor:pointer;
+  color:var(--primary);
+}
+
+/* TABLE */
+.table-wrap{overflow-x:auto}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:18px;
+}
+
+th,td{
+  padding:15px 18px;
+  font-size:16px;
+}
+
+th{
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;
+}
+
+tr{
+  background:var(--glass-soft);
+  border-bottom:1px solid var(--border);
+}
+
+td i{color:var(--primary);margin-right:8px}
+
+/* CALL BUTTON */
+.call-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:9px 16px;
+  background:linear-gradient(135deg,#16a34a,#15803d);
+  color:#fff;
+  border-radius:22px;
+  font-size:14px;
+  text-decoration:none;
+  transition:.25s;
+}
+
+.call-btn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 18px rgba(0,0,0,.25);
+}
+
+/* FOOTER */
+.footer-buttons{
+  display:flex;
+  justify-content:space-between;
+  margin-top:30px;
+}
+
+.btn-back{
+  padding:12px 32px;
+  border-radius:22px;
+  font-weight:600;
+  text-decoration:none;
+  color:#fff;
+  background:linear-gradient(135deg,#64748b,#475569);
+  transition:.3s;
+}
+
+.btn-back:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 24px rgba(0,0,0,.25);
+}
+
+/* MOBILE */
+@media(max-width:768px){
+  table{display:none}
+
+  .contact-card{
+    background:var(--glass-soft);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:18px;
+    margin-bottom:16px;
+  }
+
+  .contact-card h4{
+    margin:0 0 6px;
+    font-size:18px;
+  }
+
+  .contact-card p{
+    margin:0 0 10px;
+    color:var(--muted);
+    font-size:14px;
+  }
+
+  .footer-buttons{
+    flex-direction:column;
+    gap:14px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="glass-card">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h2>🚨 Emergency Contacts – India</h2>
+    <div class="toggle" id="themeToggle">
+      <i class="fa-solid fa-moon"></i>
+    </div>
+  </div>
+
+  <!-- DESKTOP TABLE -->
+  <div class="table-wrap">
+    <table>
+      <tr>
+        <th>Service</th>
+        <th>Number</th>
+        <th>Action</th>
+      </tr>
+
+      <tr>
+        <td><i class="fa-solid fa-shield-halved"></i> Police</td>
+        <td>100</td>
+        <td>
+          <a href="tel:100" class="call-btn"
+             onclick="return confirm('Do you want to call Police (100)?')">
+            <i class="fa-solid fa-phone"></i> Call
+          </a>
+        </td>
+      </tr>
+
+      <tr>
+        <td><i class="fa-solid fa-fire-extinguisher"></i> Fire Brigade</td>
+        <td>101</td>
+        <td>
+          <a href="tel:101" class="call-btn"
+             onclick="return confirm('Do you want to call Fire Brigade (101)?')">
+            <i class="fa-solid fa-phone"></i> Call
+          </a>
+        </td>
+      </tr>
+
+      <tr>
+        <td><i class="fa-solid fa-truck-medical"></i> Ambulance</td>
+        <td>108</td>
+        <td>
+          <a href="tel:108" class="call-btn"
+             onclick="return confirm('Do you want to call Ambulance (108)?')">
+            <i class="fa-solid fa-phone"></i> Call
+          </a>
+        </td>
+      </tr>
+
+      <tr>
+        <td><i class="fa-solid fa-bullhorn"></i> Disaster Helpline</td>
+        <td>1078</td>
+        <td>
+          <a href="tel:1078" class="call-btn"
+             onclick="return confirm('Do you want to call Disaster Helpline (1078)?')">
+            <i class="fa-solid fa-phone"></i> Call
+          </a>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- MOBILE CARDS -->
+  <div class="contact-card">
+    <h4>Police</h4>
+    <p>Law enforcement emergency</p>
+    <a href="tel:100" class="call-btn"
+       onclick="return confirm('Call Police (100)?')">📞 Call 100</a>
+  </div>
+
+  <div class="contact-card">
+    <h4>Fire Brigade</h4>
+    <p>Fire & rescue services</p>
+    <a href="tel:101" class="call-btn"
+       onclick="return confirm('Call Fire Brigade (101)?')">📞 Call 101</a>
+  </div>
+
+  <div class="contact-card">
+    <h4>Ambulance</h4>
+    <p>Medical emergency response</p>
+    <a href="tel:108" class="call-btn"
+       onclick="return confirm('Call Ambulance (108)?')">📞 Call 108</a>
+  </div>
+
+  <div class="contact-card">
+    <h4>Disaster Helpline</h4>
+    <p>Natural disaster assistance</p>
+    <a href="tel:1078" class="call-btn"
+       onclick="return confirm('Call Disaster Helpline (1078)?')">📞 Call 1078</a>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer-buttons">
+    <a href="/" class="btn-back">⬅ Back to Dashboard</a>
+  </div>
+
+</div>
+
+<script>
+document.getElementById("themeToggle").onclick = () => {
+  document.body.classList.toggle("dark");
+};
+</script>
+
+</body>
+</html>

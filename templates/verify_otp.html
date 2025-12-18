@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verify OTP — Disaster Alert</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #1e3c72, #2a5298, #0f2027);
+      background-size: 300% 300%;
+      animation: gradientBG 8s ease infinite;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Poppins", sans-serif;
+      padding: 20px;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-otp {
+      width: 460px;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(16px);
+      border-radius: 22px;
+      padding: 45px;
+      color: #fff;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+      animation: fadeIn 0.7s ease-out;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+    }
+
+    .title {
+      font-size: 32px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      text-align: center;
+      opacity: 0.85;
+      margin-bottom: 20px;
+    }
+
+    .otp-group {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .otp-box {
+      width: 52px;
+      height: 60px;
+      border-radius: 14px;
+      border: none;
+      outline: none;
+      font-size: 24px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      backdrop-filter: blur(8px);
+      transition: 0.3s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .otp-box:focus {
+      border: 2px solid #00f0ff;
+      background: rgba(255, 255, 255, 0.45);
+      box-shadow: 0 0 12px #00eaff;
+    }
+
+    .btn-verify {
+      width: 100%;
+      height: 52px;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #00f0ff, #00c3ff, #009dff);
+      color: #0d1b2a;
+      border: none;
+      transition: 0.3s;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.3);
+    }
+
+    .btn-verify:hover {
+      box-shadow: 0 0 14px #00eaff;
+      transform: translateY(-2px);
+    }
+
+    .btn-verify:disabled {
+      background: rgba(0, 240, 255, 0.4);
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .alert {
+      font-size: 16px;
+      border-radius: 14px;
+      margin-bottom: 12px;
+      text-align: center;
+      padding: 12px 20px;
+      font-weight: 700;
+      animation: fadeIn 0.5s ease forwards;
+    }
+
+    .alert-success {
+      background-color: #28a745;
+      color: #fff;
+      border: 1px solid #1f7a34;
+    }
+
+    .alert-danger {
+      background-color: #dc3545;
+      color: #fff;
+      border: 1px solid #a71d2a;
+    }
+
+    .toggle-otp {
+      text-align: center;
+      margin-bottom: 18px;
+      cursor: pointer;
+      color: #00f0ff;
+      font-size: 14px;
+    }
+
+    .resend a {
+      color: #00f0ff;
+      text-decoration: underline;
+    }
+
+    .disabled-link {
+      color: gray !important;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+<div class="card-otp">
+
+  <div class="title">Verify Your Login</div>
+  <div class="subtitle">Enter the 6-digit authentication code sent to your mobile</div>
+
+  <!-- FLASH MESSAGES WORKING FOR SUCCESS + DANGER -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" id="otpForm">
+    <div class="toggle-otp" id="toggleOtpBtn"><i class="fa fa-eye"></i> Show OTP</div>
+
+    <div class="otp-group">
+      <input type="password" maxlength="1" class="otp-box" name="o1">
+      <input type="password" maxlength="1" class="otp-box" name="o2">
+      <input type="password" maxlength="1" class="otp-box" name="o3">
+      <input type="password" maxlength="1" class="otp-box" name="o4">
+      <input type="password" maxlength="1" class="otp-box" name="o5">
+      <input type="password" maxlength="1" class="otp-box" name="o6">
+    </div>
+
+    <input type="hidden" name="otp" id="fullOtp">
+
+    <button class="btn-verify" type="submit" id="verifyBtn">Verify</button>
+  </form>
+
+  <div class="resend text-center mt-3">
+    <a id="resendBtn" href="{{ url_for('resend_otp') }}">Resend OTP</a>
+    <span id="timer" style="margin-left:6px;"></span>
+  </div>
+
+</div>
+
+<script>
+  const inputs = document.querySelectorAll(".otp-box");
+  const form = document.getElementById("otpForm");
+  const verifyBtn = document.getElementById("verifyBtn");
+  const toggleBtn = document.getElementById("toggleOtpBtn");
+
+  // SHOW/HIDE OTP
+  let otpVisible = false;
+  toggleBtn.addEventListener("click", () => {
+    otpVisible = !otpVisible;
+    inputs.forEach(i => i.type = otpVisible ? "text" : "password");
+    toggleBtn.innerHTML = otpVisible
+      ? '<i class="fa fa-eye-slash"></i> Hide OTP'
+      : '<i class="fa fa-eye"></i> Show OTP';
+  });
+
+  // AUTO-MOVE + BACKSPACE FIX + AUTO-SUBMIT
+  inputs.forEach((input, index) => {
+    input.addEventListener("keydown", (e) => {
+      // BACKSPACE FIX
+      if (e.key === "Backspace" && input.value === "" && index > 0) {
+        inputs[index - 1].focus();
+        inputs[index - 1].value = "";
+      }
+    });
+
+    input.addEventListener("keyup", (e) => {
+      // Allow only digits
+      if (!/^[0-9]$/.test(input.value)) {
+        input.value = "";
+        return;
+      }
+
+      // Move to next box
+      if (input.value && index < 5) {
+        inputs[index + 1].focus();
+      }
+
+      // CHECK FULL OTP
+      const otp = [...inputs].map(i => i.value).join("");
+
+      if (otp.length === 6) {
+        document.getElementById("fullOtp").value = otp;
+
+        verifyBtn.disabled = true;
+        verifyBtn.innerHTML =
+          'Verifying <span class="spinner-border spinner-border-sm"></span>';
+
+        form.submit();
+      }
+    });
+  });
+
+  // MANUAL SUBMIT VALIDATION
+  form.addEventListener("submit", (e) => {
+    const otp = [...inputs].map(i => i.value).join("");
+
+    if (otp.length < 6) {
+      e.preventDefault();
+      alert("Please enter the full 6-digit OTP.");
+      return;
+    }
+
+    document.getElementById("fullOtp").value = otp;
+    verifyBtn.disabled = true;
+    verifyBtn.innerHTML =
+      'Verifying <span class="spinner-border spinner-border-sm"></span>';
+  });
+
+  // RESEND TIMER
+  let timer = 30;
+  const resendBtn = document.getElementById("resendBtn");
+  const timerText = document.getElementById("timer");
+
+  function startTimer() {
+    resendBtn.classList.add("disabled-link");
+    timerText.innerHTML = `(wait ${timer}s)`;
+
+    const interval = setInterval(() => {
+      timer--;
+      timerText.innerHTML = `(wait ${timer}s)`;
+
+      if (timer <= 0) {
+        clearInterval(interval);
+        timerText.innerHTML = "";
+        resendBtn.classList.remove("disabled-link");
+      }
+    }, 1000);
+  }
+  startTimer();
+
+  // AUTO-HIDE FLASH
+  setTimeout(() => {
+    document.querySelectorAll(".alert").forEach(el => {
+      el.style.opacity = "0";
+      setTimeout(() => el.remove(), 400);
+    });
+  }, 5000);
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

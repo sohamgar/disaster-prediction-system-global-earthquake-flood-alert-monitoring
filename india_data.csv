@@ -1,0 +1,2 @@
+updated,country,countryInfo,cases,todayCases,deaths,todayDeaths,recovered,todayRecovered,active,critical,casesPerOneMillion,deathsPerOneMillion,tests,testsPerOneMillion,population,continent,oneCasePerPeople,oneDeathPerPeople,oneTestPerPeople,activePerOneMillion,recoveredPerOneMillion,criticalPerOneMillion
+1760287498566,India,"{'_id': 356, 'iso2': 'IN', 'iso3': 'IND', 'lat': 20, 'long': 77, 'flag': 'https://disease.sh/assets/img/flags/in.png'}",45035393,0,533570,0,0,0,44501823,0,32016,379,935879495,665334,1406631776,Asia,31,2636,2,31637.15,0,0

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Disaster Alert System</title>
+
+  <!-- Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b, #0f2027);
+      background-size: 300% 300%;
+      animation: bodyGradient 11s ease infinite;
+      min-height: 100vh;
+      padding: 40px;
+      color: #fff;
+    }
+
+    @keyframes bodyGradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* TOP BAR */
+    .top-title {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-shadow: 0px 3px 10px rgba(0,0,0,0.4);
+    }
+
+    .btn-logout {
+      background: #ffffff;
+      color: #1e293b;
+      font-weight: 600;
+      border-radius: 12px;
+      padding: 11px 20px;
+      border: none;
+      box-shadow: 0px 4px 12px rgba(255,255,255,0.3);
+      transition: 0.3s;
+    }
+
+    .btn-logout:hover {
+      transform: translateY(-4px);
+      background: #f1f5f9;
+    }
+
+    /* Welcome Message */
+    .welcome-msg {
+      font-size: 20px;
+      font-weight: 500;
+      margin-bottom: 30px;
+      text-align: center;
+      color: #d1d5db;
+    }
+
+    /* CARD STYLING */
+    .dashboard-card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(14px);
+      border-radius: 25px;
+      padding: 30px;
+      min-height: 235px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
+      transition: all 0.35s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .dashboard-card:hover {
+      transform: translateY(-10px);
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.55);
+    }
+
+    .dashboard-card i {
+      font-size: 48px;
+      margin-bottom: 12px;
+      color: #ffffff;
+      opacity: 0.95;
+      text-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+
+    .dashboard-card h4 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .dashboard-card p {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 18px;
+      text-align: center;
+    }
+
+    .btn-open {
+      background: #ffffff;
+      color: #0f172a;
+      font-weight: 600;
+      border-radius: 10px;
+      padding: 10px;
+      border: none;
+      transition: 0.25s;
+      box-shadow: 0 5px 20px rgba(255,255,255,0.25);
+    }
+
+    .btn-open:hover {
+      background: #e2e8f0;
+      transform: translateY(-3px);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="top-title"><i class="fa fa-shield-halved me-2"></i>Admin Dashboard</h1>
+    <a href="/admin_login" id="logoutBtn" class="btn-logout"><i class="fa fa-right-from-bracket me-1"></i> Logout</a>
+  </div>
+
+  <!-- WELCOME -->
+  <div class="welcome-msg">
+    Welcome, <strong>{{ admin.username }}</strong>!
+  </div>
+
+  <div class="container">
+    <div class="row g-4">
+
+      <!-- 1. System Overview -->
+      <div class="col-md-4">
+        <div class="dashboard-card">
+          <i class="fa fa-chart-line"></i>
+          <h4>System Overview</h4>
+          <p>Live summary of alerts, floods, earthquakes & predictions.</p>
+          <a href="/admin/overview" class="btn-open w-100">Open</a>
+        </div>
+      </div>
+
+      <!-- 2. Flood -->
+      <div class="col-md-4">
+        <div class="dashboard-card">
+          <i class="fa fa-water"></i>
+          <h4>Flood Monitoring</h4>
+          <p>Manual flood alerts, prediction map & water-level tracking.</p>
+          <a href="/admin/flood_real_time" class="btn-open w-100">Open</a>
+        </div>
+      </div>
+
+      <!-- 3. Earthquake -->
+      <div class="col-md-4">
+        <div class="dashboard-card">
+          <i class="fa fa-earthquake"></i>
+          <h4>Earthquake System</h4>
+          <p>Live feed, predictions & seismic map monitoring.</p>
+          <a href="/admin/earthquake_dashboard" class="btn-open w-100">Open</a>
+        </div>
+      </div>
+
+      <!-- 4. User Management -->
+      <div class="col-md-4">
+        <div class="dashboard-card">
+          <i class="fa fa-users"></i>
+          <h4>User Management</h4>
+          <p>View users, modify accounts, assign roles.</p>
+          <a href="/admin/users" class="btn-open w-100">Open</a>
+        </div>
+      </div>
+
+      <!-- 5. Reports -->
+      <div class="col-md-4">
+        <div class="dashboard-card">
+          <i class="fa fa-file-pdf"></i>
+          <h4>Reports</h4>
+          <p>Generate PDF & Excel analytics for disaster history.</p>
+          <a href="/admin/reports" class="btn-open w-100">Open</a>
+        </div>
+      </div>
+
+      <!-- 6. Feedback -->
+      <div class="col-md-4">
+        <div class="dashboard-card">
+          <i class="fa fa-comments"></i>
+          <h4>Feedback & Issues</h4>
+          <p>Handle complaints, queries & system issues.</p>
+          <a href="/admin/feedback" class="btn-open w-100">Open</a>
+        </div>
+      </div>
+
+      <!-- 7. Settings -->
+      <div class="col-md-4">
+        <div class="dashboard-card">
+          <i class="fa fa-gear"></i>
+          <h4>System Settings</h4>
+          <p>SMTP, thresholds, admin roles & global configs.</p>
+          <a href="/admin/settings" class="btn-open w-100">Open</a>
+        </div>
+      </div>
+
+      <!-- 8. Logs -->
+      <div class="col-md-4">
+        <div class="dashboard-card">
+          <i class="fa fa-database"></i>
+          <h4>System Logs</h4>
+          <p>Error logs, security logs & admin activity review.</p>
+          <a href="/admin/admins" class="btn-open w-100">Open</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LOGOUT CONFIRM SCRIPT -->
+  <script>
+    document.getElementById("logoutBtn").addEventListener("click", function(event){
+      event.preventDefault();
+      const logoutUrl = this.href;
+      if(confirm("Are you sure you want to logout?")) {
+        window.location.href = logoutUrl;
+      }
+    });
+  </script>
+
+</body>
+</html>

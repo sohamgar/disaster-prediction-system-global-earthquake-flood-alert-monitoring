@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html>
+  <head>
+ 
+    <title>Disaster Predition</title>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"
+    ></script>
+
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat"
+      rel="stylesheet"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.js"></script>
+    <script src="http://www.webglearth.com/v2/api.js"></script>
+    <script>
+      var earth;
+      function initialize() {
+        earth = new WE.map("earth_div");
+        earth.setView([46.8011, 8.2266], 1);
+        WE.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "",
+        }).addTo(earth);
+
+        // Start a simple rotation animation
+        var before = null;
+        requestAnimationFrame(function animate(now) {
+          var c = earth.getPosition();
+          var elapsed = before ? now - before : 0;
+          before = now;
+          earth.setCenter([c[0], c[1] + 1 * (elapsed / 30)]);
+          requestAnimationFrame(animate);
+        });
+      }
+    </script>
+<style>
+@import url("https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700");
+
+/* ================= ROOT ================= */
+:root{
+  --bg-main:#f5f7fb;
+  --glass:rgba(255,255,255,0.75);
+  --glass-soft:rgba(255,255,255,0.96);
+  --glass-border:rgba(0,0,0,0.08);
+
+  --primary:#4f46e5;
+  --primary-dark:#4338ca;
+
+  --sidebar-blue:rgba(79,70,229,0.88);
+  --sidebar-blue-soft:rgba(79,70,229,0.7);
+
+  --text:#0f172a;
+  --muted:#64748b;
+}
+/* ================= DARK MODE ================= */
+body.dark {
+  --bg-main: #0b1120;
+  --glass: rgba(15,23,42,0.88);
+  --glass-soft: rgba(15,23,42,0.95);
+  --glass-border: rgba(255,255,255,0.12);
+
+  --primary: #818cf8;
+  --primary-dark: #6366f1;
+
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+}
+
+/* Smooth transition for theme change */
+
+/* ================= GLOBAL ZOOM ================= */
+html{
+  font-size:85%;   /* 🔥 more zoomed out */
+}
+
+/* ================= BASE ================= */
+html, body{
+  height:100%;
+  margin:0;
+  font-family:"Poppins",sans-serif;
+  background:var(--bg-main);
+  color:var(--text);
+}
+
+body{
+  display:flex;
+  flex-direction:column;
+  font-size:13px;
+   transition: background 0.3s ease, color 0.3s ease;
+}
+/* ================= THEME TOGGLE ================= */
+.theme-toggle {
+  cursor: pointer;
+  font-size:12.5px;
+  padding:6px 12px;
+  border-radius:8px;
+  background: linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap:5px;
+  border: none;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.theme-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+}
+
+/* ================= NAVBAR ================= */
+.navbar{
+  padding:9px 14px;
+  background:var(--glass);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--glass-border);
+  box-shadow:0 6px 18px rgba(0,0,0,.05);
+  border-radius:12px;
+}
+
+.navbar-btn{
+  border:none;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  padding:6px 12px;
+  border-radius:8px;
+  font-size:12.5px;
+  cursor:pointer;
+}
+
+/* ================= WRAPPER ================= */
+.wrapper{
+  display:flex;
+  flex:1;
+}
+
+/* ================= SIDEBAR ================= */
+#sidebar{
+  min-width:210px;
+  max-width:210px;
+  background:linear-gradient(180deg, var(--sidebar-blue), var(--sidebar-blue-soft));
+  backdrop-filter:blur(20px);
+  border-right:1px solid rgba(255,255,255,.25);
+  box-shadow:18px 0 36px rgba(0,0,0,.18);
+  transition:.3s;
+  display:flex;
+  flex-direction:column;
+}
+
+#sidebar.active{
+  margin-left:-210px;
+}
+
+/* 🔥 SIDEBAR HEADING FIX */
+#sidebar .sidebar-header {
+  padding:8px 10px;         /* reduce vertical padding */
+  text-align:center;
+  font-size:12px;           /* smaller font size */
+  font-weight:600;
+  line-height:1.1;          /* tighter line height */
+  color:#fff;
+  background:linear-gradient(135deg,#6366f1,#4338ca);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+#sidebar .sidebar-header h3 {
+  font-size:17px;           /* reduce h3 size */
+  margin:0;                 /* remove extra margin */
+  line-height:1.1;
+}
+
+/* Sidebar menu */
+#sidebar ul.components{
+  padding:6px 0;
+  margin:0;
+  flex:1;
+}
+
+#sidebar ul li a{
+  padding:9px 12px;
+  font-size:12.5px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  color:#fff;
+  margin:4px 8px;
+  border-radius:9px;
+  text-decoration:none;
+  white-space:nowrap;
+  transition:.25s ease;
+}
+
+#sidebar ul li a i{
+  min-width:15px;
+  text-align:center;
+}
+
+#sidebar ul li a:hover{
+  background:rgba(255,255,255,.18);
+  transform:translateX(3px);
+}
+
+#sidebar ul li.active>a{
+  background:rgba(255,255,255,.25);
+  font-weight:500;
+  box-shadow:inset 3px 0 0 #fff;
+}
+
+/* ================= CONTENT ================= */
+#content{
+  width:100%;
+  padding:18px 20px;
+  flex:1;
+}
+
+/* ================= TEXT ================= */
+p{
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.55;
+}
+
+/* ================= INPUTS ================= */
+input,
+textarea,
+select,
+.form-control{
+  width:100% !important;
+  padding:9px 11px !important;
+  font-size:13.5px !important;
+  font-weight:500 !important;
+  min-height:40px !important;
+  border-radius:9px !important;
+  border:1px solid var(--glass-border) !important;
+  background:#ffffff !important;
+  color:var(--text) !important;
+  outline:none !important;
+  box-shadow:0 4px 10px rgba(0,0,0,.05) !important;
+  transition:.25s ease;
+}
+
+input::placeholder,
+textarea::placeholder{
+  font-size:12.5px !important;
+  color:#94a3b8 !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+.form-control:focus{
+  border-color:var(--primary) !important;
+  box-shadow:0 6px 16px rgba(79,70,229,.18) !important;
+}
+
+/* ================= CARDS ================= */
+.card{
+  border:none;
+  border-radius:14px;
+  background:var(--glass-soft);
+  backdrop-filter:blur(14px);
+  box-shadow:0 8px 20px rgba(0,0,0,.07);
+  padding:14px;
+  margin-bottom:12px;
+  transition:.25s ease;
+}
+
+/* ================= BUTTONS ================= */
+.btn{
+  font-size:12.5px;
+  padding:6px 12px;
+  border-radius:9px;
+  transition:.25s ease;
+  border:none;
+  cursor:pointer;
+}
+
+.btn-primary{
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;
+}
+
+.btn-success{
+  background:linear-gradient(135deg,#16a34a,#15803d);
+  color:#fff !important;
+}
+
+/* ================= FOOTER ================= */
+.app-footer{
+  width:100%;
+  background:rgba(255,255,255,.78);
+  backdrop-filter:blur(12px);
+  border-top:1px solid var(--glass-border);
+  text-align:center;
+  padding:9px;
+  font-size:11.5px;
+  color:var(--muted);
+}
+
+/* ================= RESPONSIVE ================= */
+@media(max-width:768px){
+  html{ font-size:88%; }
+  #sidebar{margin-left:-210px;}
+  #sidebar.active{margin-left:0;}
+}
+</style>
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <!-- Sidebar  -->
+      <nav id="sidebar">
+        <div class="sidebar-header">
+          <h3>Disaster Prediction</h3>
+        </div>
+
+        <ul class="list-unstyled components">
+          <li>
+            <a href="{{ url_for('index') }}">Home</a>
+          </li>
+
+          <li>
+            <a href="{{ url_for('earthquake') }}"
+              >Earthquake Prediction <span class="badge bg-success rounded-pill"><i class="fa fa-check-circle" aria-hidden="true"></i></span></a
+            >
+          </li>
+          <li class="active">
+            <a href="{{ url_for('flood') }}">Flood Prediction <span class="badge bg-success rounded-pill"><i class="fa fa-check-circle" aria-hidden="true"></i></span></a>
+          </li>
+<li>
+  <a href="/feedback">
+    Feedback & Issues
+    <span class="badge bg-primary rounded-pill">
+      <i class="fa fa-comments"></i>
+    </span>
+  </a>
+</li>
+<li>
+
+              <li>
+  <a href="{{ url_for('help_page') }}">
+    Help / User Guide
+    <span class="badge bg-info rounded-pill">
+      <i class="fa fa-question-circle"></i>
+    </span>
+  </a>
+</li>
+<li>
+  <a href="{{ url_for('safety_tips') }}">
+    Safety Tips
+    <span class="badge bg-success rounded-pill">
+      <i class="fa fa-shield"></i>
+    </span>
+  </a>
+</li>
+<li>
+  <a href="{{ url_for('emergency') }}">
+    Emergency Contacts
+    <span class="badge bg-danger rounded-pill">
+      <i class="fa fa-phone"></i>
+    </span>
+  </a>
+</li>
+
+
+<li>
+  <a href="{{ url_for('about') }}">
+    About System
+    <span class="badge bg-primary rounded-pill">
+      <i class="fa fa-info-circle"></i>
+    </span>
+  </a>
+</li>
+
+          <!-- SYSTEM -->
+<li>
+  <a href="{{ url_for('settings') }}">
+    Settings
+    <span class="badge bg-secondary rounded-pill">
+      <i class="fa fa-cog"></i>
+    </span>
+  </a>
+</li>
+
+<!-- LOGOUT (BOTTOM) -->
+<li class="mt-auto">
+  <a href="{{ url_for('logout') }}" onclick="return confirmLogout();">
+    Logout
+    <span class="badge bg-danger rounded-pill">
+      <i class="fa fa-sign-out"></i>
+    </span>
+  </a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- Page Content  -->
+      <div id="content">
+        <nav
+          class="navbar card navbar-expand-lg navbar-light bg-light justify-content-between"
+        >
+          <div class="container-fluid">
+            <button type="button" id="sidebarCollapse" class="btn btn-primary">
+              <i class="fa fa-bars"></i>
+              <span>Toggle Sidebar</span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+              <ul class="nav navbar-nav ml-auto">
+                <li class="nav-item">
+                  <div id="google_translate_element"></div>
+
+                  <script type="text/javascript">
+                    function googleTranslateElementInit() {
+                      new google.translate.TranslateElement(
+                        {
+                          pageLanguage: "en",
+                          layout:
+                            google.translate.TranslateElement.InlineLayout
+                              .SIMPLE,
+                        },
+                        "google_translate_element"
+                      );
+                    }
+                  </script>
+
+                  <script
+                    type="text/javascript"
+                    src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+                  ></script>
+                </li>
+                <li class="nav-item ms-3">
+  <button class="theme-toggle" onclick="toggleTheme()">
+    <i class="fa fa-moon-o"></i>
+    <span class="d-none d-md-inline">Theme</span>
+  </button>
+</li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+
+        <div class="row px-2 py-2">
+          <div class="col-xl-12">
+            <div class="card shadow-sm px-4">
+              <div class="card-body">
+                <h4 class="card-title">Flood Prediction (Real-Time)</h4>
+                <h6 class="card-subtitle mb-4 text-muted">
+                  Enter latitude, longitude and optional rainfall
+                </h6>
+<form
+    action="{{ url_for('predflood') }}"
+    method="POST"
+    class="row g-3"
+>
+<div class="col-md-3">
+  <input
+    type="text"
+    class="form-control"
+    name="latitude"
+    id="latitude"
+    placeholder="Latitude"
+    required
+    inputmode="decimal"
+    value="{{ lat if lat else '' }}"
+  />
+</div>
+
+<div class="col-md-3">
+  <input
+    type="text"
+    class="form-control"
+    name="longitude"
+    id="longitude"
+    placeholder="Longitude"
+    required
+    inputmode="decimal"
+    value="{{ lon if lon else '' }}"
+  />
+</div>
+
+<div class="col-md-3">
+  <input
+    type="number"
+    step="any"
+    class="form-control"
+    name="rainfall_amt"
+    id="rainfall_amt"
+    placeholder="Rainfall (mm) - optional"
+    value="{{ rainfall_amt if rainfall_amt else '' }}"
+  />
+</div>
+
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-primary w-100">
+            Predict
+        </button>
+    </div>
+</form>
+
+                {% if predictions %}
+                <div class="mt-4">
+                  <h5>Status:
+                    <span class="{{ 'text-danger' if predictions[0][1]=='Flood Predicted' else 'text-success' }}">
+                      {{ predictions[0][1] }}
+                    </span>
+                  </h5>
+                  <p>Predicted River Level: {{ predictions[0][0] }} m</p>
+                  <p>Rainfall Used: {{ rainfall_input }} mm</p>
+                </div>
+                {% endif %}
+
+                <!-- Map container -->
+                <div id="map" style="height:500px; width:100%; margin-top:20px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- Leaflet.js for map -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+      // Initialize map
+      var map = L.map('map').setView([20, 77], 5); // default center
+
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19
+      }).addTo(map);
+
+{% if predictions %}
+<div class="mt-4">
+  <h5>Status:
+    <span class="{{ 'text-danger' if predictions[0][1]=='Flood Predicted' else 'text-success' }}">
+      {{ predictions[0][1] }}
+    </span>
+  </h5>
+  <p>Predicted River Level: {{ predictions[0][0] }} m</p>
+  <p>Rainfall Used: {{ rainfall_input }} mm</p>
+  <p><strong>Timestamp:</strong> {{ timestamp }}</p> <!-- ✅ added -->
+</div>
+{% endif %}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.querySelector("form");
+
+  const latInput = document.getElementById("latitude");
+  const lonInput = document.getElementById("longitude");
+  const rainInput = document.getElementById("rainfall_amt");
+
+  const decimalRegex = /^-?\d+(\.\d+)?$/;
+
+  form.addEventListener("submit", (e) => {
+    let errors = [];
+
+    // LATITUDE
+    if (!decimalRegex.test(latInput.value)) {
+      errors.push("Latitude must be a decimal number");
+    } else {
+      const lat = parseFloat(latInput.value);
+      if (lat < -90 || lat > 90) {
+        errors.push("Latitude must be between -90 and 90");
+      }
+    }
+
+    // LONGITUDE
+    if (!decimalRegex.test(lonInput.value)) {
+      errors.push("Longitude must be a decimal number");
+    } else {
+      const lon = parseFloat(lonInput.value);
+      if (lon < -180 || lon > 180) {
+        errors.push("Longitude must be between -180 and 180");
+      }
+    }
+
+    // RAINFALL (OPTIONAL)
+    if (rainInput.value.trim() !== "") {
+      if (!decimalRegex.test(rainInput.value)) {
+        errors.push("Rainfall must be a valid decimal number");
+      } else if (parseFloat(rainInput.value) < 0) {
+        errors.push("Rainfall cannot be negative");
+      }
+    }
+
+    // BLOCK SUBMIT + ALERT
+    if (errors.length > 0) {
+      e.preventDefault();
+      alert(errors.join("\n"));
+    }
+  });
+});
+
+          function confirmLogout() {
+    return confirm("Are you sure you want to logout?");
+    // If user clicks "OK", it returns true and logout proceeds
+    // If user clicks "Cancel", it returns false and logout is cancelled
+  }
+      function toggleTheme() {
+  document.body.classList.toggle("dark");
+}
+
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+       <footer class="app-footer">
+    Copyright © 2024 | Soham Garud
+  </footer>
+  </body>
+  </body>
+</html>

@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Theme Made By www.w3schools.com - No Copyright -->
+    <title>DISASTER PREDICTOR</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<style>
+@import url("https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700");
+
+/* ================= ROOT ================= */
+:root{
+  --bg-main:#f5f7fb;
+  --glass:rgba(255,255,255,0.75);
+  --glass-soft:rgba(255,255,255,0.96);
+  --glass-border:rgba(0,0,0,0.08);
+
+  --primary:#4f46e5;
+  --primary-dark:#4338ca;
+
+  /* Sidebar stays blue always */
+  --sidebar-blue:rgba(79,70,229,0.88);
+  --sidebar-blue-soft:rgba(79,70,229,0.7);
+  --sidebar-text:#ffffff;
+
+  /* Content & Cards */
+  --content-bg:#ffffff;
+  --content-text:#0f172a;
+  --card-bg:#ffffff;
+  --card-text:#0f172a;
+
+  /* Navbar */
+  --navbar-bg:#ffffff;
+  --navbar-text:#0f172a;
+  --navbar-border:rgba(0,0,0,0.08);
+
+  --text:#0f172a;
+  --muted:#64748b;
+}
+
+/* ================= DARK MODE ================= */
+body.dark{
+  --bg-main:#0b1120;
+  --glass:rgba(30,41,59,0.85);
+  --glass-soft:rgba(30,41,59,0.95);
+  --glass-border:rgba(255,255,255,0.12);
+
+  --primary:#818cf8;
+  --primary-dark:#6366f1;
+
+  /* Sidebar stays blue in dark mode */
+  --sidebar-blue:rgba(79,70,229,0.88);
+  --sidebar-blue-soft:rgba(79,70,229,0.7);
+  --sidebar-text:#ffffff;
+
+  /* Content & Cards */
+  --content-bg:#1e293b; /* dark background for page */
+  --content-text:#e5e7eb;
+  --card-bg:#ffffff;     /* cards remain white */
+  --card-text:#0f172a;
+
+  /* Navbar */
+  --navbar-bg:#272f44;
+  --navbar-text:#e5e7eb;
+  --navbar-border:rgba(255,255,255,0.15);
+
+  --text:#e5e7eb;
+  --muted:#cbd5f5;
+}
+
+/* ================= BASE ================= */
+html, body{
+  height:100%;
+  margin:0;
+  font-family:"Poppins",sans-serif;
+  background:var(--bg-main);
+  color:var(--text);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+body{
+  display:flex;
+  flex-direction:column;
+  font-size:13.2px;
+}
+
+/* ================= NAVBAR ================= */
+.navbar{
+  padding:12px 18px;
+  background:var(--glass);
+  backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--glass-border);
+  box-shadow:0 8px 25px rgba(0,0,0,.05);
+  border-radius:12px;
+  color:var(--navbar-text);
+  transition: background 0.3s, color 0.3s, border 0.3s;
+}
+
+.navbar-btn{
+  border:none;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  padding:8px 16px;
+  border-radius:10px;
+  font-size:14px;
+  cursor:pointer;
+}
+
+/* ================= WRAPPER ================= */
+.wrapper{
+  display:flex;
+  flex:1;
+}
+
+/* ================= SIDEBAR ================= */
+#sidebar{
+  min-width:240px;
+  max-width:240px;
+  background:linear-gradient(180deg, var(--sidebar-blue), var(--sidebar-blue-soft));
+  backdrop-filter:blur(22px);
+  border-right:1px solid rgba(255,255,255,.25);
+  box-shadow:20px 0 40px rgba(0,0,0,.18);
+  transition:.3s;
+  display:flex;
+  flex-direction:column;
+}
+
+#sidebar.active{
+  margin-left:-240px;
+}
+
+#sidebar .sidebar-header{
+  padding:18px;
+  text-align:center;
+  font-size:16.5px;
+  font-weight:600;
+  color:#fff;
+  background:linear-gradient(135deg,#6366f1,#4338ca);
+}
+
+#sidebar ul.components{
+  padding:12px 0;
+  margin:0;
+  flex:1;
+}
+
+#sidebar ul li a{
+  padding:12px 18px;
+  font-size:14px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:var(--sidebar-text);
+  margin:4px 12px;
+  border-radius:12px;
+  text-decoration:none;
+  overflow:hidden;
+  white-space:nowrap;
+  transition: all .3s ease;
+}
+
+#sidebar ul li a:hover{
+  background:rgba(255,255,255,.18);
+  transform:translateX(4px);
+}
+
+#sidebar ul li.active>a{
+  background:rgba(255,255,255,.25);
+  font-weight:500;
+  box-shadow:inset 3px 0 0 #fff;
+}
+
+/* ================= CONTENT ================= */
+#content{
+  width:100%;
+  padding:24px 28px;
+  flex:1;
+  background-color:var(--content-bg);
+  color:var(--content-text);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* ================= TEXT ================= */
+p{
+  font-size:14.5px;
+  color:var(--muted);
+  line-height:1.7;
+}
+
+/* ================= INPUTS ================= */
+input,
+textarea,
+select,
+.form-control{
+  width:100% !important;
+  padding:14px 18px !important;
+  font-size:17px !important;
+  font-weight:500 !important;
+  min-height:50px !important;
+  border-radius:13px !important;
+  border:1px solid var(--glass-border) !important;
+  background:#ffffff !important; /* inputs remain white */
+  color:var(--text) !important;
+  outline:none !important;
+  box-shadow:0 6px 16px rgba(0,0,0,.05) !important;
+  transition:.25s ease;
+}
+
+input::placeholder,
+textarea::placeholder{
+  font-size:15px !important;
+  color:#94a3b8 !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+.form-control:focus{
+  border-color:var(--primary) !important;
+  box-shadow:0 10px 26px rgba(79,70,229,.18) !important;
+}
+
+.theme-toggle{
+  border:none;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  padding:8px 14px;
+  border-radius:10px;
+  font-size:14px;
+  cursor:pointer;
+  transition: all 0.3s ease;
+}
+
+.theme-toggle:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 18px rgba(0,0,0,.25);
+}
+
+/* ================= CARDS ================= */
+.card{
+  border:none;
+  border-radius:20px;
+  background:var(--card-bg); /* cards always white */
+  color:var(--card-text);
+  backdrop-filter:blur(16px);
+  box-shadow:0 12px 30px rgba(0,0,0,.07);
+  padding:20px;
+  margin-bottom:18px;
+  transition:transform .3s ease, box-shadow .3s ease, background 0.3s, color 0.3s;
+}
+
+.card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 16px 36px rgba(0,0,0,.1);
+}
+
+/* ================= BUTTONS ================= */
+.btn{
+  font-size:14.5px;
+  padding:10px 20px;
+  border-radius:13px;
+  transition:.25s ease;
+  border:none;
+  cursor:pointer;
+}
+
+.btn-primary{
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;
+}
+
+.btn-primary:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 25px rgba(79,70,229,.35);
+}
+
+.btn-success{
+  background:linear-gradient(135deg,#16a34a,#15803d);
+  color:#fff !important;
+}
+
+.btn-success:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 25px rgba(22,163,74,.35);
+}
+
+/* ================= FOOTER ================= */
+.app-footer{
+  width:100%;
+  background:var(--glass-soft);
+  border-top:1px solid var(--glass-border);
+  text-align:center;
+  padding:12px;
+  font-size:12.5px;
+  color:var(--muted);
+  transition: background 0.3s, color 0.3s;
+}
+
+/* ================= RESPONSIVE ================= */
+@media(max-width:768px){
+  #sidebar{margin-left:-240px;}
+  #sidebar.active{margin-left:0;}
+  input,textarea,.form-control{
+    font-size:16px !important;
+    min-height:46px !important;
+  }
+}
+
+</style>
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <!-- Sidebar  -->
+      <nav id="sidebar">
+        <div class="sidebar-header">
+          <h3>Disaster Prediction</h3>
+        </div>
+
+        <ul class="list-unstyled components">
+          <li>
+            <a href="{{ url_for('index') }}">Home</a>
+          </li>
+
+          <li class="active">
+            <a href="{{ url_for('earthquake') }}"
+              >Earthquake Prediction <span class="badge bg-success rounded-pill"><i class="fa fa-check-circle" aria-hidden="true"></i></span></a
+            >
+          </li>
+          <li>
+            <a href="{{ url_for('flood') }}">Flood Prediction <span class="badge bg-success rounded-pill"><i class="fa fa-check-circle" aria-hidden="true"></i></span></a>
+          </li>
+<li>
+  <a href="/feedback">
+    Feedback & Issues
+    <span class="badge bg-primary rounded-pill">
+      <i class="fa fa-comments"></i>
+    </span>
+  </a>
+</li>
+
+                          <li>
+  <a href="{{ url_for('help_page') }}">
+    Help / User Guide
+    <span class="badge bg-info rounded-pill">
+      <i class="fa fa-question-circle"></i>
+    </span>
+  </a>
+</li>
+<li>
+  <a href="{{ url_for('safety_tips') }}">
+    Safety Tips
+    <span class="badge bg-success rounded-pill">
+      <i class="fa fa-shield"></i>
+    </span>
+  </a>
+</li>
+<li>
+  <a href="{{ url_for('emergency') }}">
+    Emergency Contacts
+    <span class="badge bg-danger rounded-pill">
+      <i class="fa fa-phone"></i>
+    </span>
+  </a>
+</li>
+
+
+<li>
+  <a href="{{ url_for('about') }}">
+    About System
+    <span class="badge bg-primary rounded-pill">
+      <i class="fa fa-info-circle"></i>
+    </span>
+  </a>
+</li>
+
+            <li>
+  <a href="{{ url_for('settings') }}">
+    Settings
+    <span class="badge bg-secondary rounded-pill">
+      <i class="fa fa-cog"></i>
+    </span>
+  </a>
+</li>
+
+<!-- LOGOUT (BOTTOM) -->
+<li class="mt-auto">
+  <a href="{{ url_for('logout') }}" onclick="return confirmLogout();">
+    Logout
+    <span class="badge bg-danger rounded-pill">
+      <i class="fa fa-sign-out"></i>
+    </span>
+  </a>
+</li>
+
+        </ul>
+      </nav>
+
+      <!-- Page Content  -->
+      <div id="content">
+        <nav class="navbar card navbar-expand-lg navbar-light bg-light justify-content-between">
+          <div class="container-fluid">
+            <button type="button" id="sidebarCollapse" class="btn btn-primary ">
+              <i class="fa fa-bars"></i>
+              <span>Toggle Sidebar</span>
+            </button>
+
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+              <ul class="nav navbar-nav ml-auto">
+
+                <li class="nav-item">
+                  <div id="google_translate_element"></div>
+
+                  <script type="text/javascript">
+                    function googleTranslateElementInit() {
+                      new google.translate.TranslateElement(
+                        {
+                          pageLanguage: "en",
+                          layout:
+                            google.translate.TranslateElement.InlineLayout
+                              .SIMPLE,
+                        },
+                        "google_translate_element"
+                      );
+                    }
+                  </script>
+
+                  <script
+                    type="text/javascript"
+                    src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+                  ></script>
+                </li>
+                <li class="nav-item ms-3">
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <i class="fa fa-moon-o"></i>
+      <span class="d-none d-md-inline">Theme</span>
+    </button>
+  </li>
+
+              </ul>
+            </div>
+          </div>
+        </nav>
+
+        <div class="row card py-4 mx-1 px-4 shadow-sm mb-5">
+          <div id="map" style="width: 100%;height: 390px;"></div>
+        </div>
+
+<div class="row">
+  <!-- Left Card: Prediction Result + Live Alerts -->
+  <div class="col-xl-4">
+    <div class="card shadow-sm px-4">
+      <div class="card-body">
+<div class="results text-center">
+
+    <!-- REAL-TIME MAIN HEADING (JS controls this) -->
+    <h4 id="eq_main_heading" class="fw-bold text-secondary">
+        Loading…
+    </h4>
+
+    <!-- REAL-TIME SUB-HEADING (optional, JS can update) -->
+    <p id="eq_sub_heading" class="text-muted small">
+        Fetching real-time earthquake data…
+    </p>
+
+</div>
+
+
+
+<dl class="row mt-3">
+  <dt class="col-sm-5">Latitude</dt>
+  <dd class="col-sm-7" id="eq_lat">-</dd>
+
+  <dt class="col-sm-5">Longitude</dt>
+  <dd class="col-sm-7" id="eq_lon">-</dd>
+
+  <dt class="col-sm-5">Depth</dt>
+  <dd class="col-sm-7" id="eq_depth">-</dd>
+
+  <dt class="col-sm-5">Date / Time</dt>
+  <dd class="col-sm-7" id="eq_date">-</dd>
+
+  <dt class="col-sm-5">Magnitude</dt>
+  <dd class="col-sm-7" id="eq_mag">-</dd>
+
+  <dt class="col-sm-5">Nearest Place</dt>
+  <dd class="col-sm-7"><i id="eq_place">-</i></dd>
+
+  <!-- NEW ROW -->
+
+</dl>
+
+
+
+        <!-- Live Nearby Earthquake Alerts -->
+        <div class="mt-3">
+          <h6>Live Nearby Earthquakes</h6>
+          <ul>
+            {% for q in live_quakes %}
+            <li>
+              <strong>{{ q.place }}</strong> — Mag: {{ q.magnitude }}, Depth: {{ q.depth }} km,
+              Lat: {{ q.lat }}, Lon: {{ q.lon }}, Time: {{ q.time }}
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <!-- Buttons -->
+        <div class="row mt-3">
+          <div class="col-8">
+            <a href="{{ url_for('earthgraphs') }}" class="btn btn-success w-100">Graphical Model Analysis</a>
+          </div>
+          <div class="col-4">
+<form method="POST" action="/manual_alert" id="manualForm">
+  <input type="hidden" id="manualLat" name="lat">
+  <input type="hidden" id="manualLon" name="lon">
+  <input type="hidden" id="manualMag" name="mag">
+  <input type="hidden" id="manualPlace" name="place" value="Manual Trigger">
+
+  <button type="button" onclick="sendManualAlert()" class="btn btn-warning w-100">
+      Send Alert
+  </button>
+</form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Card: Latest Data Table -->
+  <div class="col-xl-8">
+    <div class="card px-4 shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Latest Data</h5>
+        <h6 class="card-subtitle mb-2 text-muted">Table depicts the latest queries for the prediction model</h6>
+        <div class="mt-3">
+<table class="table table-hover text-center">
+  <tr>
+    <th>Latitude</th>
+    <th>Longitude</th>
+    <th>Depth</th>
+    <th>Magnitude (real / predicted)</th>
+    <th>Alert Status</th>
+    <th>Predicted Date</th>
+  </tr>
+  {% for r in rows %}
+    <tr>
+        <td>{{ r.lat or "-" }}</td>
+        <td>{{ r.lon or "-" }}</td>
+        <td>{{ r.depth or 0 }}</td>
+        <td>
+            {% if r.real_mag is not none %}
+                <strong>{{ r.real_mag }}</strong> <small>(real)</small>
+                <div class="small text-muted">
+                    nearby: {{ r.real_place or "No recent quake" }}
+                    ({{ r.real_dist_km if r.real_dist_km is not none else 0 }} km)
+                </div>
+            {% elif r.predicted_mag is not none %}
+                <strong>{{ r.predicted_mag }}</strong> <small>(predicted)</small>
+            {% else %}
+                <strong>0</strong> <small>(real)</small>
+                <div class="small text-muted">
+                    nearby: No recent quake (0 km)
+                </div>
+            {% endif %}
+        </td>
+        <td>{{ r.alert or "-" }}</td>
+        <td>{{ r.date or "-" }}</td>
+    </tr>
+  {% endfor %}
+</table>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Earthquake Table -->
+    <div class="card px-4 shadow-sm mt-4">
+      <div class="card-body">
+        <h5 class="card-title">Live Earthquakes (Last Hour)</h5>
+        <h6 class="card-subtitle mb-2 text-muted">Data from USGS in real-time</h6>
+        <div class="mt-3">
+          <table class="table table-hover text-center" id="liveTable">
+            <thead>
+              <tr>
+                <th>Magnitude</th>
+                <th>Place</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Depth (km)</th>
+                <th>Time (UTC)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for q in live_quakes %}
+              <tr {% if q.magnitude >= 4 %} style="background-color: #f8d7da;" {% endif %}>
+                <td>{{ q.magnitude }}</td>
+                <td>{{ q.place }}</td>
+                <td>{{ q.lat }}</td>
+                <td>{{ q.lon }}</td>
+                <td>{{ q.depth }}</td>
+                <td>{{ q.time }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Google Map -->
+<div class="mt-4" id="map" style="height: 400px; width: 100%; border-radius: 15px;"></div>
+
+<!-- Footer -->
+<footer class="mt-4 text-center">
+  <p>Copyright © 2024 | Soham Garud</p>
+</footer>
+
+<!-- JS Libraries -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+function sendManualAlert() {
+    // Make sure userLat/userLon exist
+    const lat = userLat ?? 0;
+    const lon = userLon ?? 0;
+
+    // Ask user for magnitude (optional) or use default
+    let magInput = prompt("Enter magnitude for manual alert:", "0");
+    const mag = magInput ? parseFloat(magInput) : 0;
+
+    // Populate hidden inputs
+    document.getElementById("manualLat").value = lat;
+    document.getElementById("manualLon").value = lon;
+    document.getElementById("manualMag").value = mag;
+    document.getElementById("manualPlace").value = "Manual Trigger";
+
+    fetch("/manual_alert", {
+        method: "POST",
+        body: new FormData(document.getElementById("manualForm"))
+    })
+    .then(r => r.json())
+    .then(data => {
+        console.log("BACKEND RESPONSE:", data);
+
+        let alertMessage = `✅ Manual Alert Sent\n\n` +
+            `Location:\nLAT: ${data.lat}\nLON: ${data.lon}\n\n` +
+            `Submitted MAG: ${mag}\n\n`; // <- show correct submitted magnitude
+
+        if (data.nearest_real_mag !== null) {
+            alertMessage += `Nearest Real Quake Info:\n` +
+                `MAG: ${data.nearest_real_mag}\n` +
+                `Place: ${data.nearest_real_place}\n` +
+                `Time: ${data.nearest_real_time}\n` +
+                `Distance: ${data.nearest_real_dist_km ?? '-'} km\n`;
+        } else {
+            alertMessage += `No nearby real quake detected.`;
+        }
+
+        alert(alertMessage);
+    })
+    .catch(err => {
+        console.error("Manual Alert ERROR:", err);
+        alert("Manual alert failed.");
+    });
+}
+
+
+let userLat   = {{ lat | tojson if lat is not none else 'null' }};
+let userLon   = {{ lon | tojson if lon is not none else 'null' }};
+let userDepth = {{ depth | tojson if depth is not none else 'null' }};
+let userDate  = {{ date | tojson if date is not none else 'null' }};
+
+/* ============================
+   DOM REFERENCES
+============================ */
+const eqHead   = document.querySelector("#eq_main_heading");
+const eqSub    = document.querySelector("#eq_sub_heading");
+const tableBody = document.getElementById("liveTableBody");
+
+/* Initial headings */
+eqHead.textContent = "Loading real-time earthquake data…";
+eqSub.textContent  = "Connecting to global seismic servers…";
+
+/* ============================
+   FEEDS
+============================ */
+const FEEDS = [
+  "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson",
+
+];
+
+/* ============================
+   MANUAL QUAKES
+============================ */
+let manualQuakes = [];
+
+/* ============================
+   MAP INIT
+============================ */
+const map = L.map("map");
+if (userLat !== null && userLon !== null) map.setView([userLat, userLon], 6);
+else map.setView([0,0],2);
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution:"© OpenStreetMap contributors"
+}).addTo(map);
+
+/* ============================
+   DISTANCE CALC
+============================ */
+function dist(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 +
+              Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) *
+              Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+/* ============================
+   EARLY WARNING UI
+============================ */
+let flashMarker = null;
+const warnBox = document.createElement("div");
+warnBox.style.cssText = `
+    position: fixed; top: 15px; left: 50%;
+    transform: translateX(-50%);
+    padding: 20px 30px; background:red;
+    color:white; font-weight:bold;
+    font-size:20px; border-radius:10px;
+    display:none; z-index:9999;
+`;
+document.body.appendChild(warnBox);
+
+function earlyWarning(quake, distance) {
+    const pSpeed = 5;
+    const eta = Math.floor(distance / pSpeed);
+    warnBox.innerHTML = `⚠ EARTHQUAKE WARNING ⚠<br>Shaking may arrive in ${eta} sec`;
+    warnBox.style.display = "block";
+    if(navigator.vibrate) navigator.vibrate([200,150,200]);
+
+    if(flashMarker) map.removeLayer(flashMarker);
+    flashMarker = L.circleMarker([quake.lat, quake.lon], {
+        radius: quake.magnitude>0? quake.magnitude*4:8,
+        fillOpacity:1,
+        color:"yellow"
+    }).addTo(map);
+
+    let vis = true;
+    const flick = setInterval(() => {
+        if(!flashMarker) return clearInterval(flick);
+        flashMarker.setStyle({opacity:vis?1:0});
+        vis = !vis;
+    }, 300);
+
+    setTimeout(()=>{
+        warnBox.style.display="none";
+        if(flashMarker) map.removeLayer(flashMarker);
+        flashMarker=null;
+    },(eta+5)*1000);
+}
+
+/* ============================
+   REVERSE GEOCODE WITH CACHE
+============================ */
+let cachedUserPlace = null;
+async function getCachedUserPlace() {
+    if(!cachedUserPlace && userLat!=null && userLon!=null){
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${userLat}&lon=${userLon}`);
+            const data = await res.json();
+            cachedUserPlace = data.display_name || "Unknown location";
+        } catch(e){
+            cachedUserPlace = "Unknown location";
+        }
+    }
+    return cachedUserPlace ?? "-";
+}
+
+/* ============================
+   FETCH EARTHQUAKE DATA
+============================ */
+async function getEarthquakeData(){
+    let allQuakes=[];
+    for(let url of FEEDS){
+        try{
+            const res = await fetch(url);
+            if(!res.ok) continue;
+            const data = await res.json();
+
+            if(data.features){ // USGS
+                allQuakes = allQuakes.concat(data.features.map(f=>({
+                    lat:f.geometry.coordinates[1],
+                    lon:f.geometry.coordinates[0],
+                    depth:f.geometry.coordinates[2],
+                    magnitude:f.properties.mag ??0,
+                    place:f.properties.place||"Unknown location",
+                    time:new Date(f.properties.time).toUTCString()
+                })));
+            }
+
+            if(data.Infogempa){ // BMKG
+                allQuakes = allQuakes.concat(data.Infogempa.gempa.map(g=>({
+                    lat:parseFloat(g.Lintang),
+                    lon:parseFloat(g.Bujur),
+                    depth:parseFloat(g.Kedalaman),
+                    magnitude:parseFloat(g.Magnitude)||0,
+                    place:g.Wilayah||"Unknown location",
+                    time:g.Tanggal+" "+g.Jam
+                })));
+            }
+        } catch(e){console.log("Feed failed:",url,e); continue;}
+    }
+    return allQuakes;
+}
+
+/* ============================
+   FIND NEAREST QUAKE
+============================ */
+async function findNearest(quakes){
+    let nearest=null, minD=Infinity;
+    for(let q of quakes){
+        const d = dist(userLat,userLon,q.lat,q.lon);
+        if(d<minD){ nearest=q; minD=d;}
+    }
+    return {nearest,distance:minD};
+}
+
+/* ============================
+   FETCH & DISPLAY
+============================ */
+async function getPlaceFromCoords(lat, lon) {
+    try {
+        const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`,
+            { headers: { "User-Agent": "quake-map-script" } }
+        );
+        const data = await res.json();
+        return data.display_name || "Unknown location";
+    } catch (e) {
+        return "Unknown location";
+    }
+}
+
+
+
+async function fetchLive() {
+    eqHead.textContent = "Loading…";
+    eqSub.textContent = "Fetching earthquakes…";
+
+    // fetch quakes from all feeds
+    let quakes = (await getEarthquakeData()).concat(manualQuakes);
+
+    // add distance from user to each quake
+    const quakesWithDistance = quakes.map(q => ({
+        ...q,
+        distance: (userLat != null && userLon != null)
+            ? dist(userLat, userLon, q.lat, q.lon)
+            : Infinity
+    }));
+
+    // find nearest quake (within 50 km)
+    const nearbyQuakes = quakesWithDistance
+        .filter(q => q.distance <= 50)  // threshold in km
+        .sort((a, b) => a.distance - b.distance);
+
+    const exactQuake = nearbyQuakes[0] || null; // nearest quake within 50 km
+    const nearest = quakesWithDistance.sort((a, b) => a.distance - b.distance)[0] || null;
+    const distance = nearest?.distance ?? null;
+
+    /* ================================
+       DATE HANDLING
+    ================================*/
+    let inputDateRaw = document.getElementById("date")?.value || "";
+    let inputDate =
+        (inputDateRaw.trim() === "" ||
+         inputDateRaw.trim().toLowerCase() === "none" ||
+         inputDateRaw.trim().toLowerCase() === "null")
+            ? null
+            : inputDateRaw.trim();
+
+    let realtimeDate = nearest?.time ?? "-";
+    let finalDate = inputDate !== null ? inputDate : realtimeDate;
+
+    // get user place
+    const userPlace = await getCachedUserPlace(exactQuake?.bmkgRaw);
+
+    // clear old markers except base map
+    map.eachLayer(l => {
+        if (!(l instanceof L.TileLayer)) map.removeLayer(l);
+    });
+
+    // show user location marker
+    if (userLat != null && userLon != null) {
+        L.circleMarker([userLat, userLon], {
+            radius: 10,
+            color: "yellow",
+            fillOpacity: 1
+        }).addTo(map).bindPopup(`Your Location: ${userPlace}`).openPopup();
+    }
+
+    // update info panel
+    document.getElementById("eq_lat").textContent = userLat ?? "-";
+    document.getElementById("eq_lon").textContent = userLon ?? "-";
+    document.getElementById("eq_depth").textContent = nearest?.depth ?? "-";
+    document.getElementById("eq_date").textContent = finalDate;
+    document.getElementById("eq_place").textContent = userPlace ?? "-";
+
+    document.getElementById("eq_mag").innerHTML =
+        exactQuake && exactQuake.magnitude !== null && !isNaN(exactQuake.magnitude)
+            ? `${exactQuake.magnitude.toFixed(1)} <small>(real)</small>`
+            : "- <small>(real)</small>";
+
+    // plot quake markers
+    quakes.forEach(q => {
+        L.circleMarker([q.lat, q.lon], {
+            radius: q.magnitude > 0 ? q.magnitude * 2 : 8,
+            color: q.magnitude >= 4 ? "red" : "blue",
+            fillOpacity: 0.7
+        }).addTo(map).bindPopup(`
+            <b>${q.place}</b><br>
+            Mag: ${q.magnitude}<br>
+            Depth: ${q.depth} km<br>
+            ${q.time}
+        `);
+    });
+
+    // update table
+    if (tableBody) {
+        tableBody.innerHTML = "";
+        quakes.forEach(q => {
+            const tr = document.createElement("tr");
+            if (q.magnitude >= 4) tr.style.background = "#f8d7da";
+
+            tr.innerHTML = `
+                <td>${q.lat}</td>
+                <td>${q.lon}</td>
+                <td>${q.depth}</td>
+                <td>${q.magnitude}</td>
+                <td>${q.place}</td>
+                <td>${q.time}</td>
+            `;
+            tableBody.appendChild(tr);
+        });
+    }
+
+    // early warning
+    if (nearest && nearest.magnitude >= 4 && distance <= 50) {
+        earlyWarning(nearest, distance);
+        eqHead.textContent = "⚠ Strong Earthquake Nearby!";
+        eqHead.className = "text-danger fw-bold";
+    } else {
+        eqHead.textContent = "No Strong Earthquake Nearby";
+        eqHead.className = "text-success fw-bold";
+    }
+}
+
+
+
+/* ============================
+   AUTO REFRESH
+============================ */
+fetchLive();
+setInterval(fetchLive,20000);
+
+/* ============================
+   MANUAL FORM
+============================ */
+document.getElementById("predictionForm")?.addEventListener("submit",e=>{
+    e.preventDefault();
+    const manualMag=parseFloat(document.getElementById("inputMag").value);
+    const manualLat=parseFloat(document.getElementById("inputLat").value);
+    const manualLon=parseFloat(document.getElementById("inputLon").value);
+
+
+    manualQuakes.push({
+        lat:manualLat,
+        lon:manualLon,
+        depth:manualDepth,
+        magnitude:manualMag,
+        place:"Manual Input",
+        time: f.properties.time
+      ? new Date(f.properties.time).toUTCString()
+      : "Unknown"
+
+    });
+
+    fetchLive();
+});
+
+      function confirmLogout() {
+    return confirm("Are you sure you want to logout?");
+    // If user clicks "OK", it returns true and logout proceeds
+    // If user clicks "Cancel", it returns false and logout is cancelled
+  }
+       function toggleTheme(){
+  document.body.classList.toggle("dark");
+}
+</script>
+
+
+
+
+
+
+
+
+<!-- Remove Google Maps API -->
+<!-- <script
+    async
+    defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB5-16uXGj7aWiJihLngZtxsWbaMW_7zsg&callback=initMap">
+</script> -->
+
+<!-- Optional: keep your local JS files if needed -->
+<script src="{{url_for('static', filename='scripts.js')}}"></script>
+<script src="{{url_for('static', filename='script.js')}}"></script>
+<script src="{{url_for('static', filename='map.js')}}"></script>
+
+</body>
+</html>

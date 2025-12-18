@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>About – Disaster Prediction System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<style>
+/* ================= THEME VARIABLES ================= */
+:root{
+  --bg:#f5f7fb;
+  --glass:rgba(255,255,255,0.75);
+  --glass-soft:rgba(255,255,255,0.9);
+  --border:rgba(0,0,0,0.08);
+  --text:#0f172a;
+  --muted:#475569;
+  --primary:#4f46e5;
+  --primary-dark:#4338ca;
+}
+
+body.dark{
+  --bg:#0b1120;
+  --glass:rgba(15,23,42,0.85);
+  --glass-soft:rgba(15,23,42,0.95);
+  --border:rgba(255,255,255,0.12);
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+}
+
+/* ================= BASE ================= */
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:"Poppins",sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  transition:.3s;
+}
+
+/* ================= CARD ================= */
+.glass-card{
+  width:100%;
+  max-width:900px;
+  background:var(--glass);
+  backdrop-filter:blur(24px);
+  border-radius:28px;
+  border:1px solid var(--border);
+  box-shadow:0 30px 70px rgba(0,0,0,.25);
+  padding:40px;
+}
+
+/* ================= HEADER ================= */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:30px;
+}
+
+.header h2{
+  margin:0;
+  font-size:30px;
+  font-weight:700;
+}
+
+.toggle{
+  font-size:22px;
+  cursor:pointer;
+  color:var(--primary);
+}
+
+/* ================= CONTENT ================= */
+.section{
+  margin-bottom:28px;
+}
+
+.section h3{
+  font-size:22px;
+  margin-bottom:10px;
+  color:var(--primary);
+}
+
+.section p{
+  font-size:17px;
+  line-height:1.9;
+  color:var(--muted);
+}
+
+.features{
+  list-style:none;
+  padding:0;
+  margin:14px 0 0;
+}
+
+.features li{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:12px;
+  font-size:16px;
+  color:var(--muted);
+}
+
+.features i{
+  color:var(--primary);
+  margin-top:5px;
+}
+
+/* ================= INFO BOX ================= */
+.info-box{
+  background:var(--glass-soft);
+  border-radius:20px;
+  padding:22px;
+  border:1px solid var(--border);
+  margin-top:24px;
+}
+
+.info-box p{
+  margin:0;
+  font-size:16px;
+  line-height:1.8;
+}
+
+/* ================= FOOTER BUTTON ================= */
+.footer-buttons{
+  display:flex;
+  justify-content:space-between;
+  margin-top:34px;
+}
+
+.btn{
+  padding:14px 34px;
+  font-size:16px;
+  font-weight:600;
+  border-radius:20px;
+  text-decoration:none;
+  color:#fff;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  transition:.3s;
+}
+
+.btn-back{
+  background:linear-gradient(135deg,#64748b,#475569);
+}
+
+.btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 26px rgba(0,0,0,.25);
+}
+
+/* ================= MOBILE ================= */
+@media(max-width:768px){
+  .glass-card{padding:28px}
+  .header h2{font-size:24px}
+  .footer-buttons{
+    flex-direction:column;
+    gap:16px;
+  }
+  .btn{text-align:center}
+}
+</style>
+</head>
+
+<body>
+
+<div class="glass-card">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h2>ℹ️ About Disaster Prediction System</h2>
+    <div class="toggle" id="themeToggle">
+      <i class="fa-solid fa-moon"></i>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <div class="section">
+    <h3>📊 System Overview</h3>
+    <p>
+      The <strong>Disaster Prediction System</strong> is an intelligent monitoring
+      and alert platform designed to analyze and predict natural disasters
+      such as earthquakes, floods, and related hazards using real-time data.
+    </p>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="section">
+    <h3>⚙️ Core Capabilities</h3>
+    <ul class="features">
+      <li><i class="fa-solid fa-earthquake"></i> Real-time earthquake monitoring and alerts</li>
+      <li><i class="fa-solid fa-water"></i> Flood-related risk awareness</li>
+      <li><i class="fa-solid fa-map-location-dot"></i> Location-based visualization using maps</li>
+      <li><i class="fa-solid fa-bell"></i> Emergency guidance and safety instructions</li>
+    </ul>
+  </div>
+
+  <!-- DATA SOURCES -->
+  <div class="section">
+    <h3>🌐 Data Sources</h3>
+    <ul class="features">
+      <li><i class="fa-solid fa-database"></i> USGS Earthquake API – seismic activity data</li>
+      <li><i class="fa-solid fa-map"></i> OpenStreetMap – geographical mapping services</li>
+    </ul>
+  </div>
+
+  <!-- INFO BOX -->
+  <div class="info-box">
+    <p>
+      🎓 This project is developed as an <strong>academic & research-based system</strong>
+      with the objective of improving disaster awareness, preparedness, and
+      public safety through technology.
+    </p>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer-buttons">
+    <a href="/" class="btn btn-back">⬅ Back to Dashboard</a>
+  </div>
+
+</div>
+
+<script>
+document.getElementById("themeToggle").onclick = ()=>{
+  document.body.classList.toggle("dark");
+};
+</script>
+
+</body>
+</html>

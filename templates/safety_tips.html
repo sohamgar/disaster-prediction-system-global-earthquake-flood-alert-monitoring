@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Disaster Safety Guidelines</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<style>
+:root{
+  --bg:#f5f7fb;
+  --card:rgba(255,255,255,0.35);
+  --text:#0f172a;
+  --muted:#475569;
+  --primary:#4f46e5;
+  --primary-dark:#4338ca;
+  --glass-border:rgba(255,255,255,.45);
+}
+
+body.dark{
+  --bg:#0b1120;
+  --card:rgba(15,23,42,0.55);
+  --text:#e5e7eb;
+  --muted:#cbd5f5;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:var(--bg);
+  font-family:"Poppins",sans-serif;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  transition:.3s;
+}
+
+/* GLASS CARD */
+.glass-card{
+  width:100%;
+  max-width:820px;
+  background:var(--card);
+  backdrop-filter:blur(22px);
+  border-radius:30px;
+  box-shadow:0 30px 70px rgba(0,0,0,.2);
+  padding:40px;
+  border:1px solid var(--glass-border);
+  display:none; /* hide all initially */
+}
+
+.glass-card.active{
+  display:block;
+}
+
+/* HEADER */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:28px;
+}
+
+.title{
+  font-size:28px;
+  font-weight:700;
+  color:var(--text);
+}
+
+.toggle{
+  cursor:pointer;
+  font-size:22px;
+  color:var(--primary);
+}
+
+/* COLLAPSE BUTTON */
+.collapse-btn{
+  width:100%;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  border:none;
+  border-radius:18px;
+  font-size:18px;
+  font-weight:600;
+  padding:14px 20px;
+  cursor:pointer;
+  margin-bottom:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  transition:.3s;
+}
+
+.collapse-btn i{
+  transition:.3s;
+}
+
+.collapse-btn.active i{
+  transform:rotate(180deg);
+}
+
+.collapse-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 30px rgba(0,0,0,.25);
+}
+
+/* COLLAPSE CONTENT */
+.collapse-content{
+  list-style:none;
+  padding:0 12px;
+  margin:0 0 26px 0;
+  max-height:0;
+  overflow:hidden;
+  transition:max-height .4s ease;
+}
+
+.collapse-content li{
+  font-size:16px;
+  line-height:1.8;
+  color:var(--muted);
+  margin-bottom:12px;
+  display:flex;
+  gap:12px;
+}
+
+.collapse-content li i{
+  color:var(--primary);
+  font-size:18px;
+  margin-top:3px;
+}
+
+/* BUTTONS */
+.card-buttons{
+  display:flex;
+  justify-content:space-between;
+  margin-top:28px;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.btn{
+  padding:12px 30px;
+  font-size:15px;
+  font-weight:600;
+  border-radius:18px;
+  text-decoration:none;
+  color:#fff;
+  transition:.3s;
+  text-align:center;
+}
+
+.btn-back{
+  background:linear-gradient(135deg,#64748b,#475569);
+}
+
+.btn-next{
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+}
+
+.btn-dashboard{
+  background:linear-gradient(135deg,#10b981,#047857);
+}
+
+.btn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 20px rgba(0,0,0,.25);
+}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .glass-card{padding:28px;}
+  .card-buttons{
+    flex-direction:column;
+  }
+  .btn{width:100%; text-align:center;}
+}
+</style>
+</head>
+
+<body>
+
+<!-- STEP 1 -->
+<div class="glass-card active" id="step1">
+  <div class="header">
+    <div class="title">🌍 Disaster Safety Guidelines</div>
+    <div class="toggle" id="themeToggle1"><i class="fa-solid fa-moon"></i></div>
+  </div>
+
+  <button class="collapse-btn">🛑 Earthquake Safety Tips <i class="fa-solid fa-chevron-down"></i></button>
+  <ul class="collapse-content">
+    <li><i class="fa-solid fa-arrow-down"></i> Drop, Cover, and Hold On.</li>
+    <li><i class="fa-solid fa-window-maximize"></i> Stay away from windows and glass.</li>
+    <li><i class="fa-solid fa-elevator"></i> Do not use elevators.</li>
+    <li><i class="fa-solid fa-kit-medical"></i> Keep emergency kits ready.</li>
+    <li><i class="fa-solid fa-bullhorn"></i> Follow official instructions.</li>
+  </ul>
+
+  <div class="card-buttons">
+    <a href="/" class="btn btn-dashboard">🏠 Dashboard</a>
+    <a href="#" class="btn btn-next" data-next="step2">Next ➡</a>
+  </div>
+</div>
+
+<!-- STEP 2 -->
+<div class="glass-card" id="step2">
+  <div class="header">
+    <div class="title">💧 Flood Safety Guidelines</div>
+    <div class="toggle" id="themeToggle2"><i class="fa-solid fa-moon"></i></div>
+  </div>
+
+  <button class="collapse-btn">Flood Safety Tips <i class="fa-solid fa-chevron-down"></i></button>
+  <ul class="collapse-content">
+    <li><i class="fa-solid fa-arrow-up"></i> Move to higher ground immediately.</li>
+    <li><i class="fa-solid fa-ban"></i> Avoid flood water.</li>
+    <li><i class="fa-solid fa-bolt"></i> Turn off electricity if safe.</li>
+    <li><i class="fa-solid fa-radio"></i> Listen to emergency alerts.</li>
+    <li><i class="fa-solid fa-file-shield"></i> Protect important documents.</li>
+  </ul>
+
+  <div class="card-buttons">
+    <a href="#" class="btn btn-back" data-back="step1">⬅ Back</a>
+    <a href="#" class="btn btn-next" data-next="step3">Next ➡</a>
+    <a href="/" class="btn btn-dashboard">🏠 Dashboard</a>
+  </div>
+</div>
+
+<!-- STEP 3 -->
+<div class="glass-card" id="step3">
+  <div class="header">
+    <div class="title">🔥 Fire Safety Guidelines</div>
+    <div class="toggle" id="themeToggle3"><i class="fa-solid fa-moon"></i></div>
+  </div>
+
+  <button class="collapse-btn">Fire Safety Tips <i class="fa-solid fa-chevron-down"></i></button>
+  <ul class="collapse-content">
+    <li><i class="fa-solid fa-fire"></i> Stop, Drop, and Roll if clothes catch fire.</li>
+    <li><i class="fa-solid fa-kit-medical"></i> Keep fire extinguisher ready.</li>
+    <li><i class="fa-solid fa-door-closed"></i> Know exit routes and fire alarms.</li>
+  </ul>
+
+  <div class="card-buttons">
+    <a href="#" class="btn btn-back" data-back="step2">⬅ Back</a>
+    <span></span>
+    <a href="/" class="btn btn-dashboard">🏠 Dashboard</a>
+  </div>
+</div>
+
+<script>
+/* COLLAPSE */
+document.querySelectorAll(".collapse-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const content = btn.nextElementSibling;
+    btn.classList.toggle("active");
+    if(content.style.maxHeight){
+      content.style.maxHeight = null;
+    }else{
+      content.style.maxHeight = content.scrollHeight + "px";
+    }
+  });
+});
+
+/* DARK MODE TOGGLE */
+document.querySelectorAll(".toggle").forEach(toggle=>{
+  toggle.addEventListener("click", ()=>{
+    document.body.classList.toggle("dark");
+  });
+});
+
+/* NEXT/BACK NAVIGATION */
+document.querySelectorAll(".btn-next").forEach(btn=>{
+  btn.addEventListener("click", e=>{
+    e.preventDefault();
+    const nextId = btn.getAttribute("data-next");
+    if(nextId){
+      document.querySelectorAll(".glass-card").forEach(c=>c.classList.remove("active"));
+      document.getElementById(nextId).classList.add("active");
+      window.scrollTo(0,0);
+    }
+  });
+});
+
+document.querySelectorAll(".btn-back").forEach(btn=>{
+  btn.addEventListener("click", e=>{
+    e.preventDefault();
+    const backId = btn.getAttribute("data-back");
+    if(backId){
+      document.querySelectorAll(".glass-card").forEach(c=>c.classList.remove("active"));
+      document.getElementById(backId).classList.add("active");
+      window.scrollTo(0,0);
+    }
+  });
+});
+</script>
+
+</body>
+</html>

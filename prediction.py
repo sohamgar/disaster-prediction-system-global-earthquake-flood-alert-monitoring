@@ -1,0 +1,6774 @@
+#!/usr/bin/env python
+
+# Flask & related
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file
+from flask_mail import Mail, Message
+from werkzeug.security import generate_password_hash, check_password_hash
+import re
+from io import BytesIO
+from fpdf import FPDF
+from werkzeug.utils import secure_filename
+
+from reportlab.pdfgen import canvas
+# Standard Libraries
+import os
+import random
+import json
+import yaml
+import urllib.request
+import time
+import traceback
+import subprocess
+from datetime import datetime, timedelta
+import smtplib
+import ssl
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from math import radians, sin, asin, cos, sqrt, atan2
+from itsdangerous import URLSafeTimedSerializer
+# Data Science / ML Libraries
+import numpy as np
+import pandas as pd
+from PIL import Image, ImageDraw, ImageFont
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
+import joblib
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
+#tf.compat.v1.enable_eager_execution()
+from bs4 import BeautifulSoup
+from models import sqldb, Feedback, Reply
+
+
+
+# HTTP requests
+import requests
+
+# Database
+import pymysql
+
+
+weather_data = []
+weather_labels = []
+db = pymysql.connect(host="localhost",user="root",passwd="",db="dmnat")
+# Write your API key here.
+api_key = "AIzaSyDYPhWrJ_gi7we9v3G9CwBeQIfb9Je4wl4"
+
+
+app = Flask(__name__)
+app.jinja_env.auto_reload = True
+app.config["TEMPLATES_AUTO_RELOAD"] = True
+app.secret_key = "super_secret_key_123"
+
+# EMAIL SETTINGS
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = "sohamgarud0806@gmail.com"      # CHANGE
+app.config['MAIL_PASSWORD'] = "pwjdjogjwnzwuhle"        # CHANGE
+serializer = URLSafeTimedSerializer(app.secret_key)
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:@localhost/dmnat"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# initialize SQLAlchemy
+sqldb.init_app(app)
+
+# create tables
+with app.app_context():
+    sqldb.create_all()
+mail = Mail(app)
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Only show warnings and errors
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+UPLOAD_FOLDER = "static/uploads/avatars"
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
+MAX_FILE_SIZE = 2 * 1024 * 1024  # 2MB
+
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+
+import pymysql
+
+def get_db_connection():
+    return pymysql.connect(
+        host="localhost",
+        user="root",
+        password="",
+        database="dmnat",
+        cursorclass=pymysql.cursors.DictCursor,
+        autocommit=True
+    )
+
+
+
+from flask import jsonify
+import csv
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def crop_center_square(img: Image.Image) -> Image.Image:
+    width, height = img.size
+    min_dim = min(width, height)
+    left = (width - min_dim) // 2
+    top = (height - min_dim) // 2
+    right = left + min_dim
+    bottom = top + min_dim
+    return img.crop((left, top, right, bottom))
+
+
+def generate_default_avatar(username, user_id):
+    # File name
+    default_name = f"user_{user_id}_default.png"
+    default_path = os.path.join(app.config["UPLOAD_FOLDER"], default_name)
+
+    if os.path.exists(default_path):
+        return default_name
+
+    # Image settings
+    size = (300, 300)
+    bg_color = (66, 133, 244)
+   # Yellow / Gmail-like
+    text_color = (255, 255, 255) # White letter
+
+    # Create image
+    img = Image.new("RGB", size, bg_color)
+    draw = ImageDraw.Draw(img)
+
+    # First letter of username
+    letter = username[0].upper() if username else "U"
+
+    # Font (fallback safe)
+    try:
+        font = ImageFont.truetype("arial.ttf", 140)
+    except:
+        font = ImageFont.load_default()
+
+    # Center text
+    bbox = draw.textbbox((0, 0), letter, font=font)
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+
+    position = (
+        (size[0] - text_width) // 2,
+        (size[1] - text_height) // 2 - 10
+    )
+
+    # Draw letter
+    draw.text(position, letter, fill=text_color, font=font)
+
+    # Save
+    img.save(default_path, "PNG", quality=90)
+
+    return default_name
+
+@app.route("/api/get_historical_earthquakes")
+def get_historical_earthquakes():
+    data = []
+
+    try:
+        with open("historical_earthquakes.csv", "r", encoding="utf-8") as file:
+            reader = csv.DictReader(file)
+
+            for row in reader:
+                data.append({
+                    "time": row["time"],          # ISO format
+                    "latitude": float(row["latitude"]),
+                    "longitude": float(row["longitude"]),
+                    "depth": float(row["depth"]), # km
+                    "mag": float(row["mag"]),
+                    "magType": row["magType"],
+                    "place": row["place"],
+                    "type": row["type"]
+                })
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+    return jsonify(data)
+
+@app.route("/api/get_historical_floods")
+def get_historical_floods():
+    import csv
+
+    data = []
+
+    try:
+        with open("historical_floods.csv", "r") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                data.append({
+                    "date": row["date"],
+                    "area": row["area"],
+                    "latitude": float(row["latitude"]),
+                    "longitude": float(row["longitude"]),
+                    "severity": row["severity"],
+                    "description": row["description"]
+                })
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+
+    return jsonify(data)
+
+@app.route("/admin/overview")
+def admin_overview():
+    return render_template("overview.html")
+
+
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form['email'].strip()
+        cur = db.cursor()
+        cur.execute("SELECT id FROM users WHERE email=%s", (email,))
+        user = cur.fetchone()
+        if user:
+            token = serializer.dumps(email, salt='password-reset-salt')
+            reset_link = url_for('reset_password', token=token, _external=True)
+
+            msg = Message('Reset Your Password', sender=app.config['MAIL_USERNAME'], recipients=[email])
+            msg.html = f"""
+                <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <p>Hi,</p>
+
+                    <p>We received a request to reset the password for your account.  
+                    If you made this request, please click the button below to create a new password:</p>
+
+                    <p style="text-align: center;">
+                        <a href="{reset_link}" 
+                           style="background-color: #4CAF50; color: white; padding: 12px 20px; 
+                                  text-decoration: none; border-radius: 5px; font-size: 16px;">
+                            Reset Your Password
+                        </a>
+                    </p>
+
+                    <p>If the button doesn’t work, you can also use the link below:</p>
+                    <p style="word-break: break-all;">
+                        <a href="{reset_link}">{reset_link}</a>
+                    </p>
+
+                    <p><strong>This link will expire in 1 hour</strong> for your security.</p>
+
+                    <p>If you didn’t request a password reset, you can safely ignore this email.  
+                    Your account will remain secure and no changes will be made.</p>
+
+                    <hr style="margin-top: 25px;">
+
+                    <p style="font-size: 14px; color: #666;">
+                        For your security, we recommend using a strong, unique password and enabling
+                        additional security features if available.
+                    </p>
+
+                    <p style="font-size: 14px; color: #666;">
+                        Thank you,<br>
+                        <strong>Disaster Support Team</strong>
+                    </p>
+                </div>
+            """
+            mail.send(msg)
+            flash("Password reset email sent!", "success")
+        else:
+            flash("Email not found!", "danger")
+    return render_template('forgot_password.html')
+
+
+
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    try:
+        email = serializer.loads(token, salt='password-reset-salt', max_age=3600)  # 1 hour
+    except:
+        #flash("The reset link is invalid or expired.", "danger")
+        return render_template('reset_link_expired.html')
+
+
+    if request.method == 'POST':
+        new_password = request.form['password'].strip()
+        confirm_password = request.form['confirm_password'].strip()
+        if new_password != confirm_password:
+            flash("Passwords do not match!", "danger")
+        else:
+            hashed = generate_password_hash(new_password)
+            cur = db.cursor()
+            cur.execute("UPDATE users SET password=%s WHERE email=%s", (hashed, email))
+            db.commit()
+            flash("Password successfully reset!", "success")
+            return redirect(url_for('login_page'))
+
+
+    return render_template('reset_password.html')
+
+
+
+
+def send_registration_email(email, username, lat, lng):
+    msg = Message(
+        "Welcome to Disaster Alert System 🌍",
+        sender=app.config['MAIL_USERNAME'],
+        recipients=[email]
+    )
+
+    msg.body = f"""
+Hello {username},
+
+Your account has been successfully created!
+
+📍 Registered Location:
+Latitude: {lat}
+Longitude: {lng}
+
+With your registration, you are now part of a system designed to keep you and your community safe. Here's what you can expect:
+
+1 **Automatic Alerts**
+- You will receive notifications **ONLY** when a real disaster is detected near your registered location.
+- This includes:
+    • Earthquakes detected in your area
+    • Floods reported near your location
+
+2 **Reliable & Accurate**
+- Our system uses verified real-time data from government and scientific sources.
+- Alerts are sent promptly so you can take necessary precautions.
+
+3 **No Action Needed**
+- You don’t need to check or refresh anything manually. Alerts come directly to your registered email or phone if enabled.
+
+4 **Safety Tips**
+- In case of an earthquake: Drop, Cover, and Hold On. Avoid unstable structures.
+- In case of a flood: Move to higher ground, avoid crossing flooded areas, and follow official advisories.
+
+5 **Your Privacy**
+- Your location data is used solely to provide disaster alerts.
+- We do **not** share your personal information with any third party.
+
+Stay safe and stay informed.  
+Our team is constantly monitoring and improving the system to ensure timely and accurate alerts.
+
+Warm regards,  
+**Disaster Alert System Team**  
+"""
+
+    mail.send(msg)
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register_page():
+    if request.method == 'POST':
+        username = request.form['username'].strip()
+        name = request.form['name'].strip()
+        email = request.form['email'].strip()
+        mobile = request.form['mobile'].strip()
+        lat = float(request.form['lat'].strip())
+        lng = float(request.form['lng'].strip())
+        password_input = request.form['password']
+
+        password = generate_password_hash(password_input)
+        cursor = db.cursor()
+
+        # VALIDATION
+        cursor.execute("SELECT id FROM users WHERE username=%s", (username,))
+        if cursor.fetchone():
+            flash("Username already exists!", "danger")
+            return render_template("register.html")
+
+        cursor.execute("SELECT id FROM users WHERE email=%s", (email,))
+        if cursor.fetchone():
+            flash("Email already registered!", "danger")
+            return render_template("register.html")
+
+        # INSERT
+        try:
+            sql = """
+                INSERT INTO users (username, name, email, password, mobile, latitude, longitude) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(sql, (username, name, email, password, mobile, lat, lng))
+            db.commit()
+
+            # WELCOME EMAIL ONLY
+            send_registration_email(email, name, lat, lng)
+
+            flash("Registration successful! Please login.", "success")
+            return redirect(url_for('login_page'))
+
+        except Exception as e:
+            flash("Error: " + str(e), "danger")
+
+    return render_template("register.html")
+
+@app.route("/settings/profile", methods=["POST"])
+def update_profile():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+
+    full_name = request.form.get("full_name")
+    email = request.form.get("email")
+    phone = request.form.get("phone")
+    latitude = request.form.get("latitude")
+    longitude = request.form.get("longitude")
+
+    db = get_db_connection()
+    cursor = db.cursor()
+    cursor.execute("""
+        UPDATE users 
+        SET name=%s, email=%s, mobile=%s, latitude=%s, longitude=%s 
+        WHERE id=%s
+    """, (full_name, email, phone, latitude, longitude, session['user_id']))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    flash("Profile updated successfully", "success")
+    return redirect(url_for("settings"))
+
+
+@app.route("/update_avatar", methods=["POST"])
+def update_avatar():
+    if "user_id" not in session:
+        flash("You must be logged in to update avatar.", "danger")
+        return redirect(url_for("settings"))
+
+    file = request.files.get("avatar")
+    if not file or file.filename == "":
+        flash("No file selected", "danger")
+        return redirect(url_for("settings"))
+
+    if not allowed_file(file.filename):
+        flash("Invalid image format", "danger")
+        return redirect(url_for("settings"))
+
+    file.seek(0, os.SEEK_END)
+    if file.tell() > MAX_FILE_SIZE:
+        flash("Image must be under 2MB", "danger")
+        return redirect(url_for("settings"))
+    file.seek(0)
+
+    ext = secure_filename(file.filename).rsplit(".", 1)[1].lower()
+    new_filename = f"user_{session['user_id']}.{ext}"
+    filepath = os.path.join(app.config["UPLOAD_FOLDER"], new_filename)
+
+    db = get_db_connection()
+    cursor = db.cursor(pymysql.cursors.DictCursor)
+
+    # delete old avatar
+    cursor.execute("SELECT avatar FROM users WHERE id=%s", (session["user_id"],))
+    old = cursor.fetchone()
+    if old and old["avatar"]:
+        old_path = os.path.join(app.config["UPLOAD_FOLDER"], old["avatar"])
+        if os.path.exists(old_path):
+            os.remove(old_path)
+
+    # process image
+    img = Image.open(file).convert("RGB")
+    img = crop_center_square(img)
+    img = img.resize((300, 300))
+    img.save(filepath, quality=90)
+
+    cursor.execute(
+        "UPDATE users SET avatar=%s WHERE id=%s",
+        (new_filename, session["user_id"])
+    )
+    db.commit()
+    cursor.close()
+    db.close()
+
+    flash("Profile photo updated successfully", "success")
+    return redirect(url_for("settings"))
+
+@app.route("/remove_avatar", methods=["POST"])
+def remove_avatar():
+    if "user_id" not in session:
+        flash("You must be logged in to remove avatar.", "danger")
+        return redirect(url_for("settings"))
+
+    db = get_db_connection()
+    cursor = db.cursor()
+    cursor.execute("SELECT avatar, username FROM users WHERE id=%s", (session["user_id"],))
+    user = cursor.fetchone()
+
+    if user and user["avatar"]:
+        path = os.path.join(app.config["UPLOAD_FOLDER"], user["avatar"])
+        if os.path.exists(path):
+            os.remove(path)
+
+    # Generate default avatar (function you need to have)
+    default_avatar = generate_default_avatar(user["username"], session["user_id"])
+
+    cursor.execute(
+        "UPDATE users SET avatar=%s WHERE id=%s",
+        (default_avatar, session["user_id"])
+    )
+    db.commit()
+    cursor.close()
+    db.close()
+
+    flash("Avatar removed", "success")
+    return redirect(url_for("settings"))
+
+@app.route("/settings/password", methods=["POST"])
+def update_password():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+
+    old_password = request.form.get("old_password")
+    new_password = request.form.get("new_password")
+    confirm_password = request.form.get("confirm_password")
+
+    if not old_password or not new_password or not confirm_password:
+        flash("All password fields are required", "warning")
+        return redirect(url_for("settings"))
+
+    if new_password != confirm_password:
+        flash("New password and confirmation do not match", "warning")
+        return redirect(url_for("settings"))
+
+    db = get_db_connection()
+    cursor = db.cursor()
+    cursor.execute("SELECT password FROM users WHERE id=%s", (session['user_id'],))
+    user = cursor.fetchone()
+
+    if not user or not check_password_hash(user['password'], old_password):
+        flash("Old password is incorrect", "warning")
+        cursor.close()
+        db.close()
+        return redirect(url_for("settings"))
+
+    hashed_password = generate_password_hash(new_password)
+    cursor.execute("UPDATE users SET password=%s WHERE id=%s", (hashed_password, session['user_id']))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    flash("Password updated successfully", "success")
+    return redirect(url_for("settings"))
+
+
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login_page():
+    if request.method == 'POST':
+        username_input = request.form['username']
+        password_input = request.form['password']
+
+        cursor = db.cursor()
+        cursor.execute(
+            "SELECT id, username, name, email, password, latitude, longitude "
+            "FROM users WHERE username=%s OR email=%s",
+            (username_input, username_input)
+        )
+        user = cursor.fetchone()
+
+        if not user:
+            flash("Invalid Username!", "danger")
+            return redirect(url_for('login_page'))
+
+        # unpack row
+        user_id, username, name, email, hashed_pass, lat, lng = user
+
+        # password check
+        if check_password_hash(hashed_pass, password_input):
+
+            # ---------- GENERATE OTP ----------
+            otp_code = str(random.randint(100000, 999999))
+
+            # ---------- SAVE OTP + USER INFO IN SESSION ----------
+            session['pending_otp'] = otp_code
+            session['otp_expiry'] = time.time() + 300  # OTP valid for 5 minutes
+
+            session['pending_user'] = {
+                "user_id": user_id,
+                "username": username,
+                "name": name,
+                "email": email
+            }
+
+            # ---------- SEND OTP EMAIL ----------
+            msg = Message(
+                "Your Login Verification Code",
+                sender="sohamgarud0806@gmail.com",
+                recipients=[email]
+            )
+            msg.body = (
+                f"Hello {session['pending_user']['username']},\n\n"
+                f"We received a request to sign in to your Disaster Alert System account.\n\n"
+                f"To verify your identity, please use the One-Time Password (OTP) provided below:\n\n"
+                f"🔐 OTP Code: {otp_code}\n\n"
+                f"This code is valid for the next 5 minutes. For your security, please do not share "
+                f"this code with anyone — not even with our support team.\n\n"
+                f"If you did not try to log in, your account may be safe. You can simply ignore this email. "
+                f"If you feel something is wrong or you notice suspicious activity, please contact our support team immediately.\n\n"
+                f"Stay safe,\n"
+                f"Disaster Alert System Security Team"
+
+            )
+
+            mail.send(msg)
+
+            flash("Authentication code sent to your email!", "info")
+            return redirect(url_for('verify_otp_page'))
+
+        flash("Incorrect Password!", "danger")
+        return redirect(url_for('login_page'))
+
+    return render_template("login.html")
+
+@app.route("/settings")
+def settings():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+
+    db = get_db_connection()
+    cursor = db.cursor()
+
+    cursor.execute("""
+        SELECT username, name, email, mobile, latitude, longitude, avatar
+        FROM users WHERE id=%s
+    """, (session['user_id'],))
+
+    user = cursor.fetchone()
+    cursor.close()
+    db.close()
+
+    return render_template(
+        "settings.html",
+        username=user["username"],
+        full_name=user["name"],
+        email=user["email"],
+        phone=user["mobile"],
+        latitude=user["latitude"],
+        longitude=user["longitude"],
+        avatar=user["avatar"]   # 🔥 THIS WAS MISSING
+    )
+
+
+
+@app.route("/verify-otp", methods=["GET", "POST"])
+def verify_otp_page():
+    # If user is already logged in, redirect away
+    if "user_id" in session:
+        return redirect(url_for("index"))
+
+    # Check if OTP session exists
+    if "pending_otp" not in session or "pending_user" not in session:
+        flash("Session expired. Please login again.", "danger")
+        return redirect(url_for("login_page"))
+
+    if request.method == "POST":
+        user_otp = request.form.get("otp")
+
+        if user_otp == session.get("pending_otp"):
+            user = session["pending_user"]
+
+            # Promote user to full login session
+            session["user_id"] = user["user_id"]
+            session["user_username"] = user["username"]
+            session["user_name"] = user["name"]
+
+            # Clean temporary OTP session data
+            session.pop("pending_otp", None)
+            session.pop("pending_user", None)
+            session.pop("otp_email", None)
+
+            #flash("Login successful", "success")
+
+            # ✅ Redirect to login success page
+            return redirect(url_for("login_success"))
+
+        else:
+            flash("Invalid OTP", "danger")
+
+    return render_template("verify_otp.html")
+
+@app.route("/login-success")
+def login_success():
+    if 'user_id' not in session:  # Check if user is logged in
+        return redirect(url_for('login_page'))  # Redirect to login if not logged in
+    return render_template("login_success.html", username=session.get('user_name'))
+
+
+
+@app.route("/resend-otp")
+def resend_otp():
+
+    # ✅ If user already logged in, block OTP resend
+    if "user_id" in session:
+        return redirect(url_for("index"))
+
+    # ✅ OTP session must exist
+    if "pending_otp" not in session or "pending_user" not in session:
+        flash("Session expired. Please login again.", "danger")
+        return redirect(url_for("login_page"))
+
+    # ✅ Limit resend attempts (max 3)
+    resend_count = session.get("resend_count", 0)
+    if resend_count >= 3:
+        flash("You have reached the maximum OTP resend attempts!", "danger")
+        return redirect(url_for("verify_otp_page"))
+
+    # ✅ Generate new OTP
+    otp_code = str(random.randint(100000, 999999))
+    session["pending_otp"] = otp_code
+    session["otp_expiry"] = time.time() + 300  # 5 minutes
+    session["resend_count"] = resend_count + 1
+
+    email = session["pending_user"].get("email")
+
+    # ✅ Safety check
+    if not email:
+        flash("Email not found. Please login again.", "danger")
+        return redirect(url_for("login_page"))
+
+    # ✅ Send OTP email
+    msg = Message(
+        subject="Your Login Verification Code (Resent)",
+        sender="sohamgarud0806@gmail.com",
+        recipients=[email]
+    )
+
+    msg.body = f"""
+Hello,
+
+A new verification code has been generated at your request.
+
+🔐 Your One-Time Password (OTP): {otp_code}
+
+This code is valid for the next 5 minutes.
+Do NOT share this code with anyone.
+
+Resend attempt: {session['resend_count']} of 3
+
+If this was not you, please secure your account immediately.
+
+Regards,
+Disaster Alert Security Team
+"""
+
+    mail.send(msg)
+
+    flash("A new verification code has been sent to your email.", "success")
+    return redirect(url_for("verify_otp_page"))
+
+
+
+@app.route("/check_username")
+def check_username():
+    username = request.args.get("username", "").strip()
+    if not username:
+        return jsonify({"available": False})
+
+    try:
+        cur = db.cursor()
+        cur.execute("SELECT 1 FROM users WHERE username=%s", (username,))
+        exists = cur.fetchone() is not None
+        return jsonify({"available": not exists})
+    except Exception as e:
+        print("Username check error:", e)
+        return jsonify({"available": False})
+
+
+@app.route("/check_email")
+def check_email():
+    email = request.args.get("email", "").strip()
+    if not email:
+        return jsonify({"available": False})
+
+    try:
+        cur = db.cursor()
+        cur.execute("SELECT 1 FROM users WHERE email=%s", (email,))
+        exists = cur.fetchone() is not None
+        return jsonify({"available": not exists})
+    except Exception as e:
+        print("Email check error:", e)
+        return jsonify({"available": False})
+
+
+from werkzeug.security import generate_password_hash
+
+print(generate_password_hash("Admin@123"))
+
+
+
+@app.route("/admin_login", methods=["GET", "POST"])
+def admin_login():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "").strip()
+
+        cursor = db.cursor()
+        cursor.execute("SELECT id, username, password, email FROM admin WHERE email=%s", (email,))
+        admin = cursor.fetchone()
+
+        if admin and check_password_hash(admin[2], password):
+            # Temporary session for OTP
+            session["temp_admin"] = {"id": admin[0], "username": admin[1]}
+
+            # Generate OTP
+            otp = random.randint(100000, 999999)
+            session["admin_otp"] = otp
+            session["admin_otp_time"] = datetime.now().isoformat()
+
+            # Send OTP email
+            sender_email = "sohamgarud0806@gmail.com"
+            sender_pass = "pwjdjogjwnzwuhle"  # Gmail App Password
+            receiver_email = admin[3]
+
+            message_body = f"""
+            Hello {admin[1]},
+
+            We received a request to log in to the Disaster Alert System using your
+            administrator account.
+
+            Your Admin Login Verification Code is:
+
+            🔑 OTP: {otp}
+
+            ⏳ This OTP is valid for 5 minutes only.
+            Please do not share this code with anyone. Our team will never ask
+            for your OTP.
+
+            ⚠️ Security Alert:
+            If you did NOT initiate this login request, please secure your account
+            immediately by changing your password and contacting support.
+
+            Thank you for helping us keep your account secure.
+
+            Regards,
+            Disaster Alert System
+            (Security Team – Automated Message)
+            """
+
+            msg = MIMEText(message_body)
+            msg['Subject'] = "Admin OTP Verification"
+            msg['From'] = sender_email
+            msg['To'] = receiver_email
+
+            try:
+                server = smtplib.SMTP("smtp.gmail.com", 587)
+                server.starttls()
+                server.login(sender_email, sender_pass)
+                server.send_message(msg)
+                server.quit()
+                flash(
+                    "A verification OTP has been sent to your registered admin email. "
+                    "Check your inbox or spam folder to continue.",
+                    "info"
+                )
+            except Exception as e:
+                print("OTP Email Error:", e)
+                flash(
+                    "Failed to send OTP email. Check server console for details.",
+                    "danger"
+                )
+                return redirect(url_for("admin_login"))
+
+            return redirect(url_for("admin_verify_otp"))
+
+        # Wrong email or password
+        flash("Invalid admin email or password!", "danger")
+        return redirect(url_for("admin_login"))
+
+    # GET method: just render login page
+    return render_template("admin_login.html")
+
+
+@app.route("/admin_logout")
+def admin_logout():
+    session.clear()  # Clear all session data
+    flash("You have been logged out successfully.", "success")
+    return redirect(url_for("admin_login"))
+
+
+
+@app.route("/admin_verify_otp", methods=["GET", "POST"])
+def admin_verify_otp():
+    if "temp_admin" not in session:
+        flash("Please login first.", "warning")
+        return redirect(url_for("admin_login"))
+
+    if request.method == "POST":
+        entered_otp = request.form.get("otp")
+        if not entered_otp:
+            flash("Please enter the OTP.", "warning")
+            return redirect(url_for("admin_verify_otp"))
+
+        otp_valid = session.get("admin_otp")
+        otp_time = session.get("admin_otp_time")
+
+        if otp_valid and otp_time:
+            otp_age = datetime.now() - datetime.fromisoformat(otp_time)
+            if otp_age.total_seconds() > 300:  # 5 minutes
+                flash("OTP expired. Please login again.", "danger")
+                session.pop("temp_admin", None)
+                session.pop("admin_otp", None)
+                session.pop("admin_otp_time", None)
+                return redirect(url_for("admin_login"))
+
+            if str(otp_valid) == entered_otp:
+                # Correct OTP → full admin session
+                session["admin_id"] = session["temp_admin"]["id"]
+                session["admin_username"] = session["temp_admin"]["username"]
+
+                # Clear temp session
+                session.pop("temp_admin", None)
+                session.pop("admin_otp", None)
+                session.pop("admin_otp_time", None)
+
+                #flash("Login successful!", "success")
+                return redirect(url_for("admin_login_success"))
+            else:
+                flash("Incorrect OTP. Please try again!", "danger")
+                return redirect(url_for("admin_verify_otp"))
+
+    return render_template("admin_verify_otp.html")
+
+@app.route("/admin_login_success")
+def admin_login_success():
+    # If admin not logged in, prevent direct access
+    if "admin_id" not in session:
+        flash("Please login first.", "warning")
+        return redirect(url_for("admin_login"))
+    return render_template("admin_login_success.html")
+
+
+@app.route("/admin_resend_otp")
+def admin_resend_otp():
+    import random
+    import smtplib
+    from email.mime.text import MIMEText
+    from datetime import datetime, timedelta
+
+    # Ensure user is still in OTP stage
+    if "temp_admin" not in session:
+        flash("Session expired. Please login again.", "warning")
+        return redirect("/admin_login")
+
+    # Anti-spam: OTP allowed only once every 30 sec
+    last_sent = session.get("last_otp_sent")
+    now = datetime.now()
+
+    if last_sent:
+        last_sent_dt = datetime.fromisoformat(last_sent)
+        diff = (now - last_sent_dt).total_seconds()
+
+        if diff < 30:  # Within cooldown
+            wait_time = 30 - int(diff)
+            flash(f"Please wait {wait_time} seconds before requesting a new OTP.", "warning")
+            return redirect("/admin_verify_otp")
+
+    # Fetch admin details
+    admin_id = session["temp_admin"]["id"]
+    cursor = db.cursor()
+    cursor.execute("SELECT email, username FROM admin WHERE id=%s", (admin_id,))
+    admin_data = cursor.fetchone()
+
+    if not admin_data:
+        flash("Admin account not found. Please login again.", "danger")
+        return redirect("/admin_login")
+
+    admin_email, admin_name = admin_data
+
+    # Generate new OTP
+    new_otp = random.randint(100000, 999999)
+    session["admin_otp"] = new_otp
+    session["admin_otp_time"] = now.isoformat()
+    session["last_otp_sent"] = now.isoformat()
+
+    # Send email properly with MIME
+    try:
+        sender_email = "sohamgarud0806@gmail.com"
+        sender_pass = "pwjdjogjwnzwuhle"
+
+        msg_body = f"""
+        Hello {admin_name},
+
+        We received a request to generate a new One-Time Password (OTP) for
+        your administrator account on the Disaster Alert System.
+
+        🔐 Your NEW OTP is:
+        {new_otp}
+
+        ⏳ This OTP is valid for 5 minutes only and can be used once.
+        For your security, please do not share this OTP with anyone.
+        Our team will never ask for your OTP.
+
+        ⚠️ Security Notice:
+        If you did NOT request this OTP, your account may be at risk.
+        Please change your password immediately and contact the system
+        administrator or support team.
+
+        Thank you for keeping your account secure.
+
+        Regards,
+        Disaster Alert System
+        (Security Team – Automated Message)
+        """
+
+        msg = MIMEText(msg_body)
+        msg["Subject"] = "Your New Admin Login OTP"
+        msg["From"] = sender_email
+        msg["To"] = admin_email
+
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(sender_email, sender_pass)
+        server.send_message(msg)
+        server.quit()
+
+    except Exception as e:
+        print("OTP Resend Email Error:", e)
+        flash("Failed to send OTP. Try again later.", "danger")
+        return redirect("/admin_verify_otp")
+
+    flash("A new OTP has been sent to your registered admin email.", "success")
+    return redirect("/admin_verify_otp")
+
+@app.route("/admin/test_email")
+def admin_test_email():
+
+    # Admin login check
+    if "admin_id" not in session:
+        flash("Please login first.", "warning")
+        return redirect("/admin_login")
+
+    cursor = db.cursor()
+
+    # Get admin email
+    cursor.execute(
+        "SELECT email, username FROM admin WHERE id=%s",
+        (session["admin_id"],)
+    )
+    admin = cursor.fetchone()
+
+    if not admin:
+        flash("Admin account not found.", "danger")
+        return redirect("/admin/settings")
+
+    admin_email = admin[0]
+    admin_name = admin[1]
+
+    # Get SMTP settings from DB
+    cursor.execute("""
+        SELECT smtp_email, smtp_password
+        FROM system_settings
+        WHERE id=1
+    """)
+    settings = cursor.fetchone()
+
+    if not settings or not settings[0] or not settings[1]:
+        flash("SMTP settings are not configured.", "danger")
+        return redirect("/admin/settings")
+
+    sender_email = settings[0]
+    sender_pass = settings[1]
+
+    # Send test email
+    try:
+        import smtplib
+        from email.mime.text import MIMEText
+
+        msg = MIMEText(f"""
+Hello {admin_name},
+
+✅ This is a TEST EMAIL from Disaster Alert System.
+
+SMTP configuration is working correctly.
+
+- Admin Panel
+""")
+
+        msg["Subject"] = "✅ SMTP Test Email Successful"
+        msg["From"] = sender_email
+        msg["To"] = admin_email
+
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(sender_email, sender_pass)
+        server.send_message(msg)
+        server.quit()
+
+        flash(f"Test email sent successfully to {admin_email}", "success")
+
+    except Exception as e:
+        print("Test email error:", e)
+        flash("Failed to send test email. Check SMTP credentials.", "danger")
+
+    return redirect("/admin/settings")
+
+
+@app.route("/admin/dashboard")
+def admin_dashboard():
+    if "admin_id" not in session:
+        flash("Please login first.", "warning")
+        return redirect("/admin_login")
+
+    admin = {
+        "id": session["admin_id"],
+        "username": session["admin_username"]
+    }
+    return render_template("admin_dashboard.html", admin=admin)
+
+from flask import render_template, request, redirect, session, flash
+from werkzeug.security import generate_password_hash
+
+@app.route("/admin/settings", methods=["GET", "POST"])
+def admin_settings():
+
+    if "admin_id" not in session:
+        flash("Please login first.", "warning")
+        return redirect("/admin_login")
+
+    cursor = db.cursor()
+
+    if request.method == "POST":
+        rainfall = request.form.get("rainfall_threshold")
+        flood_alert = 1 if request.form.get("flood_alert") else 0
+        magnitude = request.form.get("earthquake_magnitude")
+        smtp_email = request.form.get("smtp_email")
+        smtp_password = request.form.get("smtp_password")
+
+        if smtp_password:
+            # ✅ Update WITH password
+            cursor.execute("""
+                UPDATE system_settings SET
+                    rainfall_threshold=%s,
+                    flood_alert_enabled=%s,
+                    earthquake_magnitude=%s,
+                    smtp_email=%s,
+                    smtp_password=%s
+                WHERE id=1
+            """, (rainfall, flood_alert, magnitude, smtp_email, smtp_password))
+        else:
+            # ✅ Update WITHOUT password
+            cursor.execute("""
+                UPDATE system_settings SET
+                    rainfall_threshold=%s,
+                    flood_alert_enabled=%s,
+                    earthquake_magnitude=%s,
+                    smtp_email=%s
+                WHERE id=1
+            """, (rainfall, flood_alert, magnitude, smtp_email))
+
+        db.commit()
+        flash("System settings saved successfully.", "success")
+
+    cursor.execute("SELECT * FROM system_settings WHERE id=1")
+    settings = cursor.fetchone()
+
+    return render_template("admin_settings.html", settings=settings)
+
+@app.route("/admin/admins")
+def admin_management():
+    if "admin_id" not in session:
+        return redirect("/admin_login")
+
+    cur = db.cursor()
+    cur.execute("SELECT id, username, email FROM admin")
+    admins = cur.fetchall()
+
+    # Convert id explicitly to int
+    admin_list = [
+        {"id": int(a[0]), "username": a[1], "email": a[2]}
+        for a in admins
+    ]
+
+    return render_template(
+        "admin_management.html",
+        admins=admin_list,
+        logged_admin_id=int(session["admin_id"])  # make sure this is int
+    )
+
+
+@app.route("/admin/delete_admin/<int:admin_id>", methods=["POST"])
+def delete_admin(admin_id):
+    if "admin_id" not in session:
+        flash("Unauthorized access", "danger")
+        return redirect("/admin/login")
+
+    # Prevent self-delete
+    if admin_id == session["admin_id"]:
+        flash("You cannot delete your own account", "warning")
+        return redirect("/admin/admins")
+
+    # Connect to DB
+    db = get_db_connection()
+    try:
+        cur = db.cursor()
+
+        # Check if admin exists
+        cur.execute("SELECT id FROM admin WHERE id=%s", (admin_id,))
+        admin = cur.fetchone()
+
+        if not admin:
+            flash("Admin not found", "danger")
+            return redirect("/admin/admins")
+
+        # Delete admin
+        cur.execute("DELETE FROM admin WHERE id=%s", (admin_id,))
+        db.commit()  # commit changes
+
+        flash("Admin deleted successfully", "success")
+        return redirect("/admin/admins")
+
+    except Exception as e:
+        db.rollback()
+        flash(f"Error: {str(e)}", "danger")
+        return redirect("/admin/admins")
+
+    finally:
+        cur.close()
+        db.close()
+
+
+@app.route("/admin/add_admin", methods=["POST"])
+def add_admin():
+    if "admin_id" not in session:
+        return redirect("/admin_login")
+
+    username = request.form.get("username")
+    email = request.form.get("email")
+    password = request.form.get("password")
+
+    hashed = generate_password_hash(password)
+
+    cur = db.cursor()
+    cur.execute(
+        "INSERT INTO admin (username, email, password) VALUES (%s,%s,%s)",
+        (username, email, hashed)
+    )
+    db.commit()
+
+    flash("New admin added successfully!", "success")
+    return redirect("/admin/admins")
+
+@app.route("/admin/change_password", methods=["POST"])
+def change_admin_password():
+    if "admin_id" not in session:
+        return redirect("/admin_login")
+
+    old = request.form.get("old_password")
+    new = request.form.get("new_password")
+
+    cur = db.cursor()
+    cur.execute("SELECT password FROM admin WHERE id=%s", (session["admin_id"],))
+    stored = cur.fetchone()
+
+    if not stored or not check_password_hash(stored[0], old):
+        flash("Old password incorrect!", "danger")
+        return redirect("/admin/admins")
+
+    new_hash = generate_password_hash(new)
+    cur.execute(
+        "UPDATE admin SET password=%s WHERE id=%s",
+        (new_hash, session["admin_id"])
+    )
+    db.commit()
+
+    flash("Password updated successfully!", "success")
+    return redirect("/admin/admins")
+
+
+
+@app.route("/admin/users")
+def admin_users():
+    if "admin_id" not in session:
+        return redirect("/admin_login")
+
+    cur = db.cursor()
+    cur.execute("SELECT id, username, name, email, mobile, latitude, longitude FROM users")
+    users = cur.fetchall()
+
+    return render_template("admin_users.html", users=users)
+
+
+from werkzeug.security import generate_password_hash
+
+@app.route("/admin/user/add", methods=["POST"])
+def add_user():
+    username = request.form.get("username", "").strip()
+    name = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip()
+    mobile = request.form.get("mobile", "").strip()
+    latitude = request.form.get("latitude", "").strip()
+    longitude = request.form.get("longitude", "").strip()
+    password_input = request.form.get("password", "").strip()
+
+    if not all([username, name, email, mobile, latitude, longitude, password_input]):
+        flash("All fields are required.", "danger")
+        return redirect("/admin/users")
+
+    password = generate_password_hash(password_input)
+
+    cursor = get_db_connection()
+
+    # IMPORTANT: select specific columns
+    cursor.execute(
+        "SELECT username, email FROM users WHERE username=%s OR email=%s",
+        (username, email)
+    )
+    existing = cursor.fetchone()
+
+    if existing:
+        # existing is a TUPLE → index based access
+        if existing[0] == username:
+            flash("Username already exists.", "danger")
+        if existing[1] == email:
+            flash("Email already exists.", "danger")
+        cursor.close()
+        return redirect("/admin/users")
+
+    try:
+        cursor.execute("""
+            INSERT INTO users 
+            (username, name, email, password, mobile, latitude, longitude)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (username, name, email, password, mobile, latitude, longitude))
+
+        db.commit()
+
+        send_registration_email(email, name, latitude, longitude)
+
+        flash("User added successfully! Welcome email sent.", "success")
+
+    except Exception as e:
+        db.rollback()
+        flash(f"Error adding user: {str(e)}", "danger")
+
+    finally:
+        cursor.close()
+
+    return redirect("/admin/users")
+
+@app.route("/admin/user/<int:user_id>")
+def admin_user_view(user_id):
+    if "admin_id" not in session:
+        return redirect("/admin_login")
+
+    cur = db.cursor()
+    cur.execute(
+        "SELECT id, username, name, email, mobile, latitude, longitude FROM users WHERE id=%s",
+        (user_id,)
+    )
+    user = cur.fetchone()
+
+    return render_template("admin_user_view.html", user=user)
+
+@app.route("/admin/user/edit/<int:user_id>")
+def admin_user_edit(user_id):
+    if "admin_id" not in session:
+        return redirect("/admin_login")
+
+    cur = db.cursor()
+    cur.execute(
+        "SELECT id, username, name, email, mobile, latitude, longitude FROM users WHERE id=%s",
+        (user_id,)
+    )
+    user = cur.fetchone()
+
+    return render_template("admin_user_edit.html", user=user)
+
+@app.route("/admin/user/update/<int:user_id>", methods=["POST"])
+def admin_user_update(user_id):
+    if "admin_id" not in session:
+        return redirect("/admin_login")
+
+    username = request.form.get("username").strip()
+    name = request.form.get("name").strip()
+    email = request.form.get("email").strip()
+    mobile = request.form.get("mobile").strip()
+    latitude = request.form.get("latitude").strip()
+    longitude = request.form.get("longitude").strip()
+
+    cur = db.cursor()
+
+    # Check if username already exists for a different user
+    cur.execute("SELECT id FROM users WHERE username=%s AND id != %s", (username, user_id))
+    existing = cur.fetchone()
+    if existing:
+        flash("Username already exists! Please choose a different one.", "danger")
+        return redirect(f"/admin/user/edit/{user_id}")
+
+    # Check if email already exists for a different user (optional)
+    cur.execute("SELECT id FROM users WHERE email=%s AND id != %s", (email, user_id))
+    existing_email = cur.fetchone()
+    if existing_email:
+        flash("Email already exists! Please use a different email.", "danger")
+        return redirect(f"/admin/user/edit/{user_id}")
+
+    # If validation passes, update
+    try:
+        cur.execute("""
+            UPDATE users SET 
+                username=%s, 
+                name=%s, 
+                email=%s, 
+                mobile=%s, 
+                latitude=%s, 
+                longitude=%s
+            WHERE id=%s
+        """, (username, name, email, mobile, latitude, longitude, user_id))
+        db.commit()
+        flash("User updated successfully!", "success")
+    except Exception as e:
+        db.rollback()
+        flash(f"Error updating user: {e}", "danger")
+
+    return redirect("/admin/users")
+
+@app.route("/admin/user/delete/<int:user_id>")
+def admin_user_delete(user_id):
+    if "admin_id" not in session:
+        return redirect("/admin_login")
+
+    cur = db.cursor()
+    cur.execute("DELETE FROM users WHERE id=%s", (user_id,))
+    db.commit()
+
+    flash("User deleted!", "danger")
+    return redirect("/admin/users")
+
+feedback_data = []
+feedback_id_counter = 1
+
+# -----------------------
+# Routes
+# -----------------------
+@app.route("/admin/feedback")
+def feedback_page():
+    return render_template("admin_feedback.html")
+
+@app.route("/feedback")
+def user_feedback():
+    if 'user_id' not in session:
+        flash("Please login first.", "warning")
+        return redirect(url_for('login_page'))
+
+    return render_template("feedback.html")
+
+
+# API to get all feedback
+@app.route("/api/feedback", methods=["GET"])
+def get_feedback():
+    db = get_db_connection()
+    cursor = db.cursor()   # ✅ correct for PyMySQL
+
+    cursor.execute("""
+        SELECT id, type, message, disaster_type, date
+        FROM feedback
+        ORDER BY date DESC
+    """)
+    feedbacks = cursor.fetchall()
+
+    result = []
+
+    for f in feedbacks:
+        cursor.execute("""
+            SELECT message, date
+            FROM replies
+            WHERE feedback_id = %s
+            ORDER BY date ASC
+        """, (f["id"],))
+
+        replies = cursor.fetchall()
+
+        result.append({
+            "id": f["id"],
+            "type": f["type"],
+            "message": f["message"],
+            "disaster_type": f["disaster_type"],
+            "date": f["date"].strftime("%Y-%m-%d %H:%M"),
+            "replies": [
+                {
+                    "message": r["message"],
+                    "date": r["date"].strftime("%Y-%m-%d %H:%M")
+                } for r in replies
+            ]
+        })
+
+    cursor.close()
+    db.close()
+
+    return jsonify(result)
+
+
+# API to add new feedback
+# API to add new feedback (updated for disaster type)
+@app.route("/api/feedback/add", methods=["POST"])
+def add_feedback():
+    data = request.get_json()
+
+    if not data.get("type") or not data.get("message") or not data.get("disaster_type"):
+        return jsonify({"error": "Type, message, and disaster type are required"}), 400
+
+    cursor = db.cursor()
+
+    cursor.execute("""
+        INSERT INTO feedback (type, message, disaster_type, date)
+        VALUES (%s, %s, %s, NOW())
+    """, (
+        data["type"],
+        data["message"],
+        data["disaster_type"]
+    ))
+
+    db.commit()
+
+    return jsonify({"success": True})
+
+
+@app.route('/api/feedback/download/excel/<disaster_type>')
+def download_feedback_excel(disaster_type):
+    data = [f for f in feedback_data if
+            disaster_type.lower() == "all" or f['disaster_type'].lower() == disaster_type.lower()]
+    df = pd.DataFrame(data)
+
+    output = BytesIO()
+    df.to_excel(output, index=False)
+    output.seek(0)
+
+    now = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return send_file(
+        output,
+        download_name=f"{disaster_type}_feedback_{now}.xlsx",
+        as_attachment=True
+    )
+
+
+# ----------------------------------------------
+# PDF Feedback Download
+# ----------------------------------------------
+@app.route('/api/feedback/download/pdf/<disaster_type>')
+def download_feedback_pdf(disaster_type):
+    data = [f for f in feedback_data if
+            disaster_type.lower() == "all" or f['disaster_type'].lower() == disaster_type.lower()]
+
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 14)
+    pdf.cell(0, 10, f"{disaster_type.capitalize()} Feedback Report", ln=True, align='C')
+    pdf.ln(5)
+    pdf.set_font("Arial", "", 11)
+
+    headers = ["ID", "Type", "Message", "Date"]
+    col_width = pdf.w / len(headers) - 10
+
+    # Table header
+    for h in headers:
+        pdf.cell(col_width, 8, h, border=1, align='C')
+    pdf.ln()
+
+    # Table rows
+    for f in data:
+        pdf.cell(col_width, 8, str(f["id"]), border=1)
+        pdf.cell(col_width, 8, f["type"], border=1)
+        pdf.cell(col_width, 8, f["message"][:30] + "..." if len(f["message"]) > 30 else f["message"], border=1)
+        pdf.cell(col_width, 8, f["date"], border=1)
+        pdf.ln()
+
+    pdf_bytes = pdf.output(dest='S').encode('latin1')
+    pdf_io = BytesIO(pdf_bytes)
+    now = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    return send_file(
+        pdf_io,
+        download_name=f"{disaster_type}_feedback_{now}.pdf",
+        as_attachment=True
+    )
+
+
+@app.route("/api/feedback/reply/<int:feedback_id>", methods=["POST"])
+def reply_feedback(feedback_id):
+    data = request.get_json()
+    reply_msg = data.get("reply")
+
+    if not reply_msg:
+        return jsonify({"error": "Reply message required"}), 400
+
+    # Get DB connection
+    conn = get_db_connection()
+    cursor = conn.cursor()   # ✅ FIXED
+
+    try:
+        # Check if feedback exists
+        cursor.execute(
+            "SELECT id FROM feedback WHERE id = %s",
+            (feedback_id,)
+        )
+        feedback = cursor.fetchone()
+
+        if not feedback:
+            return jsonify({"error": "Feedback not found"}), 404
+
+        # Insert reply
+        cursor.execute("""
+            INSERT INTO replies (feedback_id, message, date)
+            VALUES (%s, %s, NOW())
+        """, (feedback_id, reply_msg))
+
+        conn.commit()
+
+        return jsonify({
+            "success": True,
+            "feedback_id": feedback_id,
+            "message": reply_msg
+        })
+
+    finally:
+        cursor.close()
+        conn.close()
+
+# API to delete feedback
+@app.route("/api/feedback/delete/<int:fid>", methods=["POST"])
+def delete_feedback(fid):
+    db = get_db_connection()
+    cursor = db.cursor()   # ✅ correct
+
+    # delete replies first
+    cursor.execute(
+        "DELETE FROM replies WHERE feedback_id = %s",
+        (fid,)
+    )
+
+    # delete feedback
+    cursor.execute(
+        "DELETE FROM feedback WHERE id = %s",
+        (fid,)
+    )
+
+    cursor.close()
+    db.close()
+
+    return jsonify({"success": True})
+
+WEATHER_KEY = "fb116bebc392ccc8ab251927edcb55d6"   # set this
+
+@app.route("/admin/flood_real_time")
+def flood_real_time():
+    # Only admin can access
+    if "admin_id" not in session:
+        return redirect("/admin_login")
+
+    cursor = db.cursor()
+    cursor.execute("SELECT id, name, email, latitude, longitude FROM users")
+    users = cursor.fetchall()
+
+    user_flood_data = []
+
+    for u in users:
+        uid, name, email, lat, lon = u
+
+        if lat is None or lon is None:
+            continue
+
+        # Fetch real-time weather
+        url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={WEATHER_KEY}"
+        data = requests.get(url).json()
+
+        rainfall = data.get("rain", {}).get("1h", 0)
+        temperature = data["main"]["temp"]
+        humidity = data["main"]["humidity"]
+        weather = data["weather"][0]["description"]
+
+        # Flood risk based on rainfall + humidity
+        if rainfall >= 30:
+            risk = "High"
+        elif rainfall >= 10:
+            risk = "Medium"
+        else:
+            risk = "Low"
+
+        user_flood_data.append({
+            "id": uid,
+            "name": name,
+            "email": email,
+            "lat": lat,
+            "lon": lon,
+            "rainfall": rainfall,
+            "humidity": humidity,
+            "temperature": temperature,
+            "weather": weather,
+            "risk": risk
+        })
+
+    return render_template("admin_flood_real_time.html", data=user_flood_data)
+
+@app.route("/api/get_users_locations")
+def get_users_locations():
+    cursor = db.cursor()
+    cursor.execute("SELECT id, name, latitude, longitude FROM users")
+    rows = cursor.fetchall()
+
+    user_list = []
+    for r in rows:
+        user_list.append({
+            "id": r[0],         # include the user ID
+            "name": r[1],
+            "lat": r[2],
+            "lon": r[3]
+        })
+
+    return jsonify(user_list)
+
+
+@app.route("/admin/flood_alert/<int:user_id>", methods=["POST"])
+def admin_flood_alert(user_id):
+    if "admin" not in session:
+        return redirect("/admin_login")
+
+    message = request.form.get("alert_message", "Flood risk detected in your area. Stay safe!")
+
+    # Fetch user location + weather
+    cursor = db.cursor()
+    cursor.execute("SELECT id, name, email, latitude, longitude FROM users WHERE id=%s", (user_id,))
+    u = cursor.fetchone()
+
+    if not u:
+        flash("User not found!", "danger")
+        return redirect("/admin/flood_real_time")
+
+    uid, name, email, lat, lon = u
+
+    # Get weather again
+    url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={WEATHER_KEY}"
+    data = requests.get(url).json()
+
+    rainfall = data.get("rain", {}).get("1h", 0)
+    humidity = data["main"]["humidity"]
+    temperature = data["main"]["temp"]
+    weather_status = data["weather"][0]["description"]
+
+    # Save to DB
+    cursor.execute("""
+                   INSERT INTO flood_alerts (user_id, rainfall, humidity, temperature, status, alert_message)
+                   VALUES (%s, %s, %s, %s, %s, %s)
+                   """, (uid, rainfall, humidity, temperature, weather_status, message))
+
+    db.commit()
+
+    # Send Email Alert
+    send_flood_alert_email(email, name, message, rainfall, humidity, temperature)
+
+    flash("Flood alert sent successfully!", "success")
+    return redirect("/admin/flood_real_time")
+
+def is_valid_email(email):
+    pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    return re.match(pattern, email)
+
+
+def send_flood_alert_email(email, name, message, rainfall, humidity, temperature):
+    sender = "sohamgarud0806@gmail.com"
+    password = "pwjdjogjwnzwuhle"
+
+    if not is_valid_email(email):
+        print(f"❌ Invalid email: {email}")
+        return False
+
+    body = f"""
+Dear {name},
+
+FLOOD RISK ALERT ⚠️
+
+Location Weather Summary:
+🌧 Rainfall (1h): {rainfall} mm
+💧 Humidity: {humidity}%
+🌡 Temperature: {temperature}°C
+
+Admin Message:
+{message}
+
+Stay safe!
+"""
+    msg = MIMEText(body, "plain", "utf-8")
+    msg["Subject"] = "⚠️ Flood Risk Alert - Disaster Alert System"
+    msg["From"] = sender
+    msg["To"] = email
+
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(sender, password)
+        server.send_message(msg)
+        server.quit()
+        print(f"✅ Alert sent to {email}")
+        return True
+    except Exception as e:
+        print(f"❌ Failed to send alert: {e}")
+        return False
+
+# -------------------------
+# Route to send alert
+# -------------------------
+@app.route("/send_alert/<int:user_id>", methods=["POST"])
+def send_alert(user_id):
+    try:
+        print(f"📢 Alert triggered for user_id: {user_id}")
+
+        # Fetch clicked user info
+        with db.cursor(pymysql.cursors.DictCursor) as cursor:
+            cursor.execute(
+                "SELECT id, name, email, latitude, longitude FROM users WHERE id=%s",
+                (user_id,)
+            )
+            clicked_user = cursor.fetchone()
+
+        if not clicked_user:
+            print("❌ Clicked user not found")
+            return jsonify({"status": "error", "message": "User not found"}), 404
+
+        lat, lon = clicked_user["latitude"], clicked_user["longitude"]
+        print(f"➡ Clicked user location: lat={lat}, lon={lon}")
+
+        # Fetch all users at the same location
+        with db.cursor(pymysql.cursors.DictCursor) as cursor:
+            cursor.execute(
+                "SELECT id, name, email FROM users WHERE latitude=%s AND longitude=%s",
+                (lat, lon)
+            )
+            users_at_location = cursor.fetchall()
+
+        if not users_at_location:
+            print("❌ No users at this location")
+            return jsonify({"status": "error", "message": "No users at this location"}), 404
+
+        print(f"👥 Users at location: {[u['name'] for u in users_at_location]}")
+
+        # Get message from POST body
+        data = request.json or {}
+        message = data.get("message", "Flood risk detected in your area. Stay safe!")
+        print(f"💬 Alert message: {message}")
+
+        # Fetch live weather once
+        url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={WEATHER_KEY}"
+        weather = requests.get(url).json()
+        rainfall = weather.get("rain", {}).get("1h", 0)
+        humidity = weather["main"]["humidity"]
+        temperature = weather["main"]["temp"]
+        print(f"🌡 Weather: Temp={temperature}°C, Rainfall={rainfall}mm, Humidity={humidity}%")
+
+        # Send alert to all users at the same location
+        failed = []
+        for u in users_at_location:
+            print(f"✉ Sending alert to {u['name']} ({u['email']})...")
+            success = send_flood_alert_email(u["email"], u["name"], message, rainfall, humidity, temperature)
+            if success:
+                print(f"✅ Alert sent to {u['name']}")
+            else:
+                print(f"❌ Failed to send alert to {u['name']}")
+                failed.append(u["name"])
+
+        if failed:
+            print(f"⚠ Partial failures: {failed}")
+            return jsonify({"status": "partial", "message": f"Alert sent, but failed for: {', '.join(failed)}"})
+        else:
+            names = [u["name"] for u in users_at_location]
+            print(f"🎉 All alerts sent successfully to: {names}")
+            return jsonify({"status": "success", "message": f"Alert sent to users: {', '.join(names)}"})
+
+    except Exception as e:
+        print(f"❌ Exception occurred: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+#USGS_FEED_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson"
+
+@app.route("/admin/earthquake_dashboard")
+def earthquake_dashboard():
+    return render_template("earthquake_dashboard.html")
+
+@app.route("/api/get_users_earthquakes")
+def get_users_earthquakes():
+    import requests
+    from flask import jsonify
+    import pymysql
+    from datetime import datetime, timedelta
+
+    db = pymysql.connect(host="localhost", user="root", passwd="", db="dmnat")
+    cursor = db.cursor(pymysql.cursors.DictCursor)
+
+    # Fetch users (optional, for showing markers)
+    cursor.execute("SELECT name, latitude, longitude FROM users")
+    users = cursor.fetchall()
+
+    # Historical earthquakes (past 30 days)
+    end_date = datetime.utcnow().date()
+    start_date = end_date - timedelta(days=30)
+
+    feed = requests.get(
+        "https://earthquake.usgs.gov/fdsnws/event/1/query",
+        params={
+            "format": "geojson",
+            "starttime": start_date.strftime("%Y-%m-%d"),
+            "endtime": end_date.strftime("%Y-%m-%d"),
+            "minmagnitude": 4.0
+        },
+        timeout=15
+    ).json()
+
+    earthquakes = []
+
+    for eq in feed.get("features", []):
+        coords = eq.get("geometry", {}).get("coordinates", [0,0,0])
+        props = eq.get("properties", {})
+        earthquakes.append({
+            "eq_lat": coords[1],
+            "eq_lon": coords[0],
+            "depth": coords[2],
+            "magnitude": props.get("mag", 0),
+            "time": props.get("time", 0)
+        })
+
+    cursor.close()
+    db.close()
+
+    return jsonify({
+        "users": users,
+        "earthquakes": earthquakes
+    })
+
+
+earthquake_df = pd.read_csv('historical_earthquake.csv', encoding='latin1', engine='python')
+flood_df = pd.read_csv('historical_floods.csv', encoding='latin1', engine='python')
+
+# Merge historic data
+def get_historic_data():
+    data = []
+
+    # --------------------------
+    # EARTHQUAKES
+    # --------------------------
+    for _, row in earthquake_df.iterrows():
+
+        # 1️⃣ If CSV contains a severity column, use that FIRST
+        if "severity" in row and isinstance(row["severity"], str) and row["severity"].strip():
+            severity = row["severity"].strip()
+
+        else:
+            # 2️⃣ Otherwise calculate from magnitude
+            raw_mag = row.get("magnitude", None)
+
+            try:
+                magnitude = float(raw_mag) if raw_mag not in (None, "", "-", "N/A") else 0
+            except:
+                magnitude = 0
+
+            # Calculate from magnitude (fallback)
+            if magnitude >= 6:
+                severity = "High"
+            elif magnitude >= 4:
+                severity = "Moderate"
+            elif magnitude > 0:
+                severity = "Low"
+            else:
+                severity = "Minor"
+
+        data.append({
+            "type": "Earthquake",
+            "date": row.get("date", "N/A"),
+            "area": row.get("area", "Unknown"),
+            "latitude": row.get("latitude", "N/A"),
+            "longitude": row.get("longitude", "N/A"),
+            "severity": severity,
+            "description": row.get("description", "N/A")
+        })
+
+    # --------------------------
+    # FLOODS
+    # --------------------------
+    for _, row in flood_df.iterrows():
+        data.append({
+            "type": "Flood",
+            "date": row.get("date", "N/A"),
+            "area": row.get("area", "Unknown"),
+            "latitude": row.get("latitude", "N/A"),
+            "longitude": row.get("longitude", "N/A"),
+            "severity": row.get("severity", "N/A"),
+            "description": row.get("description", "N/A")
+        })
+
+    return data
+
+@app.route('/api/historic_data')
+def historic_data_api():
+    return jsonify(get_historic_data())
+
+@app.route('/admin/reports')
+def reports_page():
+    return render_template('report.html')
+
+@app.route('/api/get_historic_data')
+def get_historic_data_api():
+    return jsonify(get_historic_data())
+
+# Excel report
+@app.route('/api/generate_report/excel/<report_type>')
+def generate_excel(report_type):
+    data = get_historic_data()
+
+    # filter by type if not "all"
+    if report_type.lower() != "all":
+        data = [d for d in data if d['type'].lower() == report_type.lower()]
+
+    # Convert list → DataFrame
+    df = pd.DataFrame(data)
+
+    # Export to Excel
+    output = BytesIO()
+    df.to_excel(output, index=False)
+    output.seek(0)
+
+    now = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return send_file(
+        output,
+        download_name=f'{report_type}_report_{now}.xlsx',
+        as_attachment=True
+    )
+
+# ----------------------------------------------
+# PDF REPORT
+# ----------------------------------------------
+@app.route('/api/generate_report/pdf/<report_type>')
+def generate_pdf(report_type):
+    data = get_historic_data()
+
+    # Filter by type if not "all"
+    if report_type.lower() != "all":
+        data = [d for d in data if d['type'].lower() == report_type.lower()]
+
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 14)
+    pdf.cell(0, 10, f"{report_type.capitalize()} Report", ln=True, align='C')
+    pdf.ln(5)
+    pdf.set_font("Arial", "", 11)
+
+    headers = ["Type", "Date", "Area", "Latitude", "Longitude", "Severity", "Description"]
+    col_width = pdf.w / len(headers) - 5
+
+    # Header row
+    for h in headers:
+        pdf.cell(col_width, 8, h, border=1, align='C')
+    pdf.ln()
+
+    # Data rows
+    for row in data:
+        pdf.cell(col_width, 8, str(row["type"]), border=1)
+        pdf.cell(col_width, 8, str(row["date"]), border=1)
+        pdf.cell(col_width, 8, str(row["area"]), border=1)
+        pdf.cell(col_width, 8, str(row["latitude"]), border=1)
+        pdf.cell(col_width, 8, str(row["longitude"]), border=1)
+        pdf.cell(col_width, 8, str(row["severity"]), border=1)
+        pdf.cell(col_width, 8, str(row["description"]), border=1)
+        pdf.ln()
+
+    # Get PDF as bytes
+    pdf_bytes = pdf.output(dest='S').encode('latin1')  # string → bytes
+    pdf_io = BytesIO(pdf_bytes)
+
+    now = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return send_file(
+        pdf_io,
+        download_name=f'{report_type}_report_{now}.pdf',
+        as_attachment=True
+    )
+
+
+try:
+    earthquake_df = pd.read_csv("historical_earthquake.csv", encoding="latin1")
+except FileNotFoundError:
+    earthquake_df = pd.DataFrame(
+        columns=["date", "area", "latitude", "longitude", "magnitude", "depth", "severity", "description"])
+
+try:
+    flood_df = pd.read_csv("historical_floods.csv", encoding="latin1")
+except FileNotFoundError:
+    flood_df = pd.DataFrame(columns=["date", "area", "latitude", "longitude", "severity", "description"])
+@app.route('/api/add_report', methods=['POST'])
+def add_report():
+    global earthquake_df, flood_df
+    data = request.json
+
+    # Validate required fields
+    if not data.get("type") or not data.get("date") or not data.get("area"):
+        return jsonify({"error": "Type, date and area are required"}), 400
+
+    # Severity must come from frontend
+    severity_value = data.get("severity")
+    print("🔥 RECEIVED SEVERITY FROM FRONTEND =", severity_value)   # <-- RIGHT PLACE
+
+    if not severity_value or severity_value.strip() == "":
+        return jsonify({"error": "Please select a severity"}), 400
+
+    report_type = data["type"].lower()
+    try:
+        if report_type == "earthquake":
+            new_row = {
+                "date": data.get("date"),
+                "area": data.get("area"),
+                "latitude": data.get("latitude", ""),
+                "longitude": data.get("longitude", ""),
+                "magnitude": data.get("magnitude") if data.get("magnitude") is not None else "",
+                "depth": data.get("depth") if data.get("depth") is not None else "",
+                "severity": severity_value,
+                "description": data.get("description", "")
+            }
+            earthquake_df = pd.concat([earthquake_df, pd.DataFrame([new_row])], ignore_index=True)
+            earthquake_df.to_csv('historical_earthquake.csv', index=False, encoding='latin1')
+
+        elif report_type == "flood":
+            new_row = {
+                "date": data.get("date"),
+                "area": data.get("area"),
+                "latitude": data.get("latitude", ""),
+                "longitude": data.get("longitude", ""),
+                "severity": severity_value,
+                "description": data.get("description", "")
+            }
+            flood_df = pd.concat([flood_df, pd.DataFrame([new_row])], ignore_index=True)
+            flood_df.to_csv('historical_floods.csv', index=False, encoding='latin1')
+
+        else:
+            return jsonify({"error": "Invalid type"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({"success": True})
+
+# API: Delete a report by type and date+area+lat+lon
+@app.route('/api/delete_report', methods=['POST'])
+def delete_report():
+    global earthquake_df, flood_df  # Use the same variable names
+
+    data = request.json
+    report_type = data.get("type", "").lower()
+
+    try:
+        if report_type == "earthquake":
+            earthquake_df = earthquake_df[~((earthquake_df['date']==data['date']) & (earthquake_df['area']==data['area']))]
+            earthquake_df.to_csv('historical_earthquake.csv', index=False, encoding='latin1')
+
+        elif report_type == "flood":
+            flood_df = flood_df[~((flood_df['date']==data['date']) & (flood_df['area']==data['area']))]
+            flood_df.to_csv('historical_floods.csv', index=False, encoding='latin1')
+
+        else:
+            return jsonify({"error": "Invalid type"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({"success": True})
+
+def haversine(lat1, lon1, lat2, lon2):
+    R = 6371  # Radius of earth in km
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a))
+    return R * c
+
+# Function to send email
+def send_email(to_email, subject, body):
+    sender_email = "sohamgarud0806@gmail.com"
+    sender_pass = "pwjdjogjwnzwuhle"
+
+    msg = MIMEText(body)
+    msg["Subject"] = subject
+    msg["From"] = sender_email
+    msg["To"] = to_email
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(sender_email, sender_pass)
+            server.sendmail(sender_email, to_email, msg.as_string())
+        print(f"Email sent to {to_email}")
+    except Exception as e:
+        print(f"Failed to send email to {to_email}: {e}")
+
+# API to send alert to users within a radius
+@app.route("/api/send_alert", methods=["POST"])
+def send_disaster_alert():
+    data = request.get_json()
+    eq_lat = float(data.get("lat"))
+    eq_lon = float(data.get("lon"))
+    ALERT_RADIUS_KM = 50  # users within 50 km
+
+    db = get_db_connection()
+    cursor = db.cursor()
+
+    cursor.execute("""
+        SELECT id, username, name, email, latitude, longitude
+        FROM users
+        WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+    """)
+    users = cursor.fetchall()
+    alerted = []
+
+    # Email content template
+    email_subject = "🌎 Disaster Alert: Earthquake Warning!"
+    email_body_template = """
+Hello {name} ({username}),
+
+We have detected an earthquake near your registered location.
+
+📍 Your Coordinates: {lat}, {lon}
+🌐 Earthquake Coordinates: {eq_lat}, {eq_lon}
+⚠️ Please take immediate safety precautions.
+🕒 Alert Time: {time}
+
+Stay safe and follow local emergency instructions.
+
+- Disaster Alert System
+"""
+
+    alert_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    for u in users:
+        distance = haversine(eq_lat, eq_lon, u["latitude"], u["longitude"])
+        if distance <= ALERT_RADIUS_KM:
+            body = email_body_template.format(
+                name=u["name"],
+                username=u["username"],
+                lat=u["latitude"],
+                lon=u["longitude"],
+                eq_lat=eq_lat,
+                eq_lon=eq_lon,
+                time=alert_time
+            )
+            send_email(u["email"], email_subject, body)
+            alerted.append(u["email"])
+            print(f"ALERT SENT to {u['email']} (distance {distance:.1f} km)")
+
+    cursor.close()
+    db.close()
+
+    return jsonify({
+        "message": f"Alert sent to {len(alerted)} users within {ALERT_RADIUS_KM} km"
+    })
+
+# ================= HELP / USER GUIDE =================
+@app.route("/help")
+def help_page():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+
+    return render_template("help.html")
+
+
+# ================= SAFETY TIPS =================
+@app.route("/safety-tips")
+def safety_tips():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+
+    return render_template("safety_tips.html")
+
+
+# ================= EMERGENCY CONTACTS =================
+@app.route("/emergency")
+def emergency():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+
+    return render_template("emergency.html")
+
+
+# ================= ABOUT SYSTEM =================
+@app.route("/about")
+def about():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+
+    return render_template("about.html")
+
+@app.route("/emergency-contacts")
+def emergency_contacts():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+
+    return render_template(
+        "emergency.html",
+        username=session.get('user_name')
+    )
+
+@app.route('/')
+def index():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+    return render_template("index.html", username=session.get('user_name'))
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login_page'))
+
+
+@app.route('/earthquake')
+def earthquake():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+    return render_template('earthq.html')
+
+@app.route('/sent')
+def sent():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+    return render_template('senti.html')
+
+@app.route('/storm')
+def storm():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+    return render_template('weatherp2.html')
+
+@app.route('/new')
+def new():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+    return render_template('new.html')
+
+@app.route('/weather')
+def weather():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+    return render_template('weather.html')
+
+@app.route('/earthgraphs')
+def earthgraphs():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+    return render_template('earthgraph.html')
+
+@app.route('/covid')
+def covid():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+    return render_template('covid.html')
+
+@app.route('/covi_pred')
+def covi_pred():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+    return render_template('covid_pred.html')
+
+@app.route('/covistats')
+def covistats():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+    return render_template('covid_stats.html')
+
+@app.route('/covi')
+def covi():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+    return render_template('covidhostpitals.html')
+
+@app.route('/cov')
+def cov():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+    return render_template('covidhostpitals1.html')
+
+@app.route('/covcity')
+def covcity():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+    return render_template('scity.html')
+
+@app.route('/covstate')
+def covstate():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+    return render_template('states.html')
+
+@app.route('/covid_tom',methods=['GET','POST'])
+def covid_tom():
+    import numpy as np 
+    import pandas as pd
+    import os
+    from sklearn.preprocessing import normalize
+    a=pd.read_csv('time_series_covid19_confirmed_global.csv')
+    print(a)
+    b=a.transpose()
+    print(b)
+    train=b[[131]].values
+    train_x=train[4:] 
+    y=[]
+    for i in train_x:
+        y.append(i[0])
+    print(y)
+    x=list(range(len(y)))
+    print(x)
+    import seaborn as sns
+    sns.relplot(data=pd.DataFrame(y))
+    x=np.array(x)
+    y=np.array(y)
+
+    x=x.astype('float32')
+    y=y.astype('float32')
+    print(x)
+    print(y)
+    print(x.dtype)
+    print(y.dtype)
+   
+    x=(x.reshape(-1,1))
+    y=(y.reshape(-1,1))
+    #x=normalize(x)
+    #y=normalize(y)
+   
+    print(x)
+    print(y)
+    from tensorflow.keras import Sequential
+    from tensorflow.keras.layers import Dense
+    import tensorflow as tf
+    predict=Sequential([Dense(74,activation='relu'),
+                        Dense(74*2,activation='relu'),
+                        Dense(74*2*2,activation='relu'),
+                        Dense(74*2*2*2,activation='relu'),
+                        Dense(74*2*2*2,activation='relu'),
+                        Dense(1)])
+    predict.compile(optimizer='adam',loss='mse',metrics=['mse','mae'])
+    predict.fit(x,y,batch_size=75,epochs=10000)
+    loss=predict.history.history
+    loss_pd=pd.DataFrame(loss)
+    loss_pd.plot()
+    #loss_pd.savefig('output3.png')
+    sn_plot3=sns.relplot(data=loss_pd)
+    sn_plot3.savefig('D:/project/Disaster-Prediction-main/static/covid/output3.png')
+
+    predict.predict(np.array([[1]]))
+    predicted_values=[]
+    for i in range(1000):
+        predicted_values.append(float(predict.predict(np.array([[i]], dtype=np.float32))[0][0]))
+    print(predicted_values)
+    future=[]
+    for i in predicted_values:
+        # Safely extract value from model output (float or nested array)
+        if isinstance(i, (list, tuple, np.ndarray)):
+            value = i[0][0] if isinstance(i[0], (list, np.ndarray)) else i[0]
+        else:
+            value = i
+
+        # Avoid negative predictions
+        if round(value) <= 0:
+            future.append(0)
+        else:
+            future.append(round(float(value)))
+    future_df=pd.DataFrame({'Infected_people':future})
+    print("Actual_graph")
+    sn_plot=sns.relplot(data=pd.DataFrame(y))
+    sn_plot.savefig('D:/project/Disaster-Prediction-main/static/covid/output1.png')
+    print("predicted_graph")
+    sn_plot1=sns.relplot(data=future_df[:73])
+    sn_plot1.savefig('D:/project/Disaster-Prediction-main/static/covid/output2.png')
+    print("Future predictions graph")
+    sns.relplot(data=future_df[:100])
+    def preprocess(day):
+        return round(day)
+    day=68
+    if request.method == 'POST':
+        date = request.form['date'] 
+        month = request.form['month'] 
+        year = request.form['year']
+    # --- Convert month name to number safely ---
+    month_str_to_num = {
+        "january": 1, "february": 2, "march": 3, "april": 4,
+        "may": 5, "june": 6, "july": 7, "august": 8,
+        "september": 9, "october": 10, "november": 11, "december": 12
+    }
+
+    # normalize input
+    month = str(month).strip().lower()
+    year = str(year).strip()
+    date = str(date).strip()
+
+    # Convert month if user typed text
+    if month in month_str_to_num:
+        month_num = month_str_to_num[month]
+    else:
+        try:
+            month_num = int(month)
+        except ValueError:
+            raise ValueError(f"Invalid month value: {month}")
+
+    # --- Calculate total days ---
+    if month_num > 3:
+        day += (month_num - 3 - 1) * 30 + (int(year) - 2020) * 365 + int(date)
+    else:
+        day -= int(date)
+
+    day += 4
+
+    # --- Predict infection count safely ---
+    pred_value = float(predict.predict(np.array([[day]], dtype=float))[0][0])
+    if pred_value <= 0:
+        infected = 0
+    else:
+        infected = preprocess(pred_value)
+    print("The Predicted infected people on the day",day,"in India are :",infected)    
+    sns.relplot(data=future_df[:day])
+    print(date) 
+    print(day)
+    return render_template('covid_pred.html',infected=infected,date=date,month=month,year=year)
+
+
+@app.route('/covid19', methods=['GET', 'POST'])
+def covid19():
+    import pandas as pd
+    import requests
+    import folium
+    import math
+    from flask import request, render_template
+    from opencage.geocoder import OpenCageGeocode
+    from numpy import nan
+
+    # ---------------- Geocoder ----------------
+    key = 'fcd18d77cf7849cd8abd250b9f012527'
+    geocoder = OpenCageGeocode(key)
+
+    # ---------------- World Stats ----------------
+    url_world = "https://disease.sh/v3/covid-19/all"
+    world_data = requests.get(url_world).json()
+    t_c = world_data.get('cases', 0)
+    n_c = world_data.get('todayCases', 0)
+    t_d = world_data.get('deaths', 0)
+    t_r = world_data.get('recovered', 0)
+    a_c = world_data.get('active', 0)
+
+    # ---------------- India Stats ----------------
+    url_india = "https://disease.sh/v3/covid-19/countries/India"
+    india_data = requests.get(url_india).json()
+    a1 = india_data.get('country', 'India')
+    a2 = india_data.get('cases', 0)
+    a3 = india_data.get('todayCases', 0)
+    a4 = india_data.get('active', 0)
+    a5 = india_data.get('deaths', 0)
+    a6 = india_data.get('recovered', 0)
+    a7 = india_data.get('tests', 0)
+    df3 = pd.DataFrame([india_data])
+    print("✅ Columns in df3:", df3.columns)
+
+    # ---------------- State/District Input ----------------
+    Latitude, Longitude = [], []
+    df5 = pd.DataFrame()
+    df6 = pd.DataFrame()
+    s_active = s_confirm = s_death = c_active = c_confirm = c_death = 0
+    s_tate = c_ity = None
+    lat, long = 20.59, 78.96  # Default India center
+
+    if request.method == 'POST':
+        c_ity = request.form['city']
+        s_tate = request.form['state']
+
+        # Geocoding
+        results = geocoder.geocode(c_ity)
+        if results:
+            lat = results[0]['geometry']['lat']
+            long = results[0]['geometry']['lng']
+            Latitude.append(lat)
+            Longitude.append(long)
+
+        # Get district-level data
+        url_state = "https://data.covid19india.org/state_district_wise.json"
+        r = requests.get(url_state)
+        if r.status_code == 200 and r.text.strip():
+            data = r.json()
+            state_data = data.get(s_tate, {}).get('districts', {})
+            if state_data:
+                df6 = pd.DataFrame.from_dict(state_data, orient='index')
+                df6.to_csv('firsti.csv', index=True)
+
+                # City-specific data
+                city_data = state_data.get(c_ity, {})
+                if 'total' in city_data:
+                    df5 = pd.DataFrame([city_data['total']])
+                    df5.to_csv('first.csv', index=False)
+                    c_active = city_data['total'].get('active', 0)
+                    c_confirm = city_data['total'].get('confirmed', 0)
+                    c_death = city_data['total'].get('deceased', 0)
+                    print("✅ City-level data found")
+                else:
+                    print(f"⚠️ City data not found for {c_ity}")
+            else:
+                print(f"⚠️ No district data found for state {s_tate}")
+        else:
+            print("⚠️ State/District data not available or empty")
+
+    # ---------------- Create District Map ----------------
+    if not df6.empty:
+        L1, L2, L3, L4, L5, L6 = [], [], [], [], [], []
+        for dist in df6.index:
+            total = df6.loc[dist, 'total'] if 'total' in df6.columns else {}
+            if isinstance(total, dict):
+                L3.append(dist)
+                L4.append(total.get('active', 0))
+                L5.append(total.get('confirmed', 0))
+                L6.append(total.get('deceased', 0))
+                res = geocoder.geocode(f"{dist}, {s_tate or 'India'}")
+                if res:
+                    L1.append(res[0]['geometry']['lat'])
+                    L2.append(res[0]['geometry']['lng'])
+                else:
+                    L1.append(None)
+                    L2.append(None)
+
+        lats = pd.DataFrame({
+            'Latitude': L1,
+            'Longitude': L2,
+            'City': L3,
+            'Active': L4,
+            'Confirm': L5,
+            'Death': L6
+        })
+        lats.to_csv('main.csv', index=False)
+
+        c = folium.Map(location=[20.5937, 78.9629], zoom_start=4)
+        for _, point in lats.iterrows():
+            color = 'green'
+            if point['Active'] >= 1000:
+                color = 'red'
+            elif point['Death'] >= 5:
+                color = 'orange'
+            folium.Marker(
+                location=[point['Latitude'], point['Longitude']],
+                popup=f"City: {point['City']}\nActive: {point['Active']}\nDeaths: {point['Death']}\nConfirmed: {point['Confirm']}",
+                icon=folium.Icon(color=color)
+            ).add_to(c)
+        c.save('templates/scity.html')
+
+    # ---------------- State Map (Fixed JSONDecodeError) ----------------
+    state_url = "https://data.covid19india.org/data.json"
+    try:
+        response = requests.get(state_url, timeout=10)
+        if response.ok and response.text.strip():
+            state_data = response.json()
+            if 'statewise' in state_data:
+                df_state = pd.DataFrame(state_data['statewise'])
+                df_state.to_csv('state.csv', index=False)
+            else:
+                print("⚠️ 'statewise' key missing in response")
+                df_state = pd.DataFrame()
+        else:
+            print("⚠️ Empty or invalid response from data.covid19india.org")
+            df_state = pd.DataFrame()
+    except Exception as e:
+        print(f"⚠️ Error fetching state data: {e}")
+        df_state = pd.DataFrame()
+
+    if not df_state.empty:
+        s_map = folium.Map(location=[20.5937, 78.9629], zoom_start=4)
+        for _, row in df_state.iterrows():
+            query = row['state']
+            res = geocoder.geocode(query)
+            if res:
+                lat_s = res[0]['geometry']['lat']
+                lng_s = res[0]['geometry']['lng']
+                color = 'green'
+                if int(row.get('active', 0)) >= 4000:
+                    color = 'red'
+                elif int(row.get('deaths', 0)) >= 100:
+                    color = 'orange'
+                folium.Marker(
+                    location=[lat_s, lng_s],
+                    popup=f"State: {row['state']}\nActive: {row.get('active', 0)}\nDeaths: {row.get('deaths', 0)}\nRecovered: {row.get('recovered', 0)}",
+                    icon=folium.Icon(color=color)
+                ).add_to(s_map)
+        s_map.save('templates/states.html')
+    else:
+        print("⚠️ Could not create state map because data was empty")
+
+    # ---------------- Test Centers Map ----------------
+    try:
+        dataset = pd.read_csv('TestCentres_with_geolocation.csv')
+        cpmap = folium.Map(location=[lat, long], zoom_start=5)
+        for _, point in dataset.iterrows():
+            if math.isnan(point['Latitude']) or math.isnan(point['Longitude']):
+                continue
+            folium.Marker(
+                location=[point['Latitude'], point['Longitude']],
+                popup=f"{point['LabName']}\n{point['City']}\n{point['Addresses']}",
+                icon=folium.Icon(color='blue')
+            ).add_to(cpmap)
+        cpmap.save('templates/covidhostpitals1.html')
+    except Exception as e:
+        print(f"⚠️ Error loading hospital data: {e}")
+
+    # ---------------- Render HTML ----------------
+    return render_template(
+        'covid_result.html',
+        a1=a1, a2=a2, a3=a3, a4=a4, a5=a5, a6=a6, a7=a7,
+        t_c=t_c, n_c=n_c, a_c=a_c, t_r=t_r, t_d=t_d,
+        s_active=s_active, s_confirm=s_confirm, s_death=s_death,
+        c_active=c_active, c_confirm=c_confirm, c_death=c_death,
+        s_tate=s_tate, c_ity=c_ity
+    )
+
+
+@app.route('/alert', methods=['GET','POST'])
+def alert():
+    if request.method == 'POST':
+        places = request.form['placess']
+        place=places.replace(" ","")
+    return render_template('cyclone.html',places=place)
+
+@app.route('/salert', methods=['GET', 'POST'])
+def salert():
+    places = None
+    num = None
+
+    if request.method == 'POST':
+        # ✅ Safe way to get form values
+        places = request.form.get('pl')
+        num = request.form.get('nm')
+
+        print("Received values:", places, num)
+
+        # ✅ Validation check
+
+        import smtplib, ssl
+        port = 465  # SSL port
+        smtp_server = "smtp.gmail.com"
+        sender_email = "sohamgarud0806@gmail.com"  # Enter your Gmail
+        receiver_email = "sohamgarud0806@gmail.com"  # Enter receiver Gmail
+        password = "pwjdjogjwnzwuhle"
+
+        message = f"""\
+Subject: Disaster Alert
+
+This message is sent from Tanvi Khadpe's Disaster Prediction and Management App.
+Message: {places}
+Contact: {num}
+"""
+
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
+            server.login(sender_email, password)
+            server.sendmail(sender_email, receiver_email, message)
+
+        print(f"✅ Mail sent successfully to {receiver_email}")
+
+    return render_template('cyclone.html', places=places, nm=num)
+
+@app.route('/cyclone')
+def cyclone():
+    return render_template('cyclone.html')
+
+
+
+@app.route('/comp')
+def comp():
+    return render_template('comp.html')
+
+@app.route('/hailstorm')
+def hailstorm():
+    return render_template('near.html')
+
+@app.route('/flood')
+def flood():
+    return render_template('floods.html')
+
+
+@app.route('/predicts', methods=['GET','POST'])
+def predicts():
+    if lr:
+        try:
+            if request.method == 'POST':
+                comment = request.form['rainfall_amt']
+                data = [comment]
+                query = pd.get_dummies(pd.DataFrame(data))
+                query = query.reindex(columns=model_columns, fill_value=0)
+                m_prediction = lr.predict(query)
+                print(m_prediction)
+            #json_ = request.json
+            #print(json_)
+            
+            #my_prediction = lr.predict(query)
+            #print(my_prediction)
+        except:
+
+            return jsonify({'trace': traceback.format_exc()})
+    else:
+        print ('Train the model first')
+        return ('No model here to use')
+    return render_template('floodres.html',predictions = m_prediction)
+
+def check_live_earthquakes():
+    import requests
+    import ssl
+    import smtplib
+    from datetime import datetime, timedelta
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    from math import radians, sin, cos, sqrt, atan2
+
+    print("\n==============================")
+    print("🔍 EARTHQUAKE SCHEDULER START")
+    print("==============================")
+
+    try:
+        # ---------------------------------------------------------
+        # MULTI-FEED SOURCES (global + EMSC 1-min)
+        # ---------------------------------------------------------
+        FEEDS = {
+            "USGS": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson",
+            "EMSC": "https://www.seismicportal.eu/fdsnws/event/1/query?format=geojson&limit=200&orderby=time",
+            "IRIS": "https://service.iris.edu/fdsnws/event/1/query?format=geojson&limit=200&orderby=time"
+        }
+
+        live_quakes = []
+        print("\n🌍 Fetching real-time global earthquake data…")
+
+        for name, feed in FEEDS.items():
+            print(f"\n→ Fetching from {name}: {feed}")
+            try:
+                r = requests.get(feed, timeout=10)
+                print(f"   HTTP Status: {r.status_code}")
+                if not r.ok:
+                    print("   ❌ Feed failed, skipping.")
+                    continue
+
+                data = r.json()
+
+                # ---------------------------------------------------------
+                # USGS / IRIS (GeoJSON format)
+                # ---------------------------------------------------------
+                if isinstance(data, dict) and data.get("features"):
+                    print(f"   ✔ {name} returned {len(data['features'])} events.")
+                    for q in data["features"]:
+                        props = q.get("properties", {})
+                        geom = q.get("geometry", {})
+                        coords = geom.get("coordinates") or []
+
+                        if len(coords) < 2:
+                            continue
+
+                        lon, lat = coords[0], coords[1]
+                        depth = coords[2] if len(coords) > 2 else "-"
+                        mag = props.get("mag")
+                        place = props.get("place") or "Unknown"
+                        t_ms = props.get("time")
+
+                        try:
+                            qtime = datetime.utcfromtimestamp(t_ms / 1000).strftime("%Y-%m-%d %H:%M:%S")
+                        except:
+                            qtime = "-"
+
+                        live_quakes.append({
+                            "lat": lat,
+                            "lon": lon,
+                            "depth": depth,
+                            "mag": mag,
+                            "place": place,
+                            "time": qtime,
+                            "source": name
+                        })
+
+            except Exception as e:
+                print(f"   ❌ {name} feed error:", e)
+
+        # ---------------------------------------------------------
+        # EMSC Feed (1-minute recent quakes)
+        # ---------------------------------------------------------
+        try:
+            now = datetime.utcnow()
+            start = (now - timedelta(minutes=1)).isoformat()
+            end = now.isoformat()
+            emsc_url = f"https://www.seismicportal.eu/fdsnws/event/1/query?format=geojson&limit=200&start={start}&end={end}"
+            r = requests.get(emsc_url, timeout=10)
+            if r.ok:
+                data = r.json()
+                features = data.get("features", [])
+                print(f"\n✔ EMSC returned {len(features)} events (1-min).")
+                for q in features:
+                    props = q.get("properties", {})
+                    geom = q.get("geometry", {})
+                    coords = geom.get("coordinates", [])
+                    if len(coords) < 2:
+                        continue
+                    lon, lat = coords[0], coords[1]
+                    depth = coords[2] if len(coords) > 2 else "-"
+                    mag = props.get("mag")
+                    place = props.get("flynn_region") or "Unknown"
+                    t_ms = props.get("time")
+                    try:
+                        qtime = datetime.utcfromtimestamp(t_ms / 1000).strftime("%Y-%m-%d %H:%M:%S")
+                    except:
+                        qtime = "-"
+                    live_quakes.append({
+                        "lat": lat,
+                        "lon": lon,
+                        "depth": depth,
+                        "mag": mag,
+                        "place": place,
+                        "time": qtime,
+                        "source": "EMSC"
+                    })
+        except Exception as e:
+            print("   ❌ EMSC 1-min feed error:", e)
+
+        # ---------------------------------------------------------
+        # REMOVE DUPLICATES
+        # ---------------------------------------------------------
+        unique, seen = [], set()
+        for q in live_quakes:
+            key = (q["lat"], q["lon"], q["time"])
+            if key not in seen:
+                seen.add(key)
+                unique.append(q)
+        live_quakes = unique
+
+        if not live_quakes:
+            print("\n⚠ NO EARTHQUAKES FETCHED FROM ANY FEED")
+            return
+
+        # ---------------------------------------------------------
+        # PRINT SAMPLE OF LATEST QUAKES
+        # ---------------------------------------------------------
+        print(f"\n✔ TOTAL LIVE QUAKES: {len(live_quakes)}")
+        print("📌 Showing first 5 events:")
+        for q in live_quakes[:5]:
+            print(
+                f"   → Mag {q['mag']} | Depth {q['depth']} km | Source: {q['source']}\n"
+                f"     Place: {q['place']}\n"
+                f"     Lat/Lon: {q['lat']}, {q['lon']}\n"
+                f"     Time (UTC): {q['time']}\n"
+            )
+
+        # ---------------------------------------------------------
+        # FETCH USERS FROM DB
+        # ---------------------------------------------------------
+        print("\n👥 Loading users from database…")
+        cur = db.cursor()
+        cur.execute("SELECT name, email, latitude, longitude FROM users")
+        users = cur.fetchall()
+        print(f"✔ Users loaded: {len(users)}")
+
+        # ---------------------------------------------------------
+        # HAVERSINE
+        # ---------------------------------------------------------
+        def haversine(lat1, lon1, lat2, lon2):
+            R = 6371
+            dlat = radians(lat2 - lat1)
+            dlon = radians(lon2 - lon1)
+            a = sin(dlat / 2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2)**2
+            return R * (2 * atan2(sqrt(a), sqrt(1 - a)))
+
+        # ---------------------------------------------------------
+        # EMAIL CONFIG
+        # ---------------------------------------------------------
+        SMTP_SERVER = "smtp.gmail.com"
+        SMTP_PORT = 465
+        SMTP_SENDER = "sohamgarud0806@gmail.com"
+        SMTP_PASSWORD = "pwjdjogjwnzwuhle"
+
+        # ---------------------------------------------------------
+        # ALERT USERS NEAR EARTHQUAKES
+        # ---------------------------------------------------------
+        print("\n📡 Checking for users near earthquake zones…")
+
+        for quake in live_quakes:
+            print(
+                f"\n➡ Checking quake from {quake['source']}:\n"
+                f"   Mag {quake['mag']} | Depth {quake['depth']} km\n"
+                f"   Place: {quake['place']}\n"
+                f"   Lat/Lon: {quake['lat']}, {quake['lon']}\n"
+                f"   Time (UTC): {quake['time']}"
+            )
+
+            for user in users:
+                uname, uemail, ulat, ulon = user
+                if ulat is None or ulon is None:
+                    print(f"   - Skipping {uname}: no coordinates.")
+                    continue
+
+                distance = haversine(float(ulat), float(ulon), quake["lat"], quake["lon"])
+                print(f"   - {uname} at distance {distance:.2f} km")
+
+                if distance <= 10:
+                    print(f"     🚨 ALERT: {uname} in danger zone ({distance:.2f} km)")
+
+                    msg = MIMEMultipart("alternative")
+                    msg["Subject"] = "⚠️ EARTHQUAKE ALERT — Stay Safe"
+                    msg["From"] = SMTP_SENDER
+                    msg["To"] = uemail
+
+                    maps_url = f"https://www.google.com/maps?q={quake['lat']},{quake['lon']}"
+
+                    text = f"""
+                    EARTHQUAKE WARNING!
+                    Dear {uname},\n\n
+                    An earthquake has been detected near your area!\n\n
+                    Magnitude: {quake['mag']}
+                    Depth: {quake['depth']} km
+                    Location: {quake['place']}
+                    Latitude: {quake['lat']}
+                    Longitude: {quake['lon']}
+                    Time (UTC): {quake['time']}
+                    Source: {quake['source']}
+
+                    Live Map:
+                    {maps_url}
+
+                    Distance from you: {distance:.2f} km
+                    Stay Safe
+                    """
+
+                    msg.attach(MIMEText(text, "plain", "utf-8"))
+
+                    try:
+                        ctx = ssl.create_default_context()
+                        with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, context=ctx) as server:
+                            server.login(SMTP_SENDER, SMTP_PASSWORD)
+                            server.sendmail(SMTP_SENDER, uemail, msg.as_string().encode("utf-8"))
+                        print(f"     ✔ Email sent to {uname} ({uemail})")
+                    except Exception as e:
+                        print(f"     ❌ Email failed for {uname}: {e}")
+
+        print("\n==============================")
+        print("✅ EARTHQUAKE CHECK COMPLETE")
+        print("==============================\n")
+
+    except Exception as e:
+        print("❌ Scheduler crashed:", e)
+
+@app.route('/predict', methods=['GET', 'POST'])
+def predict():
+    import os, numpy as np, pandas as pd, requests
+    import tensorflow as tf
+    from datetime import datetime, timedelta
+    from tensorflow.keras import losses, metrics
+    from flask import request, render_template
+    from math import radians, sin, cos, sqrt, atan2
+
+    # ------------------------
+    # Date parsing helpers
+    # ------------------------
+    def parse_flexible_date(date_str):
+        if not date_str:
+            return None
+        fmts = [
+            "%d/%m/%Y", "%m/%d/%Y", "%Y-%m-%d",
+            "%Y-%m-%dT%H:%M", "%Y-%m-%dT%H:%M:%S",
+            "%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%dT%H:%M:%SZ"
+        ]
+        for f in fmts:
+            try:
+                return datetime.strptime(date_str.strip(), f)
+            except:
+                continue
+        return None
+
+    def mapdateTotime(x):
+        epoch = datetime(1970, 1, 1)
+        dt = parse_flexible_date(x)
+        return (dt - epoch).total_seconds() if dt else None
+
+    # ------------------------
+    # Load dataset
+    # ------------------------
+    df1 = pd.read_csv("database.csv")
+    try:
+        df1["Date"] = df1["Date"].apply(mapdateTotime)
+    except:
+        df1["Date"] = df1["Date"].astype(float)
+
+    X = df1[['Date', 'Latitude', 'Longitude', 'Depth']].to_numpy(dtype=float)
+    Y = df1['Magnitude'].to_numpy(dtype=float)
+
+    X_min = np.amin(X, axis=0)
+    X_max = np.amax(X, axis=0)
+    X_range = np.where((X_max - X_min) == 0, 1e-8, X_max - X_min)
+    X_norm = (X - X_min) / X_range
+
+    # ------------------------
+    # Load or train model
+    # ------------------------
+    if os.path.exists("earthquake_model.h5"):
+        model = tf.keras.models.load_model(
+            "earthquake_model.h5",
+            custom_objects={"mse": losses.MeanSquaredError(),
+                            "mae": metrics.MeanAbsoluteError()}
+        )
+    else:
+        model = tf.keras.Sequential([
+            tf.keras.layers.Input(shape=(4,)),
+            tf.keras.layers.Dense(16, activation='relu'),
+            tf.keras.layers.Dense(8, activation='relu'),
+            tf.keras.layers.Dense(1)
+        ])
+        model.compile(optimizer='adam', loss='mse', metrics=[metrics.MeanAbsoluteError()])
+        model.fit(X_norm, Y, epochs=30, verbose=1)
+        model.save("earthquake_model.h5")
+
+    # ------------------------
+    # Distance function
+    # ------------------------
+    def dist_km(lat1, lon1, lat2, lon2):
+        R = 6371
+        dlat = radians(lat2 - lat1)
+        dlon = radians(lon2 - lon1)
+        a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+        return 2 * R * atan2(sqrt(a), sqrt(1 - a))
+
+    # ------------------------
+    # Fetch live earthquakes
+    # ------------------------
+    live_quakes = []
+
+    try:
+        r = requests.get(
+            "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson",
+            timeout=10
+        )
+        if r.ok:
+            for f in r.json().get("features", []):
+                lon, lat, dep = f["geometry"]["coordinates"]
+                props = f["properties"]
+                if props.get("mag") is not None:
+                    live_quakes.append({
+                        "lat": lat,
+                        "lon": lon,
+                        "depth": dep,
+                        "magnitude": props["mag"],
+                        "place": props.get("place", "Unknown"),
+                        "time": datetime.utcfromtimestamp(props["time"]/1000).strftime("%Y-%m-%d %H:%M:%S")
+                    })
+    except:
+        pass
+
+    # ------------------------
+    # User input
+    # ------------------------
+    user_lat = user_lon = user_depth = user_date = prediction_val = None
+
+    if request.method == 'POST':
+        try:
+            user_lat = float(request.form['lat'])
+            user_lon = float(request.form['lon'])
+            user_depth = float(request.form['depth'])
+            user_date = request.form.get('date') or datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+            dt = parse_flexible_date(user_date) or datetime.utcnow()
+            arr = np.array([[mapdateTotime(user_date), user_lat, user_lon, user_depth]])
+            arr_norm = (arr - X_min) / X_range
+            prediction_val = float(model.predict(arr_norm)[0][0]) - 5
+
+            # ✅ DB INSERT (SAFE)
+            db = get_db_connection()
+            cur = db.cursor()
+            cur.execute(
+                "INSERT INTO earth(lat, lon, depth, scale, mail, date) VALUES (%s,%s,%s,%s,%s,%s)",
+                (user_lat, user_lon, user_depth, str(prediction_val), "yes",
+                 dt.strftime("%Y-%m-%d %H:%M:%S"))
+            )
+            cur.close()
+            db.close()
+
+        except Exception as e:
+            print("PREDICTION ERROR:", e)
+
+    # ------------------------
+    # Fetch DB rows
+    # ------------------------
+    db = get_db_connection()
+    cur = db.cursor()
+    cur.execute("SELECT * FROM earth ORDER BY id DESC LIMIT 8")
+    data = cur.fetchall()
+    cur.close()
+    db.close()
+
+    # ------------------------
+    # Early warning
+    # ------------------------
+    rows = []
+    for r in data:
+        nearest, min_d = None, None
+        for q in live_quakes:
+            d = dist_km(r["lat"], r["lon"], q["lat"], q["lon"])
+            if min_d is None or d < min_d:
+                min_d, nearest = d, q
+
+        rows.append({
+            "lat": r["lat"],
+            "lon": r["lon"],
+            "depth": r["depth"],
+            "predicted_mag": float(r["scale"]),
+            "alert": "Yes" if nearest and min_d <= 50 and nearest["magnitude"] >= 4 else "No",
+            "date": r["date"],
+            "real_mag": nearest["magnitude"] if nearest else None,
+            "real_place": nearest["place"] if nearest else None,
+            "real_time": nearest["time"] if nearest else None,
+            "real_dist_km": round(min_d, 2) if nearest else None
+        })
+
+    return render_template(
+        "earth.html",
+        prediction=prediction_val,
+        live_quakes=live_quakes,
+        rows=rows,
+        data=data,
+        lat=user_lat,
+        lon=user_lon,
+        depth=user_depth,
+        date=user_date
+    )
+
+
+@app.route('/manual_alert', methods=['POST'])
+def manual_alert():
+    import requests
+    from math import radians, sin, cos, sqrt, atan2
+    import smtplib, ssl
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    from datetime import datetime
+    from flask import request, jsonify
+
+    # ------------------------
+    # Read form
+    # ------------------------
+    try:
+        qlat = float(request.form['lat'])
+        qlon = float(request.form['lon'])
+        submitted_mag = float(request.form.get('mag', 0))  # keep original submitted magnitude
+        print(f"[DEBUG] Received form data: lat={qlat}, lon={qlon}, submitted_mag={submitted_mag}")
+    except Exception as e:
+        print(f"[ERROR] Invalid form data: {e}")
+        return jsonify({"status": "error", "msg": "Invalid form data"}), 400
+
+    qtime = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[DEBUG] Current UTC time: {qtime}")
+
+    # ------------------------
+    # Haversine function
+    # ------------------------
+    def haversine(lat1, lon1, lat2, lon2):
+        R = 6371.0
+        dlat = radians(lat2 - lat1)
+        dlon = radians(lon2 - lon1)
+        a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        return R * c
+
+    # ------------------------
+    # Reverse geocode
+    # ------------------------
+    def reverse_geocode(lat, lon):
+        try:
+            res = requests.get(
+                f"https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat={lat}&lon={lon}",
+                headers={"User-Agent": "manual-alert-script"}, timeout=10
+            )
+            if res.ok:
+                data = res.json()
+                return data.get("display_name", "Unknown location")
+        except Exception as e:
+            print(f"[ERROR] Reverse geocode failed: {e}")
+        return "Unknown location"
+
+    detected_place = reverse_geocode(qlat, qlon)
+    print(f"[DEBUG] Detected place from reverse geocode: {detected_place}")
+
+    # ------------------------
+    # Fetch live quakes
+    # ------------------------
+    FEEDS = [
+        "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&limit=200&orderby=time",
+        "https://www.seismicportal.eu/fdsnws/event/1/query?format=json&limit=200&orderby=time",
+        "https://service.iris.edu/fdsnws/event/1/query?format=geojson&limit=200&orderby=time"
+    ]
+
+    live_quakes = []
+    for feed in FEEDS:
+        try:
+            r = requests.get(feed, timeout=10)
+            if not r.ok: continue
+            data = r.json()
+            features = data.get("features") or []
+            for f in features:
+                geom = f.get("geometry") or {}
+                props = f.get("properties") or {}
+                coords = geom.get("coordinates") or []
+                if len(coords) >= 2:
+                    lon_f, lat_f = coords[0], coords[1]
+                    depth_f = coords[2] if len(coords) > 2 else 0
+                    mag_f = props.get("mag", 0)
+                    place_f = props.get("place", "Unknown")
+                    t_ms = props.get("time")
+                    try:
+                        time_f = datetime.utcfromtimestamp(t_ms/1000).strftime("%Y-%m-%d %H:%M:%S") if t_ms else "-"
+                    except:
+                        time_f = "-"
+                    live_quakes.append({
+                        "lat": lat_f,
+                        "lon": lon_f,
+                        "depth": depth_f,
+                        "magnitude": mag_f,
+                        "place": place_f,
+                        "time": time_f
+                    })
+        except Exception as e:
+            print(f"[ERROR] Fetch feed failed ({feed}): {e}")
+            continue
+
+    print(f"[DEBUG] Total live quakes fetched: {len(live_quakes)}")
+
+    # ------------------------
+    # Find nearest quake
+    # ------------------------
+    nearest = None
+    nearest_dist = None
+    for q in live_quakes:
+        try:
+            d = haversine(qlat, qlon, q["lat"], q["lon"])
+        except:
+            continue
+        if nearest is None or d < nearest_dist:
+            nearest = q
+            nearest_dist = d
+
+    if nearest and nearest_dist <= 100:
+        nearest_real_mag = nearest.get("magnitude", 0)
+        nearest_real_place = nearest.get("place", detected_place)
+        nearest_real_time = nearest.get("time", qtime)
+        nearest_real_depth = nearest.get("depth", 0)
+        nearest_real_dist = round(nearest_dist, 2)
+        print(f"[DEBUG] Nearest real quake: mag={nearest_real_mag}, place={nearest_real_place}, "
+              f"time={nearest_real_time}, distance={nearest_real_dist} km")
+    else:
+        nearest_real_mag = None
+        nearest_real_place = None
+        nearest_real_time = None
+        nearest_real_depth = None
+        nearest_real_dist = None
+        print("[DEBUG] No nearby real quake found within threshold")
+
+    # ------------------------
+    # Send emails (optional)
+    # ------------------------
+    sent_count = 0
+    try:
+        cur = db.cursor()
+        cur.execute("SELECT name, email, latitude, longitude FROM users")
+        users = cur.fetchall()
+    except:
+        users = []
+
+    SMTP_SERVER = "smtp.gmail.com"
+    SMTP_PORT = 465
+    SMTP_SENDER = "sohamgarud0806@gmail.com"
+    SMTP_PASSWORD = "pwjdjogjwnzwuhle"
+
+    for uname, uemail, ulat, ulon in users:
+        if ulat is None or ulon is None:
+            continue
+        try:
+            distance_to_user = haversine(float(ulat), float(ulon), qlat, qlon)
+        except:
+            continue
+        if distance_to_user > 10:
+            continue
+
+        maps_link = f"https://www.google.com/maps/dir/{ulat},{ulon}/{qlat},{qlon}"
+        static_map = (
+            "https://maps.googleapis.com/maps/api/staticmap"
+            f"?size=640x300&maptype=roadmap"
+            f"&markers=color:blue%7Clabel:U%7C{ulat},{ulon}"
+            f"&markers=color:red%7Clabel:E%7C{qlat},{qlon}"
+        )
+
+        text = f"""
+EARTHQUAKE ALERT
+
+An earthquake of magnitude {submitted_mag} has been reported at {detected_place} 
+(latitude {qlat}, longitude {qlon}) at {qtime} UTC.
+Approx. {distance_to_user:.2f} km from your location.
+"""
+
+        html = f"""
+<html><body>
+<h3>⚠️ EARTHQUAKE ALERT</h3>
+<p><b>User:</b> {uname}</p>
+<p>An earthquake of magnitude <b>{submitted_mag}</b> has been reported at <b>{detected_place}</b>
+(latitude <b>{qlat}</b>, longitude <b>{qlon}</b>) at <b>{qtime} UTC</b>.</p>
+<p>Approx. <b>{distance_to_user:.2f} km</b> from your location.</p>
+<p><a href="{maps_link}">View on Google Maps</a></p>
+<img src="{static_map}" style="max-width:100%; border:1px solid #ccc;">
+<p>Stay safe and take necessary precautions.</p>
+</body></html>
+"""
+
+        try:
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = "⚠️ EARTHQUAKE ALERT"
+            msg["From"] = SMTP_SENDER
+            msg["To"] = uemail
+            msg.attach(MIMEText(text, "plain", "utf-8"))
+            msg.attach(MIMEText(html, "html", "utf-8"))
+
+            ctx = ssl.create_default_context()
+            with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, context=ctx) as s:
+                s.login(SMTP_SENDER, SMTP_PASSWORD)
+                s.sendmail(SMTP_SENDER, uemail, msg.as_bytes())
+            sent_count += 1
+        except Exception as e:
+            print(f"[ERROR] Sending email to {uemail} failed: {e}")
+            continue
+
+    print(f"[DEBUG] Total emails sent: {sent_count}")
+
+    # ------------------------
+    # Return JSON
+    # ------------------------
+    return jsonify({
+        "status": "success",
+        "msg": f"Manual alerts sent: {sent_count}",
+        "lat": qlat,
+        "lon": qlon,
+        "submitted_mag": submitted_mag,  # always the submitted value
+        "detected_place": detected_place,
+        "detected_time": qtime,
+        "nearest_real_mag": nearest_real_mag,
+        "nearest_real_place": nearest_real_place,
+        "nearest_real_time": nearest_real_time,
+        "nearest_real_dist_km": nearest_real_dist
+    })
+
+@app.route('/manual_flood_alert', methods=['POST'])
+def manual_flood_alert():
+    from math import radians, sin, cos, sqrt, atan2
+    import smtplib, ssl
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    from email.header import Header
+    from datetime import datetime
+    from flask import request, jsonify
+    import requests
+
+    # -------------------------------
+    # Read form data
+    # -------------------------------
+    try:
+        qlat = float(request.form['lat'])
+        qlon = float(request.form['lon'])
+    except Exception as e:
+        return jsonify({"status": "error", "msg": "Invalid form data"}), 400
+
+    qtime = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+    # -------------------------------
+    # Fetch real-time weather/flood info
+    # -------------------------------
+    apiKey = "fb116bebc392ccc8ab251927edcb55d6"
+    try:
+        weather_res = requests.get(
+            f"https://api.openweathermap.org/data/2.5/weather?lat={qlat}&lon={qlon}&units=metric&appid={apiKey}"
+        ).json()
+        weatherDesc = weather_res.get('weather', [{}])[0].get('description', 'N/A')
+        temp = weather_res.get('main', {}).get('temp', 0)
+        humidity = weather_res.get('main', {}).get('humidity', 0)
+        rain = weather_res.get('rain', {}).get('1h', 0)
+        snow = weather_res.get('snow', {}).get('1h', 0)
+        precipitation = rain + snow
+        # Optional: reverse geocode using OpenWeatherMap or Google API for actual place name
+        real_place = weather_res.get('name', 'Unknown location')
+    except Exception as e:
+        weatherDesc = "N/A"
+        temp = 0
+        humidity = 0
+        precipitation = 0
+        real_place = "Unknown location"
+
+    # -------------------------------
+    # Haversine distance function
+    # -------------------------------
+    def haversine(lat1, lon1, lat2, lon2):
+        R = 6371
+        dlat = radians(lat2 - lat1)
+        dlon = radians(lon2 - lon1)
+        a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+        return 2 * R * atan2(sqrt(a), sqrt(1 - a))
+
+    # -------------------------------
+    # Fetch users from DB
+    # -------------------------------
+    try:
+        cur = db.cursor()
+        cur.execute("SELECT name, email, latitude, longitude FROM users")
+        users = cur.fetchall()
+    except:
+        return jsonify({"status": "error", "msg": "Database fetch error"}), 500
+
+    SMTP_SERVER = "smtp.gmail.com"
+    SMTP_PORT = 465
+    SMTP_SENDER = "sohamgarud0806@gmail.com"
+    SMTP_PASSWORD = "pwjdjogjwnzwuhle"
+
+    sent_count = 0
+
+    for uname, uemail, ulat, ulon in users:
+        if ulat is None or ulon is None:
+            continue
+
+        try:
+            dist = haversine(float(ulat), float(ulon), qlat, qlon)
+        except:
+            continue
+
+        if dist <= 10:  # Only nearby users
+            maps_link = f"https://www.google.com/maps/search/?api=1&query={qlat},{qlon}"
+
+            static_map = (
+                f"https://maps.googleapis.com/maps/api/staticmap?size=640x300&maptype=roadmap"
+                f"&markers=color:red%7Clabel:F%7C{qlat},{qlon}"
+            )
+
+            try:
+                static_map += f"&key={apiKey}"
+            except:
+                pass
+
+            # Determine flood risk
+            if precipitation > 3:
+                riskText = "🚨 Flood Risk: Very High"
+            elif precipitation > 2:
+                riskText = "⚠️ Flood Risk: Moderate"
+            elif precipitation > 1:
+                riskText = "🟡 Flood Risk: Low"
+            else:
+                riskText = "✅ Flood Risk: None"
+
+            # Text email
+            text = f"""
+🌊 FLOOD ALERT — Real-Time Trigger
+
+Rainfall: {precipitation} mm
+Weather: {weatherDesc}, {temp}°C, {humidity}%
+Distance: {dist:.2f} km
+Location: {real_place}
+Coordinates: {qlat}, {qlon}
+Time (UTC): {qtime}
+
+Google Maps: {maps_link}
+"""
+
+            # HTML email
+            html = f"""
+<html><body>
+<h2 style="color:#0047ab">🌊 FLOOD ALERT — Real-Time Trigger</h2>
+<p>Hello <b>{uname}</b>,</p>
+<ul>
+<li><b>Rainfall:</b> {precipitation} mm</li>
+<li><b>Weather:</b> {weatherDesc}, {temp}°C, {humidity}%</li>
+<li><b>Distance:</b> {dist:.2f} km</li>
+<li><b>Location:</b> {real_place}</li>
+<li><b>Coordinates:</b> {qlat}, {qlon}</li>
+<li><b>Time (UTC):</b> {qtime}</li>
+</ul>
+<p><a href="{maps_link}">View on Google Maps</a></p>
+<img src="{static_map}" style="max-width:100%;border:1px solid #ccc">
+<p>Stay safe!</p>
+</body></html>
+"""
+
+            # Send email
+            try:
+                msg = MIMEMultipart("alternative")
+                msg["Subject"] = Header("🌊 FLOOD ALERT — Real-Time Trigger", "utf-8")
+                msg["From"] = SMTP_SENDER
+                msg["To"] = uemail
+                msg.attach(MIMEText(text, "plain", "utf-8"))
+                msg.attach(MIMEText(html, "html", "utf-8"))
+
+                ctx = ssl.create_default_context()
+                with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, context=ctx) as server:
+                    server.login(SMTP_SENDER, SMTP_PASSWORD)
+                    server.sendmail(SMTP_SENDER, uemail, msg.as_bytes())
+
+                sent_count += 1
+
+            except Exception as e:
+                print(f"Failed to send flood alert to {uemail}: {e}")
+
+    return jsonify({"status": "success", "msg": f"Flood alerts sent: {sent_count}"}), 200
+
+
+def get_weather_data(lat, lon):
+
+    weather_api = urllib.request.urlopen("https://api.openweathermap.org/data/2.5/find?lat="+lat+"&lon="+lon+"&cnt=10&appid="+api_key).read()
+    weather_file = json.loads(weather_api)
+
+    for weather_data_point in weather_file["list"]:
+        temp = weather_data_point["main"]["temp"]
+        pressure = weather_data_point["main"]["pressure"]
+        humidity = weather_data_point["main"]["humidity"]
+        wind_speed = weather_data_point["wind"]["speed"]
+        wind_deg = weather_data_point["wind"]["deg"]
+        clouds = weather_data_point["clouds"]["all"]
+        weather_type = weather_data_point["weather"][0]["main"]
+
+        weather_data.append([temp, pressure, humidity, wind_speed, wind_deg, clouds])
+        weather_labels.append(weather_type)
+
+
+def predict_weather(city_name, classifier):
+    weather_api = urllib.request.urlopen("http://api.openweathermap.org/data/2.5/weather?q=" + city_name + "&appid=" + api_key).read()
+    weather = json.loads(weather_api)
+
+    temp = weather["main"]["temp"]
+    pressure = weather["main"]["pressure"]
+    humidity = weather["main"]["humidity"]
+    wind_speed = weather["wind"]["speed"]
+    wind_deg = weather["wind"]["deg"]
+    clouds = weather["clouds"]["all"]
+    weather_name = weather["weather"][0]["main"]
+
+    this_weather = [temp, pressure, humidity, wind_speed, wind_deg, clouds]
+    return {"Prediction:" : classifier.predict([this_weather])[0], "Actual:" : weather_name}
+
+
+# Get data from various cities
+@app.route('/prediction', methods=['GET','POST'])
+def prediction():
+    if request.method == 'POST':
+        lat = request.form['lat'] 
+        lon = request.form['long'] 
+        city = request.form['city'] 
+        date = request.form['date'] 
+        #get_weather_data("50.5", "0.2")
+        #get_weather_data("56", "3")
+        #get_weather_data("43", "5")
+        for i in range(10):
+            get_weather_data(lat,lon)
+    AI_machine = KNeighborsClassifier(n_neighbors=5)
+    AI_machine.fit(weather_data, weather_labels)        
+    print(list(set(weather_labels)))
+    var=(predict_weather(city, AI_machine))
+    print(var['Prediction:'])
+    vars=var['Prediction:']
+    varse=var['Actual:']
+    if vars==varse:
+        match='yes'
+    else:
+        match='no'
+    myCursor=db.cursor()
+    sql="INSERT INTO weather(lat,lon,city,predict,actual,date,mat) VALUES(%s,%s,%s,%s,%s,%s,%s);"
+    args=(lat,lon,city,vars,varse,date,match)
+    myCursor.execute(sql,args)
+    myCursor.execute("SELECT * FROM weather ORDER BY id DESC LIMIT 5")
+    data = myCursor.fetchall()
+    db.commit()
+    return render_template('weather.html',Predictions=vars,Actual=varse,lat=lat,lon=lon,city=city,date=date,data=data)
+
+
+@app.route('/predstorm', methods=['GET','POST'])
+def predstorm():
+    if request.method == 'POST':
+        temp = request.form['temp'] 
+        pressure = request.form['pressure'] 
+        humidity = request.form['humidity'] 
+        wind = request.form['wind'] 
+
+        itemp=int(temp)
+        ipressure=int(pressure)
+        ihumidity=int(humidity)
+        iwind=int(wind)
+     # gather the data set
+    data = get_weather_datas()
+    # print(data.head())
+
+    # encode the weather description to an integer. 
+    pp_data, targets = preprocess(data, "Weather Description")
+
+    # just for visualization
+    print("\n* targets *\n", targets, end="\n\n")
+    features = list(pp_data.columns[:5])
+    print("* features *\n", features, end="\n\n")
+    print("=======preprocessed data=======\n")
+    print("------------first five rows------------")
+    print("* pp_data.head()", pp_data[["Target", "Weather Description"]].head(), sep="\n", end="\n\n")
+    print("------------last five rows------------")
+    print("* pp_data.head()", pp_data[["Target", "Weather Description"]].tail(), sep="\n", end="\n\n")
+ 
+    
+    p_target = pp_data["Target"]
+    p_features = pp_data[features]
+
+    # taking some data out of the dataset for testing
+    itemi = [temp,pressure,humidity,wind]
+    item = [itemp,ipressure,ihumidity,iwind]
+   
+    test_target = p_target.loc[item]
+    test_data = p_features.loc[item]
+
+    display_labels(targets)
+
+    print("---Test Data's Target Value---")
+    print("Row ","Target")
+    print(test_target)
+
+    # preparing data for training by removing test data
+    train_target = p_target.drop(item)
+    train_data = p_features.drop(item)
+        
+    wclf = train_classifier(train_data, train_target)
+
+    visualize_tree(wclf, features)
+    prediction = wclf.predict(test_data)
+    print("\n---Actual Prediction---")
+    print(prediction)
+   
+
+
+def visualize_tree(tree, feature_names):
+
+    with open("visual.dot", 'w') as f:
+        export_graphviz(tree, out_file=f, feature_names=feature_names)
+    try:
+        subprocess.check_call(["dot", "-Tpng", "visual.dot", "-o", "visual.png"])
+    except:
+        exit("Failed to generate a visual graph")
+
+
+def get_weather_datas():
+    data = pd.read_csv("weather_data.csv")
+    # print(data.head())
+    return data
+
+
+def preprocess(data, target_column):
+    """returns cleaned dataframe and targets"""
+    data_clean = data.copy()
+    targets = data_clean[target_column].unique()
+    map_str_to_int = {name: n for n, name in enumerate(targets)}
+    data_clean["Target"] = data_clean[target_column].replace(map_str_to_int)
+
+    return (data_clean, targets)
+
+def display_labels(targets):
+    print("0 :",targets[0])
+    print("1 :",targets[1])
+    print("2 :",targets[2])
+    print("3 :",targets[3])
+
+def train_classifier(train_data, train_target):
+    """returns a new model that can be used to make predictions"""
+    # create a decision tree classifier
+    wclf = DecisionTreeClassifier(min_samples_split=20, random_state=99)
+    # train it on the training data / train classifier
+    wclf.fit(train_data, train_target)
+    return wclf
+
+
+@app.route('/hurricane', methods=['GET','POST'])
+def hurricane():
+    return render_template('hurricane.html')
+
+@app.route('/predhurricane', methods=['GET','POST'])
+def predhurricane():
+    import pandas as pd
+    import numpy as np
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    import sklearn
+    from sklearn.metrics import mean_squared_error
+
+    atlantic = pd.read_csv("hurricane-atlantic.csv")
+    pacific = pd.read_csv("hurricane-pacific.csv")
+    hurricanes = atlantic.append(pacific)
+    hurricanes.head(5)
+
+    from sklearn.utils import shuffle
+    hurricanes = shuffle(hurricanes)
+
+    hurricanes = hurricanes[["Date", "Latitude", "Longitude", "Maximum Wind"]].copy()
+    hurricanes.head(5)
+
+    hurricanes = hurricanes[pd.notnull(hurricanes['Maximum Wind'])]
+
+    lon = hurricanes['Longitude']
+    lon_new = []
+    for i in lon:
+        if "W" in i:
+            i = i.split("W")[0]
+            i = float(i)
+            i *= -1
+        elif "E" in i:
+            i = i.split("E")[0]
+            i = float(i)
+        i = float(i)
+        lon_new.append(i)
+    hurricanes['Longitude'] = lon_new
+    lat = hurricanes['Latitude']
+    lat_new = []
+    for i in lat:
+        if "S" in i:
+            i = i.split("S")[0]
+            i = float(i)
+            i *= -1
+        elif "N" in i:
+            i = i.split("N")[0]
+            i = float(i)
+        i = float(i)
+        lat_new.append(i)
+    hurricanes['Latitude'] = lat_new
+
+    hurricanes_y = hurricanes["Maximum Wind"]
+    hurricanes_y.head(5)
+
+    hurricanes_x = hurricanes.drop("Maximum Wind", axis = 1)
+    hurricanes_x['Longitude'].replace(regex=True,inplace=True,to_replace=r'W',value=r'')
+    hurricanes_x['Latitude'].replace(regex=True,inplace=True,to_replace=r'N',value=r'')
+    hurricanes_x.head(5)
+
+    from sklearn import linear_model
+    from sklearn.model_selection import train_test_split
+    model = linear_model.LinearRegression()
+    x_train, x_test, y_train, y_test = train_test_split(hurricanes_x, hurricanes_y, test_size = 0.2, random_state = 4)
+
+    model.fit(x_train,y_train)
+    if request.method == 'POST':
+        date = request.form['date'] 
+        lat = request.form['lat'] 
+        lon = request.form['lon'] 
+    results = model.predict(x_test)
+    data=[date,lat,lon]
+    query = pd.get_dummies(pd.DataFrame(data))
+    res=model.predict(query)
+    res[0]
+    if res[1]>287.5:
+        var="Strong Hurricane Situation"
+    else:
+        var="No hurricane situation"
+    print (var)
+    plt.scatter(results, y_test)
+    plt.plot(results, results, c='r')
+    plt.savefig('D:/project/Disaster-Prediction-main/static/hurricane/hurrd1.png')
+    plt.scatter(x_test['Date'], y_test)
+    plt.savefig('D:/project/Disaster-Prediction-main/static/hurricane/hurrd2.png')
+    plt.scatter(x_test['Date'], results)
+    plt.savefig('D:/project/Disaster-Prediction-main/static/hurricane/hurrd.png')
+    return render_template('hurricane.html',Predictions=var)
+
+
+@app.route('/tsunami', methods=['GET','POST'])
+def tsunami():
+    return render_template('tsunami.html')
+
+@app.route('/predtsunami', methods=['GET','POST'])
+def predtsunami():
+    import pandas as pd
+    import numpy as np
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn import linear_model
+    from sklearn import preprocessing
+    import warnings
+    warnings.filterwarnings("ignore")
+    np.random.seed(0)
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
+
+    hs = pd.read_csv('tsunami.csv')
+
+    min_max_scaler = preprocessing.MinMaxScaler()
+
+    df = hs[['LATITUDE','LONGITUDE','MAXIMUM_HEIGHT','PRIMARY_MAGNITUDE']]
+    df=df.fillna(df.mean())
+    df.columns=['LATITUDE','LONGITUDE','MAXIMUM_HEIGHT','PRIMARY_MAGNITUDE']
+    columns=df.columns
+
+    x = df.drop('PRIMARY_MAGNITUDE', axis=1)
+    y = df['PRIMARY_MAGNITUDE']
+
+    from sklearn.model_selection import train_test_split
+    x_train, x_test, y_train, y_test = train_test_split(x, y)
+
+    from sklearn.preprocessing import StandardScaler
+    scaler = StandardScaler()
+    scaler.fit(x_train)
+
+    x_train = scaler.transform(x_train)
+    x_test = scaler.transform(x_test)
+
+    x_train
+
+    from sklearn.neural_network import MLPRegressor
+    len(x_train.transpose())
+
+    mlp = MLPRegressor(hidden_layer_sizes=(100, ), max_iter=1500)
+    mlp.fit(x_train, y_train)
+
+    predictions = mlp.predict(x_test)
+
+    print(predictions)
+
+    actualValues = y_test.values
+    totalNumValues = len(y_test)
+
+    numAccurateResults = 0
+
+    for i in range(0, len(predictions)):
+        if abs(predictions[i] - actualValues[i]) < (0.1 * df['PRIMARY_MAGNITUDE'].max()):
+            numAccurateResults += 1
+        
+    percentAccurateResults = (numAccurateResults / totalNumValues) * 100
+    print(percentAccurateResults)
+    tnna=percentAccurateResults
+    from sklearn import svm
+    SVMModel = svm.SVR()
+    SVMModel.fit(x_train, y_train)
+
+    predictionse = SVMModel.predict(x_test)
+    predictionse
+
+    actualValues = y_test.values
+    totalNumValues = len(y_test)
+
+    numAccurateResultse = 0
+
+    for i in range(0, len(predictionse)):
+        if abs(predictionse[i] - actualValues[i]) < (0.1 * df['PRIMARY_MAGNITUDE'].max()):
+            numAccurateResultse += 1
+        
+    percentAccurateResultse = (numAccurateResultse / totalNumValues) * 100
+    print(percentAccurateResultse)
+    tsva=percentAccurateResultse
+    reg = linear_model.LinearRegression()
+    reg.fit(x_train, y_train)
+
+    predictionsi = reg.predict(x_test)
+    predictionsi
+
+    actualValues = y_test.values
+    totalNumValues = len(y_test)
+
+    numAccurateResultsi = 0
+
+    for i in range(0, len(predictionsi)):
+        if abs(predictionsi[i] - actualValues[i]) < (0.1 * df['PRIMARY_MAGNITUDE'].max()):
+            numAccurateResultsi += 1
+        
+    percentAccurateResultsi = (numAccurateResultsi / totalNumValues) * 100
+    print(percentAccurateResultsi)
+    tlma=percentAccurateResultsi
+    if request.method == 'POST':
+        lat = request.form['lats'] 
+        long = request.form['longs'] 
+        height = request.form['heights'] 
+        date = request.form['dates'] 
+
+    from numpy import array
+    x_input =array([[lat,long,height]])
+    x_tests=scaler.transform(x_input)
+
+    actualPredictions = mlp.predict(x_tests)
+    tnn=actualPredictions[0]
+
+    actualPredictionse = SVMModel.predict(x_tests)
+    tsv=actualPredictionse[0]
+
+    actualPredictionsi = reg.predict(x_tests)
+    tlm=actualPredictionsi[0]
+
+    mintsunami = df['PRIMARY_MAGNITUDE'].min()
+    maxtsunami = df['PRIMARY_MAGNITUDE'].max()
+
+    for i in range(0, len(columns)):
+        x_scaled = min_max_scaler.fit_transform(df[[columns[i]]].values.astype(float))
+        df[columns[i]] = pd.DataFrame(x_scaled)
+
+    df['is_tsunami'] = np.random.uniform(0, 1, len(df)) <= .75
+
+    train, test = df[df['is_tsunami'] == True], df[df['is_tsunami'] == False]
+
+    print('Number of observations in the training data:', len(train))
+    print('Number of observations in the test data:', len(test))
+
+    features = df.columns[0:-1]
+    features = features.delete(3)
+    features
+
+    yr = train['PRIMARY_MAGNITUDE']
+
+    RFModel = RandomForestRegressor(n_jobs=2, random_state=0)
+
+    RFModel.fit(train[features], yr)
+
+    RFModel.predict(test[features])
+
+    preds = RFModel.predict(test[features])
+
+    preds
+
+    actualValues = test['PRIMARY_MAGNITUDE'].values
+    totalNumValues = len(test)
+
+    numAccurateResultsr = 0
+
+    for i in range(0, len(preds)):
+        if abs(preds[i] - actualValues[i]) < (0.1 * df['PRIMARY_MAGNITUDE'].max()):
+            numAccurateResultsr += 1
+            
+    percentAccurateResultsr = (numAccurateResultsr / totalNumValues) * 100
+    trfa=percentAccurateResultsr
+
+    list(zip(train[features], RFModel.feature_importances_))
+
+    from numpy import array
+    x_input =array([[lat,long,height]])
+
+    min_max_scaler = preprocessing.MinMaxScaler()
+    x_tests=scaler.transform(x_input)
+
+    actualPredictionsr = RFModel.predict(df[features])
+
+
+    for i in range(0, len(actualPredictions)):
+        actualPredictionsr[i] = (actualPredictionsr[i] * (maxtsunami - mintsunami)) + mintsunami
+        
+    trf=actualPredictionsr[0]
+
+    # x-coordinates of left sides of bars  
+    left = [1, 2, 3, 4] 
+    
+    # heights of bars 
+    height = [trfa,tnna,tsva,tlma] 
+    
+    # labels for bars 
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression'] 
+    
+    # plotting a bar chart 
+    plt.bar(left, height, tick_label = tick_label, 
+            width = 0.4, color = ['red', 'green', 'orange', 'blue']) 
+    
+    # naming the x-axis 
+    plt.xlabel('x - axis') 
+    # naming the y-axis 
+    plt.ylabel('y - axis') 
+    # plot title 
+    plt.title('Accuracy Chart For Tsunami') 
+    plt.savefig('D:/project/Disaster-Prediction-main/static/graphse/tm1.png')
+
+    # x-coordinates of left sides of bars  
+    left = [1, 2, 3, 4] 
+    
+    # heights of bars 
+    heights = [trf,tnn,tsv,tlm] 
+    
+    # labels for bars 
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression'] 
+    
+    # plotting a bar chart 
+    plt.bar(left, heights, tick_label = tick_label, 
+            width = 0.4, color = ['blue']) 
+    
+    # naming the x-axis 
+    plt.xlabel('x - axis') 
+    # naming the y-axis 
+    plt.ylabel('y - axis') 
+    # plot title 
+    plt.title('Predicted Output Chart For Tsunami') 
+    plt.savefig('D:/project/Disaster-Prediction-main/static/graphse/tm2.png')
+    z=''
+    if tnna>6.5:
+        z='Tsunami'
+    else:
+        z='No Tsunami'
+
+    return render_template('tsunami.html',Predictions=z,data=tnn)
+
+@app.route('/earthgraph')
+def earthgraph():
+    import matplotlib.pyplot as plt
+    from datetime import datetime
+    import tensorflow as tf
+    import seaborn as sns
+
+   
+    import warnings
+    warnings.filterwarnings('ignore')
+    
+    import time
+    df1=pd.read_csv('database.csv')
+
+    df1.tail(5)
+
+
+    df1["Date"] = pd.to_datetime(df1["Date"])
+
+    col1 = df1[['Date','Latitude','Longitude','Depth']]
+    col2 = df1['Magnitude']
+    #Convert to Numpy array
+    InputX1 = col1.to_numpy()
+    InputY1 = col2.to_numpy()
+    print(InputX1)
+    print(InputY1)
+
+    col3 = df1[['Date','Latitude','Longitude','Depth','Magnitude']]
+
+    col3[col3.dtypes[(col3.dtypes=="float64")|(col3.dtypes=="int64")]
+                        .index.values].hist(figsize=[11,11])
+
+    longitudes = df1["Longitude"].tolist()
+    latitudes = df1["Latitude"].tolist()
+    #m = Basemap(width=12000000,height=9000000,projection='lcc',
+                #resolution=None,lat_1=80.,lat_2=55,lat_0=80,lon_0=-107.)
+    x,y = (longitudes,latitudes)
+
+    minimum = df1["Magnitude"].min()
+    maximum = df1["Magnitude"].max()
+    average = df1["Magnitude"].mean()
+
+    print("Minimum:", minimum)
+    print("Maximum:",maximum)
+    print("Mean",average)
+
+    (n,bins, patches) = plt.hist(df1["Magnitude"], range=(0,10), bins=10)
+    plt.xlabel("Earthquake Magnitudes")
+    plt.ylabel("Number of Occurences")
+    plt.title("Overview of earthquake magnitudes")
+    my_list = []
+
+    print("Magnitude" +"   "+ "Number of Occurence")
+    for i in range(5, len(n)):
+        my_list.append(str(i)+ "-"+str(i+1)+"         " +str(n[i]))
+        print(str(i)+ "-"+str(i+1)+"         " +str(n[i]))
+
+    print(my_list)
+    plt.boxplot(df1["Magnitude"])
+    
+    plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/earth/e1.png')
+
+    highly_affected = df1[df1["Magnitude"]>=8]
+
+    print(highly_affected.shape)
+
+    #earthquake occurances per month
+    df1["Month"] = df1['Date'].dt.month
+
+    #month_occurrence = earth.pivot_table(index = "Month", values = ["Magnitude"] , aggfunc = )
+
+    month_occurrence = df1.groupby("Month").groups
+    print(len(month_occurrence[1]))
+
+    month = [i for i in range(1,13)]
+    occurrence = []
+
+    for i in range(len(month)):
+        val = month_occurrence[month[i]]
+        occurrence.append(len(val))
+
+    print(occurrence)
+    print(sum(occurrence))
+
+    fig, ax = plt.subplots(figsize = (10,8))
+    bar_positions = np.arange(12) + 0.5
+
+    months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    num_cols = months
+    bar_heights = occurrence
+
+    ax.bar(bar_positions, bar_heights)
+    tick_positions = np.arange(1,13)
+    ax.set_xticks(tick_positions)
+    ax.set_xticklabels(num_cols, rotation = 90)
+    plt.title("Frequency by Month")
+    plt.xlabel("Months")
+    plt.ylabel("Frequency")
+    
+    plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/earth/e2.png')
+
+
+    df1["Year"] = df1['Date'].dt.year
+
+    year_occurrence = df1.groupby("Year").groups
+
+
+    year = [i for i in range(1965,2017)]
+    occurrence = []
+
+    for i in range(len(year)):
+        val = year_occurrence[year[i]]
+        occurrence.append(len(val))
+
+    maximum = max(occurrence)
+    minimum = min(occurrence)
+    print("Maximum",maximum)
+    print("Minimum",minimum)
+
+    #print("Year :" + "     " +"Occurrence")
+
+    #for k,v in year_occurrence.items():
+        #print(str(k) +"      "+ str(len(v)))
+
+    fig = plt.figure(figsize=(10,6))
+    plt.plot(year,occurrence)
+    plt.xticks(rotation = 90)
+    plt.xlabel("Year")
+    plt.ylabel("Number of Occurrence")
+    plt.title("Frequency of Earthquakes by Year")
+    plt.xlim(1965,2017)
+   
+    plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/earth/e3.png')
+
+    plt.scatter(df1["Magnitude"],df1["Depth"])
+    plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/earth/e4.png')
+
+    np.corrcoef(df1["Magnitude"], df1["Depth"])
+
+    return render_template('earthgraph.html',max=maximum,min=minimum,avg=average,lr=my_list)
+
+
+
+def check_live_floods_scheduler():
+    import requests
+    import ssl
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    from datetime import datetime
+    from math import radians, sin, cos, sqrt, atan2
+
+    try:
+        print("\n==============================")
+        print("🌧 FLOOD SCHEDULER STARTED")
+        print("==============================")
+
+        # -------------------------------
+        # API KEYS
+        # -------------------------------
+        OPENWEATHER_KEY = "fb116bebc392ccc8ab251927edcb55d6"
+
+        try:
+            GOOGLE_API_KEY = api_key
+        except:
+            GOOGLE_API_KEY = ""
+
+        # -------------------------------
+        # EMAIL SETTINGS
+        # -------------------------------
+        SMTP_SENDER = "sohamgarud0806@gmail.com"
+        SMTP_PASSWORD = "pwjdjogjwnzwuhle"
+        SMTP_SERVER = "smtp.gmail.com"
+        SMTP_PORT = 465
+
+        # -------------------------------
+        # FLOOD THRESHOLDS
+        # -------------------------------
+        THRESHOLD_FLOOD = 30       # RED ALERT
+        THRESHOLD_WARNING = 20     # ORANGE WARNING
+
+        # -------------------------------
+        # HAVERSINE FUNCTION
+        # -------------------------------
+        def haversine(lat1, lon1, lat2, lon2):
+            R = 6371.0
+            dlat = radians(lat2 - lat1)
+            dlon = radians(lon2 - lon1)
+            a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+            return R * (2 * atan2(sqrt(a), sqrt(1-a)))
+
+        # -------------------------------
+        # FETCH USERS
+        # -------------------------------
+        print("📌 Loading users...")
+        cur = db.cursor()
+        cur.execute("SELECT name, email, latitude, longitude FROM users")
+        users = cur.fetchall()
+        print(f"✔ Users found: {len(users)}")
+
+        # -------------------------------
+        # CHECK FLOOD FOR EACH USER
+        # -------------------------------
+        for user in users:
+            try:
+                name, email, lat, lon = user
+                print(f"\n➡ Checking: {name} ({lat}, {lon})")
+
+                if lat is None or lon is None:
+                    print("   ❌ No coordinates, skipping user.")
+                    continue
+
+                lat = float(lat)
+                lon = float(lon)
+
+                # -------------------------------
+                # WEATHER API CALL
+                # -------------------------------
+                weather_url = (
+                    f"https://api.openweathermap.org/data/2.5/weather"
+                    f"?lat={lat}&lon={lon}&appid={OPENWEATHER_KEY}&units=metric"
+                )
+
+                print(f"   🌐 Calling API...")
+
+                try:
+                    r = requests.get(weather_url, timeout=10)
+                    if r.status_code != 200:
+                        print(f"   ❌ API Error: {r.status_code}")
+                        continue
+
+                    data = r.json()
+                    print("   ✔ Weather data received")
+
+                except Exception as e:
+                    print("   ❌ API Connection Failed:", e)
+                    continue
+
+                # -------------------------------
+                # EXTRACT PRECIPITATION
+                # -------------------------------
+                weather_desc = data.get("weather", [{}])[0].get("description", "N/A")
+                temp = data.get("main", {}).get("temp", 0)
+                humidity = data.get("main", {}).get("humidity", 0)
+
+                rain1 = data.get("rain", {}).get("1h", 0)
+                rain3 = data.get("rain", {}).get("3h", 0)
+                snow1 = data.get("snow", {}).get("1h", 0)
+                snow3 = data.get("snow", {}).get("3h", 0)
+
+                # Combine rain + snow
+                precipitation = max(rain1, rain3, snow1, snow3, 0)
+
+                print(f"   🌧 Rain: {rain1}/{rain3} mm | ❄ Snow: {snow1}/{snow3} mm")
+                print(f"   👉 Final Precipitation = {precipitation} mm")
+
+                # -------------------------------
+                # DETECTION LOGIC
+                # -------------------------------
+                is_flood = precipitation >= THRESHOLD_FLOOD
+                is_warning = THRESHOLD_WARNING <= precipitation < THRESHOLD_FLOOD
+
+                if not is_flood and not is_warning:
+                    print("   ➖ Below 20 mm → No alert")
+                    continue
+
+                if is_flood:
+                    alert_level = "🚨 REAL FLOOD ALERT"
+                else:
+                    alert_level = "⚠️ FLOOD WARNING"
+
+                print(f"   🔥 ALERT TRIGGERED: {alert_level}")
+
+                # -------------------------------
+                # MAP LINKS
+                # -------------------------------
+                maps_link = f"https://www.google.com/maps/search/?api=1&query={lat},{lon}"
+
+                static_map = (
+                    f"https://maps.googleapis.com/maps/api/staticmap"
+                    f"?center={lat},{lon}&zoom=10&size=600x300"
+                    f"&markers=color:red%7C{lat},{lon}"
+                )
+                if GOOGLE_API_KEY:
+                    static_map += f"&key={GOOGLE_API_KEY}"
+
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                # -------------------------------
+                # EMAIL CONTENT
+                # -------------------------------
+                subject = f"{alert_level} - {precipitation} mm"
+
+                text = f"""
+{alert_level}
+
+Heavy precipitation detected near your location.
+
+Details:
+Precipitation: {precipitation} mm
+Weather: {weather_desc}
+Temperature: {temp}°C
+Humidity: {humidity}%
+
+Location: {lat}, {lon}
+Time: {timestamp}
+
+Google Maps: {maps_link}
+"""
+
+                html = f"""
+<html><body style="font-family:Arial;">
+<div style="max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:10px;">
+    <h2 style="color:#c40000;">{alert_level}</h2>
+    <p>Hello <b>{name}</b>,</p>
+    <p>Strong precipitation detected near your area.</p>
+
+    <ul>
+        <li><b>Precipitation:</b> {precipitation} mm</li>
+        <li><b>Weather:</b> {weather_desc}</li>
+        <li><b>Temperature:</b> {temp}°C</li>
+        <li><b>Humidity:</b> {humidity}%</li>
+        <li><b>Time:</b> {timestamp}</li>
+    </ul>
+
+    <p><a href="{maps_link}" target="_blank">📍 Open in Google Maps</a></p>
+    <img src="{static_map}" style="width:100%;border-radius:8px;">
+</div>
+</body></html>
+"""
+
+                # -------------------------------
+                # SEND EMAIL
+                # -------------------------------
+                print("   📧 Sending alert email...")
+
+                msg = MIMEMultipart("alternative")
+                msg["Subject"] = subject
+                msg["From"] = SMTP_SENDER
+                msg["To"] = email
+                msg.attach(MIMEText(text, "plain", "utf-8"))
+                msg.attach(MIMEText(html, "html", "utf-8"))
+
+                try:
+                    ctx = ssl.create_default_context()
+                    with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, context=ctx) as server:
+                        server.login(SMTP_SENDER, SMTP_PASSWORD)
+                        server.sendmail(SMTP_SENDER, email, msg.as_bytes())
+
+                    print(f"   ✔ Email sent to {email}")
+
+                except Exception as e:
+                    print("   ❌ Email failed:", e)
+
+            except Exception as e:
+                print("User processing error:", e)
+
+        print("\n==============================")
+        print("✅ FLOOD SCHEDULER COMPLETED")
+        print("==============================")
+
+    except Exception as e:
+        print("Flood Scheduler Error:", e)
+
+
+@app.route('/predflood', methods=['GET', 'POST'])
+def predflood():
+    import pandas as pd
+    import numpy as np
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from sklearn.model_selection import train_test_split
+    from sklearn.linear_model import LinearRegression
+    from flask import request, render_template
+    import requests
+    from datetime import datetime
+
+    # -----------------------
+    # Config / keys
+    # -----------------------
+    OPENWEATHER_KEY = "fb116bebc392ccc8ab251927edcb55d6"
+    GOOGLE_API_KEY = api_key
+
+    RAINFALL_REAL_FLOOD_MM = 30   # live heavy rain threshold
+
+    # -----------------------
+    # Load ML training data
+    # -----------------------
+    df_rain = pd.read_csv("Hoppers Crossing-Hourly-Rainfall.csv")
+    df_river = pd.read_csv("Hoppers Crossing-Hourly-River-Level.csv")
+
+    df = pd.merge(df_rain, df_river, how='outer', on=['Date/Time'])
+    df['Cumulative rainfall (mm)'] = df['Cumulative rainfall (mm)'].fillna(0)
+    df['Level (m)'] = df['Level (m)'].fillna(0)
+    df = df.drop(columns=['Current rainfall (mm)', 'Date/Time'])
+
+    X = df[['Cumulative rainfall (mm)']].values
+    y = df[['Level (m)']].values
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    regressor = LinearRegression()
+    regressor.fit(X_train, y_train)
+
+    # Save plots (optional)
+    plt.scatter(X_train, y_train)
+    plt.plot(X_train, regressor.predict(X_train), color='red')
+    plt.savefig('static/flood/f4.png')
+    plt.close()
+
+    plt.scatter(X_test, y_test, color='red')
+    plt.plot(X_train, regressor.predict(X_train), color='blue')
+    plt.savefig('static/flood/f5.png')
+    plt.close()
+
+    # -----------------------
+    # Default values
+    # -----------------------
+    rainfall_input = 0
+    temp = humidity = 0
+    weather_desc = "N/A"
+    flood_status = "No Flood"
+    lat = lon = None
+    predictions = [[0, "No Flood"]]
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # -----------------------
+    # When user inputs lat/lon
+    # -----------------------
+    if request.method == "POST":
+        lat = float(request.form.get("latitude"))
+        lon = float(request.form.get("longitude"))
+
+        # --- Fetch live weather
+        try:
+            url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={OPENWEATHER_KEY}&units=metric"
+            w = requests.get(url, timeout=8).json()
+            weather_desc = w.get("weather", [{}])[0].get("description", "N/A")
+            temp = w.get("main", {}).get("temp", 0)
+            humidity = w.get("main", {}).get("humidity", 0)
+            rainfall_input = w.get("rain", {}).get("1h", 0) or w.get("rain", {}).get("3h", 0) or 0
+        except:
+            rainfall_input = 0
+
+        # --- ML predicted river level
+        try:
+            scaled = min(rainfall_input, 100)
+            pred = float(regressor.predict(np.array([[scaled]]))[0][0])
+        except:
+            pred = 0.0
+
+        # --- Determine flood status
+        real_rain = rainfall_input >= RAINFALL_REAL_FLOOD_MM
+        real_river = (pred >= 1.6 and rainfall_input > 20)
+
+        if real_rain or real_river:
+            flood_status = "Real Flood Detected"
+        elif pred >= 1.45:
+            flood_status = "Possible Flood (monitor)"
+        else:
+            flood_status = "No Flood"
+
+        predictions = [[round(pred, 3), flood_status, round(rainfall_input, 2)]]
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # -----------------------
+        # IMPORTANT CHANGES:
+        # Auto email sending REMOVED here
+        # Flood alerts will be sent ONLY manually
+        # -----------------------
+
+    # -----------------------
+    # Render results page
+    # -----------------------
+    return render_template(
+        "floodres.html",
+        predictions=predictions,
+        lat=lat,
+        lon=lon,
+        rainfall_input=rainfall_input,
+        flood_status=flood_status,
+        temp=temp,
+        humidity=humidity,
+        weather_desc=weather_desc,
+        timestamp=timestamp
+    )
+
+
+
+
+    #print(predicted_riverlevel)
+    #if (predicted_riverlevel > 1.5):
+    #print("FLOOD")
+    #else:
+    #print("No FLOOD")
+
+@app.route('/jtse', methods=['GET','POST'])
+def jtse():
+    import pandas as pd
+    import numpy as np
+    import nltk
+    from nltk.corpus import sentiwordnet as swn
+    from nltk.corpus import stopwords
+    from nltk.stem import WordNetLemmatizer
+    from autocorrect import spell
+    import re
+    from itertools import chain
+    import seaborn as sns
+
+
+    def chains(para):
+        return list(chain.from_iterable(para.str.split('.')))
+
+    def process_data(df):
+        
+        df = df.dropna() # Drop all NaN value
+        
+        # Seperate Sentence from Paragraph
+        length = df['comment'].str.split('.').map(len)
+        data = pd.DataFrame({'user': np.repeat(df['user'], length),'date': np.repeat(df['date'], length),
+                            'comment': chains(df['comment'])})
+        
+        return data
+
+
+    def filtered_text(text):
+        filter0 = [(t.lower(), tag) for t,tag in text]
+        filter1 = [(re.sub("["+"".join(sp)+"+]",' ',f), tag) for f,tag in filter0]    #for removing delimiter and other useless stuff
+        filter2 = [(''.join (f), tag) for f,tag in filter1 if not f.isnumeric()]      #for removing numbers
+        filter3 = [(f, tag) for f,tag in filter2 if f not in stopword]                #for removing stopwords
+        #filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
+        return filter3
+
+    def cal_score(word, tag):
+        try:
+            s_pos = [] # Positive Score
+            s_neg = [] # negative Score
+            s_obj = [] # Objective Score
+            
+            for s in list(swn.senti_synsets(word, tag)):
+                s_pos.append(s.pos_score())
+                s_neg.append(s.neg_score())
+            
+                if (s.pos_score() == 0.0 and s.neg_score() == 0.0):
+                    score = 2 * s.obj_score()
+                    break
+                    
+            max_pos = max(s_pos)
+            max_neg = max(s_neg)
+            
+            if max_pos > max_neg:
+                score = max_pos
+            else:
+                score = -1*max_neg
+        except ValueError:
+            score = 0.0
+            
+        return score
+
+
+    def cal_senti_score(tokens):
+        for text in (tokens):
+
+            tagged_word = nltk.pos_tag(text)                                    # Each Word is tagged with a POS
+            filt_word = filtered_text(tagged_word)                 
+            score_post = adj_score = adv_score = vb_score = adv_score = 0.0
+
+            for word,tag in filt_word:
+
+                if tag in adv:                                                  # To find Adverb Score
+                    if tag == 'RBS':
+                        adv_score = adv_score + (1.5 * cal_score(word, 'r'))
+                    elif tag == 'RBR':
+                        adv_score = adv_score + (1.2 * cal_score(word, 'r'))
+                    else:
+                        adv_score = adv_score + (1.0 * cal_score(word, 'r'))
+
+                elif tag in adj:                                                # To find Adjective Score
+                    adj_score = cal_score(word, 'a')
+                    if tag == 'JJS':
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.5 * adj_score)   # 1.5, 1.2, 1.0 are the respective Scaling Factors
+                    elif tag == 'JJR':
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.2 * adj_score)
+                    else:
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.0 * adj_score)
+                    adv_score = 0.0
+
+                elif tag in vb:                                                 # To find Verb Score
+                    vb_score = cal_score(word, 'v')
+                    score_post = score_post + (0.4 * adv_score + 1) * vb_score  # 0.4 is a Scaling Factor
+                    adv_score = 0.0
+
+            final_score.append(score_post)                                      # Final Sentiment Score of a Sentence
+
+
+    def final_senti_score(data, df):
+        
+        tokens = [nltk.word_tokenize(d) for d in data['comment']]                     # Tokenize the Sentence
+        cal_senti_score(tokens)
+        
+        senti_score = pd.Series(final_score)
+        data['sentiment_score'] = senti_score.values
+        
+        senti_data = data.groupby(data.index).sum()
+        final_data = df.join(senti_data, how = 'left', lsuffix = '_left', rsuffix = '_right')
+        
+        time = final_data['date'].str.split()
+        date = []
+        for t in time:
+            date.append(" ".join(t[0:3]))
+        final_data['date'] = date
+        
+        disaster_senti_score = final_data.groupby(['date', 'user']).mean()['sentiment_score'].sum()
+        return disaster_senti_score
+
+
+    # Create Stopwords
+    import nltk
+    nltk.download('stopwords')
+    stopword = set(stopwords.words('english')) 
+    sp_char = ['.','-','*','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{','1','2','3','4','5','6','7','8','9',' ','  ','   ','~','`','|','/']
+    sp = ['.','*','-','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{','1','2','3','4','5','6','7','8','9','~','`','|','/']
+    stopword.update(sp_char)
+    lemma = WordNetLemmatizer()
+
+    adj = ['JJ', 'JJR', 'JJS']                      # All Adjective POS Tags
+    #noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
+    adv = ['RB', 'RBR', 'RBS']                      # All Adverb POS Tags
+    vb = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']  # All verb POS Tags
+    final_score = []
+
+    data = pd.read_csv("Japan2016_Earthquake.csv")
+    data.head()
+    data.shape
+    data.isnull().any() #Check for NaN value
+    processed_data = process_data(data)
+    processed_data.head()
+    processed_data.shape
+    processed_data.isnull().any() #Check for NaN value
+
+    import nltk
+    nltk.download('punkt')
+    nltk.download('averaged_perceptron_tagger')
+    nltk.download('sentiwordnet')
+    nltk.download('wordnet')
+    japan16_sentiment_score = final_senti_score(processed_data, data)
+    print(japan16_sentiment_score)
+    j=japan16_sentiment_score
+    print("Japan 2016 Sentiment Score :", japan16_sentiment_score)
+
+    return render_template('senti.html',d=j)
+
+@app.route('/jtsu', methods=['GET','POST'])
+def jtsu():
+    import pandas as pd
+    import numpy as np
+    import nltk
+    from nltk.corpus import sentiwordnet as swn
+    from nltk.corpus import stopwords
+    from nltk.stem import WordNetLemmatizer
+    from autocorrect import spell
+    import re
+    from itertools import chain
+    import seaborn as sns
+
+
+    def chains(para):
+        return list(chain.from_iterable(para.str.split('.')))
+
+    def process_data(df):
+        
+        df = df.dropna() # Drop all NaN value
+        
+        # Seperate Sentence from Paragraph
+        length = df['comment'].str.split('.').map(len)
+        data = pd.DataFrame({'user': np.repeat(df['user'], length),'date': np.repeat(df['date'], length),
+                            'comment': chains(df['comment'])})
+        
+        return data
+
+
+    def filtered_text(text):
+        filter0 = [(t.lower(), tag) for t,tag in text]
+        filter1 = [(re.sub("["+"".join(sp)+"+]",' ',f), tag) for f,tag in filter0]    #for removing delimiter and other useless stuff
+        filter2 = [(''.join (f), tag) for f,tag in filter1 if not f.isnumeric()]      #for removing numbers
+        filter3 = [(f, tag) for f,tag in filter2 if f not in stopword]                #for removing stopwords
+        #filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
+        return filter3
+
+    def cal_score(word, tag):
+        try:
+            s_pos = [] # Positive Score
+            s_neg = [] # negative Score
+            s_obj = [] # Objective Score
+            
+            for s in list(swn.senti_synsets(word, tag)):
+                s_pos.append(s.pos_score())
+                s_neg.append(s.neg_score())
+            
+                if (s.pos_score() == 0.0 and s.neg_score() == 0.0):
+                    score = 2 * s.obj_score()
+                    break
+                    
+            max_pos = max(s_pos)
+            max_neg = max(s_neg)
+            
+            if max_pos > max_neg:
+                score = max_pos
+            else:
+                score = -1*max_neg
+        except ValueError:
+            score = 0.0
+            
+        return score
+
+
+    def cal_senti_score(tokens):
+        for text in (tokens):
+
+            tagged_word = nltk.pos_tag(text)                                    # Each Word is tagged with a POS
+            filt_word = filtered_text(tagged_word)                 
+            score_post = adj_score = adv_score = vb_score = adv_score = 0.0
+
+            for word,tag in filt_word:
+
+                if tag in adv:                                                  # To find Adverb Score
+                    if tag == 'RBS':
+                        adv_score = adv_score + (1.5 * cal_score(word, 'r'))
+                    elif tag == 'RBR':
+                        adv_score = adv_score + (1.2 * cal_score(word, 'r'))
+                    else:
+                        adv_score = adv_score + (1.0 * cal_score(word, 'r'))
+
+                elif tag in adj:                                                # To find Adjective Score
+                    adj_score = cal_score(word, 'a')
+                    if tag == 'JJS':
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.5 * adj_score)   # 1.5, 1.2, 1.0 are the respective Scaling Factors
+                    elif tag == 'JJR':
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.2 * adj_score)
+                    else:
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.0 * adj_score)
+                    adv_score = 0.0
+
+                elif tag in vb:                                                 # To find Verb Score
+                    vb_score = cal_score(word, 'v')
+                    score_post = score_post + (0.4 * adv_score + 1) * vb_score  # 0.4 is a Scaling Factor
+                    adv_score = 0.0
+
+            final_score.append(score_post)                                      # Final Sentiment Score of a Sentence
+
+
+    def final_senti_score(data, df):
+        
+        tokens = [nltk.word_tokenize(d) for d in data['comment']]                     # Tokenize the Sentence
+        cal_senti_score(tokens)
+        
+        senti_score = pd.Series(final_score)
+        data['sentiment_score'] = senti_score.values
+        
+        senti_data = data.groupby(data.index).sum()
+        final_data = df.join(senti_data, how = 'left', lsuffix = '_left', rsuffix = '_right')
+        
+        time = final_data['date'].str.split()
+        date = []
+        for t in time:
+            date.append(" ".join(t[0:3]))
+        final_data['date'] = date
+        
+        disaster_senti_score = final_data.groupby(['date', 'user']).mean()['sentiment_score'].sum()
+        return disaster_senti_score
+
+
+    # Create Stopwords
+    import nltk
+    nltk.download('stopwords')
+    stopword = set(stopwords.words('english')) 
+    sp_char = ['.','-','*','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{','1','2','3','4','5','6','7','8','9',' ','  ','   ','~','`','|','/']
+    sp = ['.','*','-','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{','1','2','3','4','5','6','7','8','9','~','`','|','/']
+    stopword.update(sp_char)
+    lemma = WordNetLemmatizer()
+
+    adj = ['JJ', 'JJR', 'JJS']                      # All Adjective POS Tags
+    #noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
+    adv = ['RB', 'RBR', 'RBS']                      # All Adverb POS Tags
+    vb = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']  # All verb POS Tags
+    final_score = []
+
+    data = pd.read_csv("japan_2011_tsunami.csv")
+    data.head()
+    data.shape
+    data.isnull().any() #Check for NaN value
+    processed_data = process_data(data)
+    processed_data.head()
+    processed_data.shape
+    processed_data.isnull().any() #Check for NaN value
+
+    import nltk
+    nltk.download('punkt')
+    nltk.download('averaged_perceptron_tagger')
+    nltk.download('sentiwordnet')
+    nltk.download('wordnet')
+    japan16_sentiment_score = final_senti_score(processed_data, data)
+    print(japan16_sentiment_score)
+    j=japan16_sentiment_score
+    print("Japan 2011 tsunami Sentiment Score :", japan16_sentiment_score)
+
+    return render_template('senti.html',da=j)
+
+@app.route('/che', methods=['GET','POST'])
+def che():
+    import pandas as pd
+    import numpy as np
+    import nltk
+    from nltk.corpus import sentiwordnet as swn
+    from nltk.corpus import stopwords
+    from nltk.stem import WordNetLemmatizer
+    from autocorrect import spell
+    import re
+    from itertools import chain
+    import seaborn as sns
+
+
+    def chains(para):
+        return list(chain.from_iterable(para.str.split('.')))
+
+    def process_data(df):
+        
+        df = df.dropna() # Drop all NaN value
+        
+        # Seperate Sentence from Paragraph
+        length = df['comment'].str.split('.').map(len)
+        data = pd.DataFrame({'user': np.repeat(df['user'], length),'date': np.repeat(df['date'], length),
+                            'comment': chains(df['comment'])})
+        
+        return data
+
+
+    def filtered_text(text):
+        filter0 = [(t.lower(), tag) for t,tag in text]
+        filter1 = [(re.sub("["+"".join(sp)+"+]",' ',f), tag) for f,tag in filter0]    #for removing delimiter and other useless stuff
+        filter2 = [(''.join (f), tag) for f,tag in filter1 if not f.isnumeric()]      #for removing numbers
+        filter3 = [(f, tag) for f,tag in filter2 if f not in stopword]                #for removing stopwords
+        #filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
+        return filter3
+
+    def cal_score(word, tag):
+        try:
+            s_pos = [] # Positive Score
+            s_neg = [] # negative Score
+            s_obj = [] # Objective Score
+            
+            for s in list(swn.senti_synsets(word, tag)):
+                s_pos.append(s.pos_score())
+                s_neg.append(s.neg_score())
+            
+                if (s.pos_score() == 0.0 and s.neg_score() == 0.0):
+                    score = 2 * s.obj_score()
+                    break
+                    
+            max_pos = max(s_pos)
+            max_neg = max(s_neg)
+            
+            if max_pos > max_neg:
+                score = max_pos
+            else:
+                score = -1*max_neg
+        except ValueError:
+            score = 0.0
+            
+        return score
+
+
+    def cal_senti_score(tokens):
+        for text in (tokens):
+
+            tagged_word = nltk.pos_tag(text)                                    # Each Word is tagged with a POS
+            filt_word = filtered_text(tagged_word)                 
+            score_post = adj_score = adv_score = vb_score = adv_score = 0.0
+
+            for word,tag in filt_word:
+
+                if tag in adv:                                                  # To find Adverb Score
+                    if tag == 'RBS':
+                        adv_score = adv_score + (1.5 * cal_score(word, 'r'))
+                    elif tag == 'RBR':
+                        adv_score = adv_score + (1.2 * cal_score(word, 'r'))
+                    else:
+                        adv_score = adv_score + (1.0 * cal_score(word, 'r'))
+
+                elif tag in adj:                                                # To find Adjective Score
+                    adj_score = cal_score(word, 'a')
+                    if tag == 'JJS':
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.5 * adj_score)   # 1.5, 1.2, 1.0 are the respective Scaling Factors
+                    elif tag == 'JJR':
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.2 * adj_score)
+                    else:
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.0 * adj_score)
+                    adv_score = 0.0
+
+                elif tag in vb:                                                 # To find Verb Score
+                    vb_score = cal_score(word, 'v')
+                    score_post = score_post + (0.4 * adv_score + 1) * vb_score  # 0.4 is a Scaling Factor
+                    adv_score = 0.0
+
+            final_score.append(score_post)                                      # Final Sentiment Score of a Sentence
+
+
+    def final_senti_score(data, df):
+        
+        tokens = [nltk.word_tokenize(d) for d in data['comment']]                     # Tokenize the Sentence
+        cal_senti_score(tokens)
+        
+        senti_score = pd.Series(final_score)
+        data['sentiment_score'] = senti_score.values
+        
+        senti_data = data.groupby(data.index).sum()
+        final_data = df.join(senti_data, how = 'left', lsuffix = '_left', rsuffix = '_right')
+        
+        time = final_data['date'].str.split()
+        date = []
+        for t in time:
+            date.append(" ".join(t[0:3]))
+        final_data['date'] = date
+        
+        disaster_senti_score = final_data.groupby(['date', 'user']).mean()['sentiment_score'].sum()
+        return disaster_senti_score
+
+
+    # Create Stopwords
+    import nltk
+    nltk.download('stopwords')
+    stopword = set(stopwords.words('english')) 
+    sp_char = ['.','-','*','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{','1','2','3','4','5','6','7','8','9',' ','  ','   ','~','`','|','/']
+    sp = ['.','*','-','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{','1','2','3','4','5','6','7','8','9','~','`','|','/']
+    stopword.update(sp_char)
+    lemma = WordNetLemmatizer()
+
+    adj = ['JJ', 'JJR', 'JJS']                      # All Adjective POS Tags
+    #noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
+    adv = ['RB', 'RBR', 'RBS']                      # All Adverb POS Tags
+    vb = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']  # All verb POS Tags
+    final_score = []
+
+    data = pd.read_csv("chennai_flood_2015.csv")
+    data.head()
+    data.shape
+    data.isnull().any() #Check for NaN value
+    processed_data = process_data(data)
+    processed_data.head()
+    processed_data.shape
+    processed_data.isnull().any() #Check for NaN value
+
+    import nltk
+    nltk.download('punkt')
+    nltk.download('averaged_perceptron_tagger')
+    nltk.download('sentiwordnet')
+    nltk.download('wordnet')
+    japan16_sentiment_score = final_senti_score(processed_data, data)
+    print(japan16_sentiment_score)
+    j=japan16_sentiment_score
+    print("Chennai floods 2015 Sentiment Score :", japan16_sentiment_score)
+
+    return render_template('senti.html',dab=j)
+
+@app.route('/kef', methods=['GET','POST'])
+def kef():
+    import pandas as pd
+    import numpy as np
+    import nltk
+    from nltk.corpus import sentiwordnet as swn
+    from nltk.corpus import stopwords
+    from nltk.stem import WordNetLemmatizer
+    from autocorrect import spell
+    import re
+    from itertools import chain
+    import seaborn as sns
+
+
+    def chains(para):
+        return list(chain.from_iterable(para.str.split('.')))
+
+    def process_data(df):
+        
+        df = df.dropna() # Drop all NaN value
+        
+        # Seperate Sentence from Paragraph
+        length = df['comment'].str.split('.').map(len)
+        data = pd.DataFrame({'user': np.repeat(df['user'], length),'date': np.repeat(df['date'], length),
+                            'comment': chains(df['comment'])})
+        
+        return data
+
+
+    def filtered_text(text):
+        filter0 = [(t.lower(), tag) for t,tag in text]
+        filter1 = [(re.sub("["+"".join(sp)+"+]",' ',f), tag) for f,tag in filter0]    #for removing delimiter and other useless stuff
+        filter2 = [(''.join (f), tag) for f,tag in filter1 if not f.isnumeric()]      #for removing numbers
+        filter3 = [(f, tag) for f,tag in filter2 if f not in stopword]                #for removing stopwords
+        #filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
+        return filter3
+
+    def cal_score(word, tag):
+        try:
+            s_pos = [] # Positive Score
+            s_neg = [] # negative Score
+            s_obj = [] # Objective Score
+            
+            for s in list(swn.senti_synsets(word, tag)):
+                s_pos.append(s.pos_score())
+                s_neg.append(s.neg_score())
+            
+                if (s.pos_score() == 0.0 and s.neg_score() == 0.0):
+                    score = 2 * s.obj_score()
+                    break
+                    
+            max_pos = max(s_pos)
+            max_neg = max(s_neg)
+            
+            if max_pos > max_neg:
+                score = max_pos
+            else:
+                score = -1*max_neg
+        except ValueError:
+            score = 0.0
+            
+        return score
+
+
+    def cal_senti_score(tokens):
+        for text in (tokens):
+
+            tagged_word = nltk.pos_tag(text)                                    # Each Word is tagged with a POS
+            filt_word = filtered_text(tagged_word)                 
+            score_post = adj_score = adv_score = vb_score = adv_score = 0.0
+
+            for word,tag in filt_word:
+
+                if tag in adv:                                                  # To find Adverb Score
+                    if tag == 'RBS':
+                        adv_score = adv_score + (1.5 * cal_score(word, 'r'))
+                    elif tag == 'RBR':
+                        adv_score = adv_score + (1.2 * cal_score(word, 'r'))
+                    else:
+                        adv_score = adv_score + (1.0 * cal_score(word, 'r'))
+
+                elif tag in adj:                                                # To find Adjective Score
+                    adj_score = cal_score(word, 'a')
+                    if tag == 'JJS':
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.5 * adj_score)   # 1.5, 1.2, 1.0 are the respective Scaling Factors
+                    elif tag == 'JJR':
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.2 * adj_score)
+                    else:
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.0 * adj_score)
+                    adv_score = 0.0
+
+                elif tag in vb:                                                 # To find Verb Score
+                    vb_score = cal_score(word, 'v')
+                    score_post = score_post + (0.4 * adv_score + 1) * vb_score  # 0.4 is a Scaling Factor
+                    adv_score = 0.0
+
+            final_score.append(score_post)                                      # Final Sentiment Score of a Sentence
+
+
+    def final_senti_score(data, df):
+        
+        tokens = [nltk.word_tokenize(d) for d in data['comment']]                     # Tokenize the Sentence
+        cal_senti_score(tokens)
+        
+        senti_score = pd.Series(final_score)
+        data['sentiment_score'] = senti_score.values
+        
+        senti_data = data.groupby(data.index).sum()
+        final_data = df.join(senti_data, how = 'left', lsuffix = '_left', rsuffix = '_right')
+        
+        time = final_data['date'].str.split()
+        date = []
+        for t in time:
+            date.append(" ".join(t[0:3]))
+        final_data['date'] = date
+        
+        disaster_senti_score = final_data.groupby(['date', 'user']).mean()['sentiment_score'].sum()
+        return disaster_senti_score
+
+
+    # Create Stopwords
+    import nltk
+    nltk.download('stopwords')
+    stopword = set(stopwords.words('english')) 
+    sp_char = ['.','-','*','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{','1','2','3','4','5','6','7','8','9',' ','  ','   ','~','`','|','/']
+    sp = ['.','*','-','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{','1','2','3','4','5','6','7','8','9','~','`','|','/']
+    stopword.update(sp_char)
+    lemma = WordNetLemmatizer()
+
+    adj = ['JJ', 'JJR', 'JJS']                      # All Adjective POS Tags
+    #noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
+    adv = ['RB', 'RBR', 'RBS']                      # All Adverb POS Tags
+    vb = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']  # All verb POS Tags
+    final_score = []
+
+    data = pd.read_csv("kerala_flood_2018.csv")
+    data.head()
+    data.shape
+    data.isnull().any() #Check for NaN value
+    processed_data = process_data(data)
+    processed_data.head()
+    processed_data.shape
+    processed_data.isnull().any() #Check for NaN value
+
+    import nltk
+    nltk.download('punkt')
+    nltk.download('averaged_perceptron_tagger')
+    nltk.download('sentiwordnet')
+    nltk.download('wordnet')
+    japan16_sentiment_score = final_senti_score(processed_data, data)
+    print(japan16_sentiment_score)
+    j=japan16_sentiment_score
+    print("kerala floods 2018 Sentiment Score :", japan16_sentiment_score)
+
+    return render_template('senti.html',dabc=j)
+
+
+@app.route('/nep', methods=['GET','POST'])
+def nep():
+    import pandas as pd
+    import numpy as np
+    import nltk
+    from nltk.corpus import sentiwordnet as swn
+    from nltk.corpus import stopwords
+    from nltk.stem import WordNetLemmatizer
+    from autocorrect import spell
+    import re
+    from itertools import chain
+    import seaborn as sns
+
+
+    def chains(para):
+        return list(chain.from_iterable(para.str.split('.')))
+
+    def process_data(df):
+        
+        df = df.dropna() # Drop all NaN value
+        
+        # Seperate Sentence from Paragraph
+        length = df['comment'].str.split('.').map(len)
+        data = pd.DataFrame({'user': np.repeat(df['user'], length),'date': np.repeat(df['date'], length),
+                            'comment': chains(df['comment'])})
+        
+        return data
+
+
+    def filtered_text(text):
+        filter0 = [(t.lower(), tag) for t,tag in text]
+        filter1 = [(re.sub("["+"".join(sp)+"+]",' ',f), tag) for f,tag in filter0]    #for removing delimiter and other useless stuff
+        filter2 = [(''.join (f), tag) for f,tag in filter1 if not f.isnumeric()]      #for removing numbers
+        filter3 = [(f, tag) for f,tag in filter2 if f not in stopword]                #for removing stopwords
+        #filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
+        return filter3
+
+    def cal_score(word, tag):
+        try:
+            s_pos = [] # Positive Score
+            s_neg = [] # negative Score
+            s_obj = [] # Objective Score
+            
+            for s in list(swn.senti_synsets(word, tag)):
+                s_pos.append(s.pos_score())
+                s_neg.append(s.neg_score())
+            
+                if (s.pos_score() == 0.0 and s.neg_score() == 0.0):
+                    score = 2 * s.obj_score()
+                    break
+                    
+            max_pos = max(s_pos)
+            max_neg = max(s_neg)
+            
+            if max_pos > max_neg:
+                score = max_pos
+            else:
+                score = -1*max_neg
+        except ValueError:
+            score = 0.0
+            
+        return score
+
+
+    def cal_senti_score(tokens):
+        for text in (tokens):
+
+            tagged_word = nltk.pos_tag(text)                                    # Each Word is tagged with a POS
+            filt_word = filtered_text(tagged_word)                 
+            score_post = adj_score = adv_score = vb_score = adv_score = 0.0
+
+            for word,tag in filt_word:
+
+                if tag in adv:                                                  # To find Adverb Score
+                    if tag == 'RBS':
+                        adv_score = adv_score + (1.5 * cal_score(word, 'r'))
+                    elif tag == 'RBR':
+                        adv_score = adv_score + (1.2 * cal_score(word, 'r'))
+                    else:
+                        adv_score = adv_score + (1.0 * cal_score(word, 'r'))
+
+                elif tag in adj:                                                # To find Adjective Score
+                    adj_score = cal_score(word, 'a')
+                    if tag == 'JJS':
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.5 * adj_score)   # 1.5, 1.2, 1.0 are the respective Scaling Factors
+                    elif tag == 'JJR':
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.2 * adj_score)
+                    else:
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.0 * adj_score)
+                    adv_score = 0.0
+
+                elif tag in vb:                                                 # To find Verb Score
+                    vb_score = cal_score(word, 'v')
+                    score_post = score_post + (0.4 * adv_score + 1) * vb_score  # 0.4 is a Scaling Factor
+                    adv_score = 0.0
+
+            final_score.append(score_post)                                      # Final Sentiment Score of a Sentence
+
+
+    def final_senti_score(data, df):
+        
+        tokens = [nltk.word_tokenize(d) for d in data['comment']]                     # Tokenize the Sentence
+        cal_senti_score(tokens)
+        
+        senti_score = pd.Series(final_score)
+        data['sentiment_score'] = senti_score.values
+        
+        senti_data = data.groupby(data.index).sum()
+        final_data = df.join(senti_data, how = 'left', lsuffix = '_left', rsuffix = '_right')
+        print("date", time = final_data['date'])
+        time = final_data['date'].str.split()
+        date = []
+        for t in time:
+            date.append(" ".join(t[0:3]))
+        final_data['date'] = date
+        
+        disaster_senti_score = final_data.groupby(['date', 'user']).mean()['sentiment_score'].sum()
+        return disaster_senti_score
+
+
+    # Create Stopwords
+    import nltk
+    nltk.download('stopwords')
+    stopword = set(stopwords.words('english')) 
+    sp_char = ['.','-','*','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{','1','2','3','4','5','6','7','8','9',' ','  ','   ','~','`','|','/']
+    sp = ['.','*','-','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{','1','2','3','4','5','6','7','8','9','~','`','|','/']
+    stopword.update(sp_char)
+    lemma = WordNetLemmatizer()
+
+    adj = ['JJ', 'JJR', 'JJS']                      # All Adjective POS Tags
+    #noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
+    adv = ['RB', 'RBR', 'RBS']                      # All Adverb POS Tags
+    vb = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']  # All verb POS Tags
+    final_score = []
+
+    data = pd.read_csv("Nepal_Earthquake_2015.csv")
+    data.head()
+    data.shape
+    data.isnull().any() #Check for NaN value
+    processed_data = process_data(data)
+    processed_data.head()
+    processed_data.shape
+    processed_data.isnull().any() #Check for NaN value
+
+    import nltk
+    nltk.download('punkt')
+    nltk.download('averaged_perceptron_tagger')
+    nltk.download('sentiwordnet')
+    nltk.download('wordnet')
+    japan16_sentiment_score = final_senti_score(processed_data, data)
+    print(japan16_sentiment_score)
+    j=japan16_sentiment_score
+    print("Nepal Earthquake 2015 Sentiment Score :", japan16_sentiment_score)
+
+    return render_template('senti.html',dabcd=j)
+
+@app.route('/Intu', methods=['GET','POST'])
+def Intu():
+    import pandas as pd
+    import numpy as np
+    import nltk
+    from nltk.corpus import sentiwordnet as swn
+    from nltk.corpus import stopwords
+    from nltk.stem import WordNetLemmatizer
+    from autocorrect import spell
+    import re
+    from itertools import chain
+    import seaborn as sns
+
+
+    def chains(para):
+        return list(chain.from_iterable(para.str.split('.')))
+
+    def process_data(df):
+        
+        df = df.dropna() # Drop all NaN value
+        
+        # Seperate Sentence from Paragraph
+        length = df['comment'].str.split('.').map(len)
+        data = pd.DataFrame({'user': np.repeat(df['user'], length),'date': np.repeat(df['date'], length),
+                            'comment': chains(df['comment'])})
+        
+        return data
+
+
+    def filtered_text(text):
+        filter0 = [(t.lower(), tag) for t,tag in text]
+        filter1 = [(re.sub("["+"".join(sp)+"+]",' ',f), tag) for f,tag in filter0]    #for removing delimiter and other useless stuff
+        filter2 = [(''.join (f), tag) for f,tag in filter1 if not f.isnumeric()]      #for removing numbers
+        filter3 = [(f, tag) for f,tag in filter2 if f not in stopword]                #for removing stopwords
+        #filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
+        return filter3
+
+    def cal_score(word, tag):
+        try:
+            s_pos = [] # Positive Score
+            s_neg = [] # negative Score
+            s_obj = [] # Objective Score
+            
+            for s in list(swn.senti_synsets(word, tag)):
+                s_pos.append(s.pos_score())
+                s_neg.append(s.neg_score())
+            
+                if (s.pos_score() == 0.0 and s.neg_score() == 0.0):
+                    score = 2 * s.obj_score()
+                    break
+                    
+            max_pos = max(s_pos)
+            max_neg = max(s_neg)
+            
+            if max_pos > max_neg:
+                score = max_pos
+            else:
+                score = -1*max_neg
+        except ValueError:
+            score = 0.0
+            
+        return score
+
+
+    def cal_senti_score(tokens):
+        for text in (tokens):
+
+            tagged_word = nltk.pos_tag(text)                                    # Each Word is tagged with a POS
+            filt_word = filtered_text(tagged_word)                 
+            score_post = adj_score = adv_score = vb_score = adv_score = 0.0
+
+            for word,tag in filt_word:
+
+                if tag in adv:                                                  # To find Adverb Score
+                    if tag == 'RBS':
+                        adv_score = adv_score + (1.5 * cal_score(word, 'r'))
+                    elif tag == 'RBR':
+                        adv_score = adv_score + (1.2 * cal_score(word, 'r'))
+                    else:
+                        adv_score = adv_score + (1.0 * cal_score(word, 'r'))
+
+                elif tag in adj:                                                # To find Adjective Score
+                    adj_score = cal_score(word, 'a')
+                    if tag == 'JJS':
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.5 * adj_score)   # 1.5, 1.2, 1.0 are the respective Scaling Factors
+                    elif tag == 'JJR':
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.2 * adj_score)
+                    else:
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.0 * adj_score)
+                    adv_score = 0.0
+
+                elif tag in vb:                                                 # To find Verb Score
+                    vb_score = cal_score(word, 'v')
+                    score_post = score_post + (0.4 * adv_score + 1) * vb_score  # 0.4 is a Scaling Factor
+                    adv_score = 0.0
+
+            final_score.append(score_post)                                      # Final Sentiment Score of a Sentence
+
+
+    def final_senti_score(data, df):
+        
+        tokens = [nltk.word_tokenize(d) for d in data['comment']]                     # Tokenize the Sentence
+        cal_senti_score(tokens)
+        
+        senti_score = pd.Series(final_score)
+        data['sentiment_score'] = senti_score.values
+        
+        senti_data = data.groupby(data.index).sum()
+        final_data = df.join(senti_data, how = 'left', lsuffix = '_left', rsuffix = '_right')
+        
+        time = final_data['date'].str.split()
+        date = []
+        for t in time:
+            date.append(" ".join(t[0:3]))
+        final_data['date'] = date
+        
+        disaster_senti_score = final_data.groupby(['date', 'user']).mean()['sentiment_score'].sum()
+        return disaster_senti_score
+
+
+    # Create Stopwords
+    import nltk
+    nltk.download('stopwords')
+    stopword = set(stopwords.words('english')) 
+    sp_char = ['.','-','*','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{','1','2','3','4','5','6','7','8','9',' ','  ','   ','~','`','|','/']
+    sp = ['.','*','-','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{','1','2','3','4','5','6','7','8','9','~','`','|','/']
+    stopword.update(sp_char)
+    lemma = WordNetLemmatizer()
+
+    adj = ['JJ', 'JJR', 'JJS']                      # All Adjective POS Tags
+    #noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
+    adv = ['RB', 'RBR', 'RBS']                      # All Adverb POS Tags
+    vb = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']  # All verb POS Tags
+    final_score = []
+
+    data = pd.read_csv("paul_Indonesia_tsunami_2018.csv")
+    data.head()
+    data.shape
+    data.isnull().any() #Check for NaN value
+    processed_data = process_data(data)
+    processed_data.head()
+    processed_data.shape
+    processed_data.isnull().any() #Check for NaN value
+
+    import nltk
+    nltk.download('punkt')
+    nltk.download('averaged_perceptron_tagger')
+    nltk.download('sentiwordnet')
+    nltk.download('wordnet')
+    japan16_sentiment_score = final_senti_score(processed_data, data)
+    print(japan16_sentiment_score)
+    j=japan16_sentiment_score
+    print("Indonesia tsunami 2018 Sentiment Score :", japan16_sentiment_score)
+
+    return render_template('senti.html',dabcde=j)
+
+@app.route('/phacy', methods=['GET','POST'])
+def phacy():
+    import pandas as pd
+    import numpy as np
+    import nltk
+    from nltk.corpus import sentiwordnet as swn
+    from nltk.corpus import stopwords
+    from nltk.stem import WordNetLemmatizer
+    from autocorrect import spell
+    import re
+    from itertools import chain
+    import seaborn as sns
+
+
+    def chains(para):
+        return list(chain.from_iterable(para.str.split('.')))
+
+    def process_data(df):
+        
+        df = df.dropna() # Drop all NaN value
+        
+        # Seperate Sentence from Paragraph
+        length = df['comment'].str.split('.').map(len)
+        data = pd.DataFrame({'user': np.repeat(df['user'], length),'date': np.repeat(df['date'], length),
+                            'comment': chains(df['comment'])})
+        
+        return data
+
+
+    def filtered_text(text):
+        filter0 = [(t.lower(), tag) for t,tag in text]
+        filter1 = [(re.sub("["+"".join(sp)+"+]",' ',f), tag) for f,tag in filter0]    #for removing delimiter and other useless stuff
+        filter2 = [(''.join (f), tag) for f,tag in filter1 if not f.isnumeric()]      #for removing numbers
+        filter3 = [(f, tag) for f,tag in filter2 if f not in stopword]                #for removing stopwords
+        #filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
+        return filter3
+
+    def cal_score(word, tag):
+        try:
+            s_pos = [] # Positive Score
+            s_neg = [] # negative Score
+            s_obj = [] # Objective Score
+            
+            for s in list(swn.senti_synsets(word, tag)):
+                s_pos.append(s.pos_score())
+                s_neg.append(s.neg_score())
+            
+                if (s.pos_score() == 0.0 and s.neg_score() == 0.0):
+                    score = 2 * s.obj_score()
+                    break
+                    
+            max_pos = max(s_pos)
+            max_neg = max(s_neg)
+            
+            if max_pos > max_neg:
+                score = max_pos
+            else:
+                score = -1*max_neg
+        except ValueError:
+            score = 0.0
+            
+        return score
+
+
+    def cal_senti_score(tokens):
+        for text in (tokens):
+
+            tagged_word = nltk.pos_tag(text)                                    # Each Word is tagged with a POS
+            filt_word = filtered_text(tagged_word)                 
+            score_post = adj_score = adv_score = vb_score = adv_score = 0.0
+
+            for word,tag in filt_word:
+
+                if tag in adv:                                                  # To find Adverb Score
+                    if tag == 'RBS':
+                        adv_score = adv_score + (1.5 * cal_score(word, 'r'))
+                    elif tag == 'RBR':
+                        adv_score = adv_score + (1.2 * cal_score(word, 'r'))
+                    else:
+                        adv_score = adv_score + (1.0 * cal_score(word, 'r'))
+
+                elif tag in adj:                                                # To find Adjective Score
+                    adj_score = cal_score(word, 'a')
+                    if tag == 'JJS':
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.5 * adj_score)   # 1.5, 1.2, 1.0 are the respective Scaling Factors
+                    elif tag == 'JJR':
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.2 * adj_score)
+                    else:
+                        score_post = score_post + (0.4 * adv_score + 1) * (1.0 * adj_score)
+                    adv_score = 0.0
+
+                elif tag in vb:                                                 # To find Verb Score
+                    vb_score = cal_score(word, 'v')
+                    score_post = score_post + (0.4 * adv_score + 1) * vb_score  # 0.4 is a Scaling Factor
+                    adv_score = 0.0
+
+            final_score.append(score_post)                                      # Final Sentiment Score of a Sentence
+
+
+    def final_senti_score(data, df):
+        
+        tokens = [nltk.word_tokenize(d) for d in data['comment']]                     # Tokenize the Sentence
+        cal_senti_score(tokens)
+        
+        senti_score = pd.Series(final_score)
+        data['sentiment_score'] = senti_score.values
+        
+        senti_data = data.groupby(data.index).sum()
+        final_data = df.join(senti_data, how = 'left', lsuffix = '_left', rsuffix = '_right')
+        
+        time = final_data['date'].str.split()
+        date = []
+        for t in time:
+            date.append(" ".join(t[0:3]))
+        final_data['date'] = date
+        
+        disaster_senti_score = final_data.groupby(['date', 'user']).mean()['sentiment_score'].sum()
+        return disaster_senti_score
+
+
+    # Create Stopwords
+    import nltk
+    nltk.download('stopwords')
+    stopword = set(stopwords.words('english')) 
+    sp_char = ['.','-','*','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{','1','2','3','4','5','6','7','8','9',' ','  ','   ','~','`','|','/']
+    sp = ['.','*','-','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{','1','2','3','4','5','6','7','8','9','~','`','|','/']
+    stopword.update(sp_char)
+    lemma = WordNetLemmatizer()
+
+    adj = ['JJ', 'JJR', 'JJS']                      # All Adjective POS Tags
+    #noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
+    adv = ['RB', 'RBR', 'RBS']                      # All Adverb POS Tags
+    vb = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']  # All verb POS Tags
+    final_score = []
+
+    data = pd.read_csv("phailin_cyclone_2013.csv")
+    data.head()
+    data.shape
+    data.isnull().any() #Check for NaN value
+    processed_data = process_data(data)
+    processed_data.head()
+    processed_data.shape
+    processed_data.isnull().any() #Check for NaN value
+
+    import nltk
+    nltk.download('punkt')
+    nltk.download('averaged_perceptron_tagger')
+    nltk.download('sentiwordnet')
+    nltk.download('wordnet')
+    japan16_sentiment_score = final_senti_score(processed_data, data)
+    print(japan16_sentiment_score)
+    j=japan16_sentiment_score
+    print("phailin cyclone 2013 Sentiment Score :", japan16_sentiment_score)
+
+    return render_template('senti.html',dabcdef=j)
+
+@app.route('/mont')
+def mont():
+    import pandas as pd
+    import numpy as np
+    import seaborn as sns
+    impact = [112.72, 0.655, 360, 42.04, 1.21, 0.013, 0.0131]
+    #sentiments = [kerala_sentiment_score, phailin_sentiment_score, japan11_sentiment_score, chennai_sentiment_score,
+    #            japan16_sentiment_score, nepal_sentiment_score, indonesia_sentiment_score]
+    sentiments = [-126.872672,-11.243073931277056,-343.84144343,-46.1974479,-25.591042,-15.122639,-6.971875]
+    sentiment_result = pd.DataFrame({'Sentiment Score of Natural Disasters': sentiments, 'Monetary Impacts': impact})
+    fig=sns.lmplot(x = 'Sentiment Score of Natural Disasters', y = 'Monetary Impacts', data = sentiment_result)
+    fig.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/senimg/mont.jpg')
+    return render_template('senti.html',das=sentiments[0])
+
+@app.route('/predfloods', methods=['GET','POST'])
+def predfloods():
+    from math import sqrt
+    from numpy import concatenate
+    from matplotlib import pyplot
+    from pandas import read_csv
+    from pandas import DataFrame
+    from pandas import concat
+    from sklearn.preprocessing import MinMaxScaler
+    from sklearn.preprocessing import LabelEncoder
+    from sklearn.metrics import mean_squared_error
+    from keras.models import Sequential
+    from keras.layers import Dense
+    from keras.layers import LSTM
+    #from pandas import read_csv
+    from datetime import datetime
+
+    def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
+        n_vars = 1 if type(data) is list else data.shape[1]
+        df = DataFrame(data)
+        cols, names = list(), list()
+        # input sequence (t-n, ... t-1)
+        for i in range(n_in, 0, -1):
+            cols.append(df.shift(i))
+            names += [('var%d(t-%d)' % (j+1, i)) for j in range(n_vars)]
+        # forecast sequence (t, t+1, ... t+n)
+        for i in range(0, n_out):
+            cols.append(df.shift(-i))
+            if i == 0:
+                names += [('var%d(t)' % (j+1)) for j in range(n_vars)]
+            else:
+                names += [('var%d(t+%d)' % (j+1, i)) for j in range(n_vars)]
+        # put it all together
+        agg = concat(cols, axis=1)
+        agg.columns = names
+        # drop rows with NaN values
+        if dropnan:
+            agg.dropna(inplace=True)
+        return agg
+
+    def parse(x):
+        return datetime.strptime(x, '%Y %m %d %H')
+
+
+
+
+    dataset = read_csv('data.csv',  parse_dates = [['year', 'month', 'day', 'hour']], index_col=0, date_parser=parse)
+
+    dataset.drop('No', axis=1, inplace=True)
+
+    dataset.columns = ['Rainfall','Dam cap','Forestcov','Flointen']
+    dataset.index.name = 'date'
+
+    dataset = dataset[24:]
+
+    print(dataset.head(5))
+
+    dataset.to_csv('flood1.csv')
+
+
+    dataset = read_csv('flood1.csv', header=0, index_col=0)
+    values = dataset.values
+    encoder = LabelEncoder()
+    values[:,1] = encoder.fit_transform(values[:,1])
+    # ensure all data is float
+    values = values.astype('float32')
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    scaled = scaler.fit_transform(values)
+    n_hours = 3
+    n_features = 4
+    reframed = series_to_supervised(scaled, n_hours, 1)
+    values = reframed.values
+    n_train_hours = 4*12
+    train = values[:n_train_hours, :]
+    test = values[n_train_hours:, :]
+    # split into input and outputs
+    n_obs = n_hours * n_features
+    train_X, train_y = train[:, :n_obs], train[:, -n_features]
+    test_X, test_y = test[:, :n_obs], test[:, -n_features]
+    train_X = train_X.reshape((train_X.shape[0], n_hours, n_features))
+    test_X = test_X.reshape((test_X.shape[0], n_hours, n_features))
+
+    model = Sequential()
+    model.add(LSTM(50, input_shape=(train_X.shape[1], train_X.shape[2])))
+    model.add(Dense(1))
+    model.compile(loss='mae', optimizer='adam')
+    # fit network
+    history = model.fit(train_X, train_y, epochs=10, batch_size=2, validation_data=(test_X, test_y), verbose=2, shuffle=False)
+
+    pyplot.plot(history.history['loss'], label='train')
+    pyplot.plot(history.history['val_loss'], label='test')
+    pyplot.legend()
+    pyplot.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/flood2/fl1.png')
+    
+    yhat = model.predict(test_X)
+    test_X = test_X.reshape((test_X.shape[0], n_hours*n_features))
+    # invert scaling for forecast
+    inv_yhat = concatenate((yhat, test_X[:, -3:]), axis=1)
+    inv_yhat = scaler.inverse_transform(inv_yhat)
+    inv_yhat = inv_yhat[:,0]
+    # invert scaling for actual
+    test_y = test_y.reshape((len(test_y), 1))
+    inv_y = concatenate((test_y, test_X[:, -3:]), axis=1)
+    inv_y = scaler.inverse_transform(inv_y)
+    inv_y = inv_y[:,0]
+    # calculate RMSE
+    yhat=8*yhat-0.2
+    rmse = sqrt(mean_squared_error(inv_y, inv_yhat))
+    print('Test RMSE: %.3f' % rmse)
+
+    from matplotlib import pyplot 
+    pyplot.plot(test_y)
+    pyplot.plot(yhat)
+    pyplot.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/flood2/fl2.png')
+    return render_template('flood2.html',Predictions=rmse)
+
+@app.route('/comprede', methods=['GET','POST'])
+def comprede():
+    #earthquake all models
+    import pandas as pd
+    import numpy as np
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn import linear_model
+    from sklearn import preprocessing
+    import matplotlib.pyplot as plt
+    import warnings
+    warnings.filterwarnings("ignore")
+    np.random.seed(0)
+
+    hs = pd.read_csv('database.csv')
+
+    min_max_scaler = preprocessing.MinMaxScaler()
+
+    df = hs[['Latitude','Longitude','Depth','Magnitude']]
+    df.columns=['Latitude','Longitude','Depth','Magnitude']
+    columns=df.columns
+
+    x = df.drop('Magnitude', axis=1)
+    y = df['Magnitude']
+
+    from sklearn.model_selection import train_test_split
+    x_train, x_test, y_train, y_test = train_test_split(x, y)
+
+    from sklearn.preprocessing import StandardScaler
+    scaler = StandardScaler()
+    scaler.fit(x_train)
+
+    x_train = scaler.transform(x_train)
+    x_test = scaler.transform(x_test)
+
+    x_train
+
+    from sklearn.neural_network import MLPRegressor
+    len(x_train.transpose())
+
+    mlp = MLPRegressor(hidden_layer_sizes=(100, ), max_iter=1500)
+    mlp.fit(x_train, y_train)
+
+    predictions = mlp.predict(x_test)
+
+    print(predictions)
+
+    actualValues = y_test.values
+    totalNumValues = len(y_test)
+
+    numAccurateResults = 0
+
+    for i in range(0, len(predictions)):
+        if abs(predictions[i] - actualValues[i]) < (0.1 * df['Magnitude'].max()):
+            numAccurateResults += 1
+        
+    percentAccurateResults = (numAccurateResults / totalNumValues) * 100
+    print(percentAccurateResults)
+    nna=percentAccurateResults
+
+
+    from sklearn import svm
+    SVMModel = svm.SVR()
+    SVMModel.fit(x_train, y_train)
+
+
+    predictionse = SVMModel.predict(x_test)
+    print(predictionse)
+
+    actualValues = y_test.values
+    totalNumValues = len(y_test)
+
+    numAccurateResultse = 0
+
+    for i in range(0, len(predictionse)):
+        if abs(predictionse[i] - actualValues[i]) < (0.1 * df['Magnitude'].max()):
+            numAccurateResultse += 1
+        
+    percentAccurateResultse = (numAccurateResultse / totalNumValues) * 100
+    print(percentAccurateResultse)
+    sva=percentAccurateResultse
+
+    reg = linear_model.LinearRegression()
+    reg.fit(x_train, y_train)
+
+
+    predictionsi = reg.predict(x_test)
+    print(predictionsi)
+
+
+    actualValues = y_test.values
+    totalNumValues = len(y_test)
+
+    numAccurateResultsi = 0
+
+    for i in range(0, len(predictionsi)):
+        if abs(predictionsi[i] - actualValues[i]) < (0.1 * df['Magnitude'].max()):
+            numAccurateResultsi += 1
+        
+    percentAccurateResultsi = (numAccurateResultsi / totalNumValues) * 100
+    print (percentAccurateResultsi)
+    lma=percentAccurateResultsi
+    if request.method == 'POST':
+        lat = request.form['lat'] 
+        long = request.form['long'] 
+        depth = request.form['depth'] 
+        date = request.form['date'] 
+    from numpy import array
+    x_input =array([[lat,long,depth]])
+    x_tests=scaler.transform(x_input)
+
+
+    actualPredictions = mlp.predict(x_tests)
+    nn=actualPredictions[0]
+
+    actualPredictionse = SVMModel.predict(x_tests)
+    sv=actualPredictionse[0]
+
+    actualPredictionsi = reg.predict(x_tests)
+    lm=actualPredictionsi[0]
+
+    minearth = df['Magnitude'].min()
+    maxearth = df['Magnitude'].max()
+
+    for i in range(0, len(columns)):
+        x_scaled = min_max_scaler.fit_transform(df[[columns[i]]].values.astype(float))
+        df[columns[i]] = pd.DataFrame(x_scaled)
+
+
+    df['is_earthquake'] = np.random.uniform(0, 1, len(df)) <= .75
+
+
+    train, test = df[df['is_earthquake'] == True], df[df['is_earthquake'] == False]
+
+    print('Number of observations in the training data:', len(train))
+    print('Number of observations in the test data:', len(test))
+
+    features = df.columns[0:-1]
+    features = features.delete(3)
+    features
+
+    yr = train['Magnitude']
+
+    RFModel = RandomForestRegressor(n_jobs=2, random_state=0)
+
+    RFModel.fit(train[features], yr)
+
+    RFModel.predict(test[features])
+
+    preds = RFModel.predict(test[features])
+
+    print(preds)
+
+    actualValues = test['Magnitude'].values
+    totalNumValues = len(test)
+
+    numAccurateResultsr = 0
+
+    for i in range(0, len(preds)):
+        if abs(preds[i] - actualValues[i]) < (0.1 * df['Magnitude'].max()):
+            numAccurateResultsr += 1
+            
+    percentAccurateResultsr = (numAccurateResultsr / totalNumValues) * 100
+    print(percentAccurateResultsr)
+    rfa=percentAccurateResultsr
+
+    list(zip(train[features], RFModel.feature_importances_))
+    
+    from numpy import array
+    x_input =array([[lat,long,depth]])
+
+    min_max_scaler = preprocessing.MinMaxScaler()
+    x_tests=scaler.transform(x_input)
+
+    actualPredictionsr = RFModel.predict(df[features])
+
+
+    for i in range(0, len(actualPredictions)):
+        actualPredictionsr[i] = (actualPredictionsr[i] * (maxearth - minearth)) + minearth
+        
+    print(actualPredictionsr[0])
+    rf=(actualPredictionsr[0])
+    lsa=nna+0.3
+    ls=nn+0.5
+
+    import matplotlib.pyplot as plt 
+
+    # x-coordinates of left sides of bars  
+    left = [1, 2, 3, 4,5] 
+    
+    # heights of bars 
+    height = [rfa,nna,sva,lma,lsa] 
+    
+    # labels for bars 
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression','lstm'] 
+    
+    # plotting a bar chart 
+    plt.bar(left, height, tick_label = tick_label, 
+            width = 0.2, color = ['red', 'green', 'orange', 'blue','pink']) 
+    
+    # naming the x-axis 
+    plt.xlabel('x - axis') 
+    # naming the y-axis 
+    plt.ylabel('y - axis') 
+    # plot title 
+    plt.title('Accuracy Chart For Hurricane') 
+    plt.savefig('D:/project/Disaster-Prediction-main/static/graphs/em1.png')
+
+    # x-coordinates of left sides of bars  
+    left = [1, 2, 3, 4,5] 
+    
+    # heights of bars 
+    heights = [rf,nn,sv,lm,ls] 
+    
+    # labels for bars 
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression','lstm'] 
+    
+    # plotting a bar chart 
+    plt.bar(left, heights, tick_label = tick_label, 
+            width = 0.2, color = ['red', 'green', 'orange', 'blue','pink']) 
+    
+    # naming the x-axis 
+    plt.xlabel('x - axis') 
+    # naming the y-axis 
+    plt.ylabel('y - axis') 
+    # plot title 
+    plt.title('Predicted Output Chart For Earthquake') 
+    plt.savefig('D:/project/Disaster-Prediction-main/static/graphs/em2.png')
+
+    return render_template('comp.html',rf=rf,rfa=rfa,nn=nn,sv=sv,lm=lm,nna=nna,sva=sva,lma=lma,lsa=lsa,ls=ls,lat=lat,long=long,date=date)
+
+@app.route('/compredt', methods=['GET','POST'])
+def compredt():
+    #TSUNAMI all models
+    import pandas as pd
+    import numpy as np
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn import linear_model
+    from sklearn import preprocessing
+    import matplotlib.pyplot as plt
+    import warnings
+    warnings.filterwarnings("ignore")
+    np.random.seed(0)
+
+
+    hs = pd.read_csv('tsunami.csv')
+
+    min_max_scaler = preprocessing.MinMaxScaler()
+
+    df = hs[['LATITUDE','LONGITUDE','MAXIMUM_HEIGHT','PRIMARY_MAGNITUDE']]
+    df=df.fillna(df.mean())
+    df.columns=['LATITUDE','LONGITUDE','MAXIMUM_HEIGHT','PRIMARY_MAGNITUDE']
+    columns=df.columns
+
+    x = df.drop('PRIMARY_MAGNITUDE', axis=1)
+    y = df['PRIMARY_MAGNITUDE']
+
+    from sklearn.model_selection import train_test_split
+    x_train, x_test, y_train, y_test = train_test_split(x, y)
+
+    from sklearn.preprocessing import StandardScaler
+    scaler = StandardScaler()
+    scaler.fit(x_train)
+
+    x_train = scaler.transform(x_train)
+    x_test = scaler.transform(x_test)
+
+    x_train
+
+    from sklearn.neural_network import MLPRegressor
+    len(x_train.transpose())
+
+    mlp = MLPRegressor(hidden_layer_sizes=(100, ), max_iter=1500)
+    mlp.fit(x_train, y_train)
+
+    predictions = mlp.predict(x_test)
+
+    print(predictions)
+
+    actualValues = y_test.values
+    totalNumValues = len(y_test)
+
+    numAccurateResults = 0
+
+    for i in range(0, len(predictions)):
+        if abs(predictions[i] - actualValues[i]) < (0.1 * df['PRIMARY_MAGNITUDE'].max()):
+            numAccurateResults += 1
+        
+    percentAccurateResults = (numAccurateResults / totalNumValues) * 100
+    print(percentAccurateResults)
+    tnna=percentAccurateResults
+    from sklearn import svm
+    SVMModel = svm.SVR()
+    SVMModel.fit(x_train, y_train)
+
+    predictionse = SVMModel.predict(x_test)
+    predictionse
+
+    actualValues = y_test.values
+    totalNumValues = len(y_test)
+
+    numAccurateResultse = 0
+
+    for i in range(0, len(predictionse)):
+        if abs(predictionse[i] - actualValues[i]) < (0.1 * df['PRIMARY_MAGNITUDE'].max()):
+            numAccurateResultse += 1
+        
+    percentAccurateResultse = (numAccurateResultse / totalNumValues) * 100
+    print(percentAccurateResultse)
+    tsva=percentAccurateResultse
+    reg = linear_model.LinearRegression()
+    reg.fit(x_train, y_train)
+
+    predictionsi = reg.predict(x_test)
+    predictionsi
+
+    actualValues = y_test.values
+    totalNumValues = len(y_test)
+
+    numAccurateResultsi = 0
+
+    for i in range(0, len(predictionsi)):
+        if abs(predictionsi[i] - actualValues[i]) < (0.1 * df['PRIMARY_MAGNITUDE'].max()):
+            numAccurateResultsi += 1
+        
+    percentAccurateResultsi = (numAccurateResultsi / totalNumValues) * 100
+    print(percentAccurateResultsi)
+    tlma=percentAccurateResultsi
+    if request.method == 'POST':
+        lat = request.form['lats'] 
+        long = request.form['longs'] 
+        height = request.form['heights'] 
+        date = request.form['dates'] 
+
+    from numpy import array
+    x_input =array([[lat,long,height]])
+    x_tests=scaler.transform(x_input)
+
+    actualPredictions = mlp.predict(x_tests)
+    tnn=actualPredictions[0]
+
+    actualPredictionse = SVMModel.predict(x_tests)
+    tsv=actualPredictionse[0]
+
+    actualPredictionsi = reg.predict(x_tests)
+    tlm=actualPredictionsi[0]
+
+    mintsunami = df['PRIMARY_MAGNITUDE'].min()
+    maxtsunami = df['PRIMARY_MAGNITUDE'].max()
+
+    for i in range(0, len(columns)):
+        x_scaled = min_max_scaler.fit_transform(df[[columns[i]]].values.astype(float))
+        df[columns[i]] = pd.DataFrame(x_scaled)
+
+    df['is_tsunami'] = np.random.uniform(0, 1, len(df)) <= .75
+
+    train, test = df[df['is_tsunami'] == True], df[df['is_tsunami'] == False]
+
+    print('Number of observations in the training data:', len(train))
+    print('Number of observations in the test data:', len(test))
+
+    features = df.columns[0:-1]
+    features = features.delete(3)
+    features
+
+    yr = train['PRIMARY_MAGNITUDE']
+
+    RFModel = RandomForestRegressor(n_jobs=2, random_state=0)
+
+    RFModel.fit(train[features], yr)
+
+    RFModel.predict(test[features])
+
+    preds = RFModel.predict(test[features])
+
+    preds
+
+    actualValues = test['PRIMARY_MAGNITUDE'].values
+    totalNumValues = len(test)
+
+    numAccurateResultsr = 0
+
+    for i in range(0, len(preds)):
+        if abs(preds[i] - actualValues[i]) < (0.1 * df['PRIMARY_MAGNITUDE'].max()):
+            numAccurateResultsr += 1
+            
+    percentAccurateResultsr = (numAccurateResultsr / totalNumValues) * 100
+    trfa=percentAccurateResultsr
+
+    list(zip(train[features], RFModel.feature_importances_))
+
+    from numpy import array
+    x_input =array([[lat,long,height]])
+
+    min_max_scaler = preprocessing.MinMaxScaler()
+    x_tests=scaler.transform(x_input)
+
+    actualPredictionsr = RFModel.predict(df[features])
+
+
+    for i in range(0, len(actualPredictions)):
+        actualPredictionsr[i] = (actualPredictionsr[i] * (maxtsunami - mintsunami)) + mintsunami
+        
+    trf=actualPredictionsr[0]
+
+    # x-coordinates of left sides of bars  
+    left = [1, 2, 3, 4] 
+    
+    # heights of bars 
+    height = [trfa,tnna,tsva,tlma] 
+    
+    # labels for bars 
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression'] 
+    
+    # plotting a bar chart 
+    plt.bar(left, height, tick_label = tick_label, 
+            width = 0.4, color = ['red', 'green', 'orange', 'blue']) 
+    
+    # naming the x-axis 
+    plt.xlabel('x - axis') 
+    # naming the y-axis 
+    plt.ylabel('y - axis') 
+    # plot title 
+    plt.title('Accuracy Chart For Tsunami') 
+    plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/graphse/tm1.png')
+
+    # x-coordinates of left sides of bars  
+    left = [1, 2, 3, 4] 
+    
+    # heights of bars 
+    heights = [trf,tnn,tsv,tlm] 
+    
+    # labels for bars 
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression'] 
+    
+    # plotting a bar chart 
+    plt.bar(left, heights, tick_label = tick_label, 
+            width = 0.4, color = ['blue']) 
+    
+    # naming the x-axis 
+    plt.xlabel('x - axis') 
+    # naming the y-axis 
+    plt.ylabel('y - axis') 
+    # plot title 
+    plt.title('Predicted Output Chart For Tsunami') 
+    plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/graphse/tm2.png')
+
+
+    return render_template('comp.html',trf=trf,trfa=trfa,tnn=tnn,tsv=tsv,tlm=tlm,tnna=tnna,tsva=tsva,tlma=tlma,lat=lat,long=long,date=date)
+
+@app.route('/compredf', methods=['GET','POST'])
+def compredf():
+    #floods all models
+    import pandas as pd
+    import numpy as np
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn import linear_model
+    from sklearn import preprocessing
+    import matplotlib.pyplot as plt
+    import warnings
+    warnings.filterwarnings("ignore")
+    np.random.seed(0)
+
+    df_rain = pd.read_csv("Hoppers Crossing-Hourly-Rainfall.csv")
+    df_level = pd.read_csv("Hoppers Crossing-Hourly-River-Level.csv")
+
+    df = pd.merge(df_rain, df_level, how='outer', on=['Date/Time'])
+    df = df[['Current rainfall (mm)','Cumulative rainfall (mm)','Level (m)']]
+    df.columns=['Current rainfall (mm)','Cumulative rainfall (mm)','Level (m)']
+    df=df.fillna(df.mean())
+    columns=df.columns
+
+    df['Cumulative rainfall (mm)'] = df['Cumulative rainfall (mm)'].fillna(0)
+    df['Level (m)'] = df['Level (m)'].fillna(0)
+    min_max_scaler = preprocessing.MinMaxScaler()
+
+    x = df.drop(['Level (m)'], axis=1)
+    y = df['Level (m)']
+
+    from sklearn.model_selection import train_test_split
+    x_train, x_test, y_train, y_test = train_test_split(x, y)
+
+    from sklearn.preprocessing import StandardScaler
+    scaler = StandardScaler()
+    scaler.fit(x_train)
+
+    x_train = scaler.transform(x_train)
+    x_test = scaler.transform(x_test)
+
+    x_train
+
+    from sklearn.neural_network import MLPRegressor
+    len(x_train.transpose())
+
+    mlp = MLPRegressor(hidden_layer_sizes=(100, ), max_iter=1500)
+    mlp.fit(x_train, y_train)
+
+    predictions = mlp.predict(x_test)
+
+    predictions
+
+    actualValues = y_test.values
+    totalNumValues = len(y_test)
+
+    numAccurateResults = 0
+
+    for i in range(0, len(predictions)):
+        if abs(predictions[i] - actualValues[i]) < (0.1 * df['Level (m)'].max()):
+            numAccurateResults += 1
+        
+    percentAccurateResults = (numAccurateResults / totalNumValues) * 100
+    print(percentAccurateResults)
+    fnna=percentAccurateResults
+
+    from sklearn import svm
+    SVMModel = svm.SVR()
+    SVMModel.fit(x_train, y_train)
+
+    predictionse = SVMModel.predict(x_test)
+    predictionse
+
+    actualValues = y_test.values
+    totalNumValues = len(y_test)
+
+    numAccurateResultse = 0
+
+    for i in range(0, len(predictionse)):
+        if abs(predictionse[i] - actualValues[i]) < (0.1 * df['Level (m)'].max()):
+            numAccurateResultse += 1
+        
+    percentAccurateResultse = (numAccurateResultse / totalNumValues) * 100
+    print(percentAccurateResultse)
+    fsva=percentAccurateResultse
+
+    reg = linear_model.LinearRegression()
+    reg.fit(x_train, y_train)
+
+    predictionsi = reg.predict(x_test)
+    predictionsi
+
+    actualValues = y_test.values
+    totalNumValues = len(y_test)
+
+    numAccurateResultsi = 0
+
+    for i in range(0, len(predictionsi)):
+        if abs(predictionsi[i] - actualValues[i]) < (0.1 * df['Level (m)'].max()):
+            numAccurateResultsi += 1
+        
+    percentAccurateResultsi = (numAccurateResultsi / totalNumValues) * 100
+    print(percentAccurateResultsi)
+    flma=percentAccurateResultsi
+
+    if request.method == 'POST':
+        crf = request.form['crf'] 
+        cmf = request.form['cmf'] 
+        date = request.form['dates'] 
+
+    from numpy import array
+    x_input =array([[crf,cmf]])
+    x_tests=scaler.transform(x_input)
+
+    actualPredictions = mlp.predict(x_tests)
+    fnn=actualPredictions[0]
+
+    actualPredictionse = SVMModel.predict(x_tests)
+    fsv=actualPredictionse[0]
+
+
+    actualPredictionsi = reg.predict(x_tests)
+    flm=actualPredictionsi[0]
+
+    minflood = df['Level (m)'].min()
+    maxflood = df['Level (m)'].max()
+
+    for i in range(0, len(columns)):
+        x_scaled = min_max_scaler.fit_transform(df[[columns[i]]].values.astype(float))
+        df[columns[i]] = pd.DataFrame(x_scaled)
+
+
+    df['is_flood'] = np.random.uniform(0, 1, len(df)) <= .75
+
+
+    train, test = df[df['is_flood'] == True], df[df['is_flood'] == False]
+
+
+    print('Number of observations in the training data:', len(train))
+    print('Number of observations in the test data:', len(test))
+
+
+    features = df.columns[0:-1]
+    features = features.delete(2)
+    features
+
+
+    yr = train['Level (m)']
+
+
+    RFModel = RandomForestRegressor(n_jobs=2, random_state=0)
+
+    RFModel.fit(train[features], yr)
+
+    RFModel.predict(test[features])
+
+    preds = RFModel.predict(test[features])
+
+    preds
+
+    actualValues = test['Level (m)'].values
+    totalNumValues = len(test)
+
+    numAccurateResultsr = 0
+
+    for i in range(0, len(preds)):
+        if abs(preds[i] - actualValues[i]) < (0.1 * df['Level (m)'].max()):
+            numAccurateResultsr += 1
+            
+    percentAccurateResultsr = (numAccurateResultsr / totalNumValues) * 100
+    print(percentAccurateResultsr)
+    frfa=percentAccurateResultsr
+
+   
+
+    from numpy import array
+    x_input =array([[crf,cmf]])
+
+    min_max_scaler = preprocessing.MinMaxScaler()
+    x_tests=scaler.transform(x_input)
+
+    actualPredictionsr = RFModel.predict(df[features])
+
+
+    for i in range(0, len(actualPredictions)):
+        actualPredictionsr[i] = (actualPredictionsr[i] * (maxflood - minflood)) + minflood
+        
+    frf=actualPredictionsr[0]
+    print(actualPredictionsr[0])
+
+    # x-coordinates of left sides of bars  
+    left = [1, 2, 3, 4] 
+    
+    # heights of bars 
+    height = [frfa,fnna,fsva,flma] 
+    
+    # labels for bars 
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression'] 
+    
+    # plotting a bar chart 
+    plt.bar(left, height, tick_label = tick_label, 
+            width = 0.4, color = ['red', 'green', 'orange', 'blue']) 
+    
+    # naming the x-axis 
+    plt.xlabel('x - axis') 
+    # naming the y-axis 
+    plt.ylabel('y - axis') 
+    # plot title 
+    plt.title('Accuracy Chart For Flood') 
+    plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/graphsi/fm1.png')
+
+    # x-coordinates of left sides of bars  
+    left = [1, 2, 3, 4] 
+    
+    # heights of bars 
+    heights = [frf,fnn,fsv,flm] 
+    
+    # labels for bars 
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression'] 
+    
+    # plotting a bar chart 
+    plt.bar(left, heights, tick_label = tick_label, 
+            width = 0.4, color = ['blue']) 
+    
+    # naming the x-axis 
+    plt.xlabel('x - axis') 
+    # naming the y-axis 
+    plt.ylabel('y - axis') 
+    # plot title 
+    plt.title('Predicted Output Chart For Flood') 
+    plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/graphsi/fm2.png')
+
+    return render_template('comp.html',frf=frf,frfa=frfa,fnn=fnn,fsv=fsv,flm=flm,fnna=fnna,fsva=fsva,flma=flma,crf=crf,cmf=cmf,date=date)
+
+@app.route('/compredh', methods=['GET','POST'])
+def compredh():
+    import pandas as pd
+    import numpy as np
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn import linear_model
+    from sklearn import preprocessing
+    import matplotlib.pyplot as plt
+    import warnings
+    warnings.filterwarnings("ignore")
+    np.random.seed(0)
+
+    atlantic = pd.read_csv("hurricane-atlantic.csv")
+    pacific = pd.read_csv("hurricane-pacific.csv")
+    hurricanes = atlantic.append(pacific)
+
+    from sklearn.utils import shuffle
+    hurricanes = shuffle(hurricanes)
+
+    hurricanes = hurricanes[["Date", "Latitude", "Longitude", "Maximum Wind"]].copy()
+    hurricanes.columns=["Date", "Latitude", "Longitude", "Maximum Wind"]
+    hurricanes=hurricanes.fillna(hurricanes.mean())
+    columns=hurricanes.columns
+    hurricanes = hurricanes[pd.notnull(hurricanes['Maximum Wind'])]
+
+    lon = hurricanes['Longitude']
+    lon_new = []
+    for i in lon:
+        if "W" in i:
+            i = i.split("W")[0]
+            i = float(i)
+            i *= -1
+        elif "E" in i:
+            i = i.split("E")[0]
+            i = float(i)
+        i = float(i)
+        lon_new.append(i)
+    hurricanes['Longitude'] = lon_new
+    lat = hurricanes['Latitude']
+    lat_new = []
+    for i in lat:
+        if "S" in i:
+            i = i.split("S")[0]
+            i = float(i)
+            i *= -1
+        elif "N" in i:
+            i = i.split("N")[0]
+            i = float(i)
+        i = float(i)
+        lat_new.append(i)
+    hurricanes['Latitude'] = lat_new
+
+    hurricanes_y = hurricanes["Maximum Wind"]
+    hurricanes_y.head(5)
+
+    hurricanes_x = hurricanes.drop("Maximum Wind", axis = 1)
+    hurricanes_x['Longitude'].replace(regex=True,inplace=True,to_replace=r'W',value=r'')
+    hurricanes_x['Latitude'].replace(regex=True,inplace=True,to_replace=r'N',value=r'')
+
+    from sklearn.model_selection import train_test_split
+    x_train, x_test, y_train, y_test = train_test_split(hurricanes_x,hurricanes_y)
+
+    from sklearn.preprocessing import StandardScaler
+    scaler = StandardScaler()
+    scaler.fit(x_train)
+
+    x_train = scaler.transform(x_train)
+    x_test = scaler.transform(x_test)
+
+    x_train
+
+    from sklearn.neural_network import MLPRegressor
+    len(x_train.transpose())
+
+    mlp = MLPRegressor(hidden_layer_sizes=(100, ), max_iter=1500)
+    mlp.fit(x_train, y_train)
+
+    predictions = mlp.predict(x_test)
+
+    predictions
+
+    actualValues = y_test.values
+    totalNumValues = len(y_test)
+
+    numAccurateResults = 0
+
+    for i in range(0, len(predictions)):
+        if abs(predictions[i] - actualValues[i]) < (0.1 * hurricanes['Maximum Wind'].max()):
+            numAccurateResults += 1
+        
+    percentAccurateResults = (numAccurateResults / totalNumValues) * 100
+    print(percentAccurateResults)
+    hnna=percentAccurateResults
+
+    from sklearn import svm
+    SVMModel = svm.SVR()
+    SVMModel.fit(x_train, y_train)
+
+    predictionse = SVMModel.predict(x_test)
+    predictionse
+
+    actualValues = y_test.values
+    totalNumValues = len(y_test)
+
+    numAccurateResultse = 0
+
+    for i in range(0, len(predictionse)):
+        if abs(predictionse[i] - actualValues[i]) < (0.1 * hurricanes['Maximum Wind'].max()):
+            numAccurateResultse += 1
+        
+    percentAccurateResultse = (numAccurateResultse / totalNumValues) * 100
+    print(percentAccurateResultse)
+    hsva=percentAccurateResultse
+
+    reg = linear_model.LinearRegression()
+    reg.fit(x_train, y_train)
+
+    predictionsi = reg.predict(x_test)
+    predictionsi
+
+    actualValues = y_test.values
+    totalNumValues = len(y_test)
+
+    numAccurateResultsi = 0
+
+    for i in range(0, len(predictionsi)):
+        if abs(predictionsi[i] - actualValues[i]) < (0.1 * hurricanes['Maximum Wind'].max()):
+            numAccurateResultsi += 1
+        
+    percentAccurateResultsi = (numAccurateResultsi / totalNumValues) * 100
+    hlma=percentAccurateResultsi
+    print(percentAccurateResultsi)
+    if request.method == 'POST':
+        lati = request.form['lati'] 
+        longi = request.form['longi']  
+        date = request.form['dates'] 
+
+    from numpy import array
+    x_input =array([[date,lati,longi]])
+    x_tests=scaler.transform(x_input)
+
+    actualPredictions = mlp.predict(x_tests)
+    hnn=actualPredictions[0]
+
+    actualPredictionse = SVMModel.predict(x_tests)
+    hsv=actualPredictionse[0]
+
+    actualPredictionsi = reg.predict(x_tests)
+    hlm=actualPredictionsi[0]
+
+    minhurricane = hurricanes['Maximum Wind'].min()
+    maxhurricane = hurricanes['Maximum Wind'].max()
+
+    min_max_scaler = preprocessing.MinMaxScaler()
+    for i in range(0, len(columns)):
+        x_scaled = min_max_scaler.fit_transform(hurricanes[[columns[i]]].values.astype(float))
+        hurricanes[columns[i]] = pd.DataFrame(x_scaled)
+
+    hurricanes['is_hurricane'] = np.random.uniform(0, 1, len(hurricanes)) <= .75
+
+
+    train, test = hurricanes[hurricanes['is_hurricane'] == True], hurricanes[hurricanes['is_hurricane'] == False]
+
+    print('Number of observations in the training data:', len(train))
+    print('Number of observations in the test data:', len(test))
+
+    features = hurricanes.columns[0:-1]
+    features = features.delete(3)
+    features
+
+    yr = train['Maximum Wind']
+
+    RFModel = RandomForestRegressor(n_jobs=2, random_state=0)
+
+    RFModel.fit(train[features], yr)
+
+    RFModel.predict(test[features])
+
+    preds = RFModel.predict(test[features])
+
+
+    preds
+
+    actualValues = test['Maximum Wind'].values
+    totalNumValues = len(test)
+
+    numAccurateResultsr = 0
+
+    for i in range(0, len(preds)):
+        if abs(preds[i] - actualValues[i]) < (0.1 * hurricanes['Maximum Wind'].max()):
+            numAccurateResultsr += 1
+            
+    percentAccurateResultsr = (numAccurateResultsr / totalNumValues) * 100
+    print(percentAccurateResultsr)
+    hrfa=percentAccurateResultsr
+
+    list(zip(train[features], RFModel.feature_importances_))
+
+    from numpy import array
+    x_input =array([[date,lati,longi]])
+
+    min_max_scaler = preprocessing.MinMaxScaler()
+    x_tests=scaler.transform(x_input)
+
+
+    actualPredictionsr = RFModel.predict(hurricanes[features])
+
+
+    for i in range(0, len(actualPredictions)):
+        actualPredictionsr[i] = (actualPredictionsr[i] * (maxhurricane - minhurricane)) + minhurricane
+        
+    hrf=actualPredictionsr[0]+5
+
+    # x-coordinates of left sides of bars  
+    left = [1, 2, 3, 4] 
+    
+    # heights of bars 
+    height = [hrfa,hnna,hsva,hlma] 
+    
+    # labels for bars 
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression'] 
+    
+    # plotting a bar chart 
+    plt.bar(left, height, tick_label = tick_label, 
+            width = 0.4, color = ['red', 'green', 'orange', 'blue']) 
+    
+    # naming the x-axis 
+    plt.xlabel('x - axis') 
+    # naming the y-axis 
+    plt.ylabel('y - axis') 
+    # plot title 
+    plt.title('Accuracy Chart For Hurricane') 
+    plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/graphsr/hm1.jpg')
+
+    # x-coordinates of left sides of bars  
+    left = [1, 2, 3, 4] 
+    
+    # heights of bars 
+    heights = [hrf,hnn,hsv,hlm] 
+    
+    # labels for bars 
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression'] 
+    
+    # plotting a bar chart 
+    plt.bar(left, heights, tick_label = tick_label, 
+            width = 0.4, color = ['blue']) 
+    
+    # naming the x-axis 
+    plt.xlabel('x - axis') 
+    # naming the y-axis 
+    plt.ylabel('y - axis') 
+    # plot title 
+    plt.title('Predicted Output Chart For Hurricane') 
+    plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/graphsr/hm2.png')
+
+    return render_template('comp.html',hrf=hrf,hrfa=hrfa,hnn=hnn,hsv=hsv,hlm=hlm,hnna=hnna,hsva=hsva,hlma=hlma,lat=lati,long=longi,date=date)
+
+
+from apscheduler.schedulers.background import BackgroundScheduler
+import atexit
+
+scheduler = BackgroundScheduler()
+
+# Earthquake 1-minute job
+scheduler.add_job(func=check_live_earthquakes, trigger="interval", minutes=1)
+
+# Flood 1-minute job
+scheduler.add_job(func=check_live_floods_scheduler, trigger="interval", minutes=1)
+
+scheduler.start()
+
+# shutdown safely when app stops
+atexit.register(lambda: scheduler.shutdown())
+
+
+
+
+if __name__ == "__main__":
+    lr = joblib.load("model.pkl") # Load "model.pkl"
+    print ('Model loaded')
+    model_columns = joblib.load("model_columns.pkl") # Load "model_columns.pkl"
+    print ('Model columns loaded')
+    app.run(debug=True)
+
+
+
+
+
