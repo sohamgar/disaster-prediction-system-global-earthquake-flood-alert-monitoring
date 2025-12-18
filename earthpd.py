@@ -6,61 +6,92 @@ from tensorflow.keras.models import load_model
 from twilio.rest import Client
 import os
 
+# --------------------------------
+# Flask App
+# --------------------------------
 app = Flask(__name__)
 
-# Load the compressed Keras model at startup
+# --------------------------------
+# Load ML Model (IMPORTANT FIX)
+# --------------------------------
 MODEL_PATH = "earthquake_model.h5"
-model = load_model(MODEL_PATH)
 
-# Twilio environment variables
+# compile=False fixes: keras.metrics.mse error
+model = load_model(MODEL_PATH, compile=False)
+
+# --------------------------------
+# Twilio Config (ENV VARIABLES)
+# --------------------------------
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_FROM = os.getenv("TWILIO_FROM")
 TWILIO_TO = os.getenv("TWILIO_TO")
 
-@app.route('/')
+# --------------------------------
+# Routes
+# --------------------------------
+@app.route("/")
 def index():
-    return render_template('index.html')
+    return render_template("index.html")
 
-@app.route('/earthquake')
+@app.route("/earthquake")
 def earthquake():
-    return render_template('earthq.html')
+    return render_template("earthq.html")
 
-@app.route('/predict', methods=['POST'])
+@app.route("/predict", methods=["POST"])
 def predict():
-    def mapdateTotime(x):
+
+    # Convert date → epoch seconds
+    def mapdateTotime(date_str):
         epoch = datetime(1970, 1, 1)
         try:
-            dt = datetime.strptime(x, "%m/%d/%Y")
+            dt = datetime.strptime(date_str, "%m/%d/%Y")
         except ValueError:
-            dt = datetime.strptime(x, "%Y-%m-%dT%H:%M:%S.%fZ")
-        diff = dt - epoch
-        return diff.total_seconds()
+            dt = datetime.strptime(date_str, "%Y-%m-%d")
+        return (dt - epoch).total_seconds()
 
-    # Get form input
-    lat = float(request.form['lat'])
-    long = float(request.form['long'])
-    depth = float(request.form['depth'])
-    date = request.form['date']
+    # -----------------------------
+    # Get User Input
+    # -----------------------------
+    lat = float(request.form["lat"])
+    lon = float(request.form["long"])
+    depth = float(request.form["depth"])
+    date = request.form["date"]
 
-    # Convert date to seconds and normalize slightly
+    # Normalize date lightly (model-safe)
     date_sec = mapdateTotime(date) / 1e9
-    input_data = np.array([[lat, long, depth, date_sec]], dtype=np.float32)
 
-    # Predict magnitude
-    prediction = model.predict(input_data)
+    # Input shape must match training
+    input_data = np.array([[lat, lon, depth, date_sec]], dtype=np.float32)
+
+    # -----------------------------
+    # Prediction
+    # -----------------------------
+    prediction = model.predict(input_data, verbose=0)
     magnitude = float(prediction[0][0])
 
-    # Send Twilio SMS alert if magnitude > 6
-    if magnitude > 6 and all([TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM, TWILIO_TO]):
+    # -----------------------------
+    # Twilio Alert
+    # -----------------------------
+    if (
+        magnitude > 6
+        and TWILIO_ACCOUNT_SID
+        and TWILIO_AUTH_TOKEN
+        and TWILIO_FROM
+        and TWILIO_TO
+    ):
         client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
         client.messages.create(
             to=TWILIO_TO,
             from_=TWILIO_FROM,
-            body=f"⚠️ Earthquake Alert! Predicted magnitude: {magnitude:.2f}"
+            body=f"⚠️ Earthquake Alert! Predicted magnitude: {magnitude:.2f}",
         )
 
-    return render_template('earth.html', prediction=magnitude)
+    return render_template("earth.html", prediction=magnitude)
 
+
+# --------------------------------
+# Run (LOCAL ONLY)
+# --------------------------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
