@@ -6,3 +6,4 @@ h5py>=3.8
 joblib
 twilio
 scikit-learn
+gunicorn
