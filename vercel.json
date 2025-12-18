@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "earthpd.py", "use": "@vercel/python" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "earthpd.py" }
+  ]
+}

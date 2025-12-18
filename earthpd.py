@@ -8,8 +8,8 @@ import os
 
 app = Flask(__name__)
 
-# Load the trained model once at startup
-MODEL_PATH = "earthquake_model.h5"  # Your trained Keras model
+# Load the compressed Keras model at startup
+MODEL_PATH = "earthquake_model.h5"
 model = load_model(MODEL_PATH)
 
 # Twilio environment variables
@@ -37,23 +37,21 @@ def predict():
         diff = dt - epoch
         return diff.total_seconds()
 
-    # Read input from form
+    # Get form input
     lat = float(request.form['lat'])
     long = float(request.form['long'])
     depth = float(request.form['depth'])
     date = request.form['date']
 
-    # Convert date to seconds
-    date_sec = mapdateTotime(date)
-
-    # Prepare input for prediction
+    # Convert date to seconds and normalize slightly
+    date_sec = mapdateTotime(date) / 1e9
     input_data = np.array([[lat, long, depth, date_sec]], dtype=np.float32)
 
     # Predict magnitude
     prediction = model.predict(input_data)
     magnitude = float(prediction[0][0])
 
-    # Send Twilio alert if magnitude > 6
+    # Send Twilio SMS alert if magnitude > 6
     if magnitude > 6 and all([TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM, TWILIO_TO]):
         client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
         client.messages.create(
@@ -63,7 +61,6 @@ def predict():
         )
 
     return render_template('earth.html', prediction=magnitude)
-
 
 if __name__ == "__main__":
     app.run(debug=True)
