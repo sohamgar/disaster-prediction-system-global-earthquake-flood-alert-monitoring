@@ -1438,7 +1438,12 @@ feedback_id_counter = 1
 # -----------------------
 @app.route("/admin/feedback")
 def feedback_page():
+    # Only admin can access
+    if "admin_id" not in session:
+        return redirect("/admin_login")
+
     return render_template("admin_feedback.html")
+
 
 @app.route("/feedback")
 def user_feedback():

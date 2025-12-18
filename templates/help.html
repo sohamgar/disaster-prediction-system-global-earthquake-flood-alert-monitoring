@@ -1,9 +1,258 @@
-<div class="card">
-  <h3>Help & User Guide</h3>
-  <ul>
-    <li>Earthquake data comes from USGS & trusted sources</li>
-    <li>Magnitude ≥ 4 shows warning alerts</li>
-    <li>Distance is calculated using your location</li>
-    <li>Auto-refresh every 20 seconds</li>
-  </ul>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help & User Guide</title>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<style>
+:root {
+    --bg-light: linear-gradient(135deg, #eef2ff, #f8fafc);
+    --bg-dark: radial-gradient(circle at top, #1a2b4f, #060b18 85%);
+    --glass-light: rgba(255,255,255,0.65);
+    --glass-dark: rgba(255,255,255,0.08);
+    --border-light: rgba(0,0,0,0.1);
+    --border-dark: rgba(255,255,255,0.25);
+    --text-light: #111827;
+    --text-dark: #e5e7eb;
+    --accent: #2563eb;
+    --danger: #dc2626;
+    --warning: #f59e0b;
+    --success: #16a34a;
+}
+
+/* ✅ LIGHT THEME DEFAULT */
+body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-light);
+    color: var(--text-light);
+    min-height: 100vh;
+    padding: 40px;
+    transition: background 0.3s, color 0.3s;
+}
+
+/* 🌙 DARK MODE */
+body.dark {
+    background: var(--bg-dark);
+    color: var(--text-dark);
+}
+
+/* HEADER */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 35px;
+    gap: 15px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header h2 {
+    font-weight: 700;
+}
+
+/* BACK BUTTON */
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 14px;
+    text-decoration: none;
+    font-weight: 600;
+    background: rgba(255,255,255,0.5);
+    color: inherit;
+    border: 1px solid var(--border-light);
+    backdrop-filter: blur(10px);
+    transition: all 0.25s ease;
+}
+
+body.dark .back-btn {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid var(--border-dark);
+}
+
+.back-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+/* TOGGLE */
+.toggle-btn {
+    border: none;
+    padding: 10px 18px;
+    border-radius: 14px;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* GLASS CARD */
+.card {
+    backdrop-filter: blur(18px) saturate(160%);
+    background: var(--glass-light);
+    border: 1px solid var(--border-light);
+    border-radius: 22px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    transition: all 0.3s;
+}
+
+body.dark .card {
+    background: var(--glass-dark);
+    border: 1px solid var(--border-dark);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.4);
+}
+
+.card:hover {
+    transform: translateY(-4px);
+}
+
+/* TITLES */
+.card h3 {
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.icon {
+    margin-right: 10px;
+}
+
+/* LIST */
+.card ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.card ul li {
+    margin-bottom: 12px;
+    padding-left: 28px;
+    position: relative;
+    line-height: 1.6;
+}
+
+.card ul li::before {
+    content: "✔";
+    position: absolute;
+    left: 0;
+    color: var(--success);
+    font-weight: bold;
+}
+
+/* COLORS */
+.warning { color: var(--warning); }
+.danger { color: var(--danger); }
+.success { color: var(--success); }
+
+/* GRID */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 30px;
+}
+
+/* FOOTER */
+.footer {
+    text-align: center;
+    margin-top: 45px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <div class="header-left">
+        <a href="/" class="back-btn">
+            <i class="fa-solid fa-arrow-left"></i> Back
+        </a>
+        <h2><i class="fa-solid fa-circle-info"></i> Help & User Guide</h2>
+    </div>
+
+    <button class="toggle-btn" onclick="toggleTheme()">
+        <i class="fa-solid fa-moon"></i> Toggle Theme
+    </button>
 </div>
+
+<div class="grid">
+
+    <div class="card">
+        <h3><i class="fa-solid fa-earth-asia icon danger"></i> Earthquake Monitoring</h3>
+        <ul>
+            <li>Earthquake data from USGS & trusted agencies</li>
+            <li>Magnitude ≥ 4.0 triggers warnings</li>
+            <li>Distance calculated using Haversine formula</li>
+            <li>Nearby users receive automatic alerts</li>
+            <li>Auto-refresh every 20 seconds</li>
+            <li>Depth analysis improves impact accuracy</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3><i class="fa-solid fa-water icon success"></i> Flood Monitoring</h3>
+        <ul>
+            <li>Rainfall & river-level based detection</li>
+            <li>High-risk zones highlighted dynamically</li>
+            <li>Early flood warnings issued</li>
+            <li>Near real-time updates</li>
+            <li>Historical data improves predictions</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3><i class="fa-solid fa-bell icon warning"></i> Alert System</h3>
+        <ul>
+            <li>Email alerts based on distance radius</li>
+            <li>Alerts include safety instructions</li>
+            <li>Admin protected with OTP verification</li>
+            <li>False alert reduction using validation</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3><i class="fa-solid fa-shield-halved icon"></i> User Safety Tips</h3>
+        <ul>
+            <li>Drop, Cover & Hold during earthquakes</li>
+            <li>Move to higher ground during floods</li>
+            <li>Keep emergency kits ready</li>
+            <li>Follow evacuation instructions</li>
+        </ul>
+    </div>
+
+</div>
+
+<div class="footer">
+    © 2025 Disaster Alert System • Real-time Monitoring • Early Warning Platform
+</div>
+
+<script>
+function toggleTheme() {
+    document.body.classList.toggle("dark");
+    localStorage.setItem("theme",
+        document.body.classList.contains("dark") ? "dark" : "light"
+    );
+}
+
+/* ✅ Load saved theme */
+if (localStorage.getItem("theme") === "dark") {
+    document.body.classList.add("dark");
+}
+</script>
+
+</body>
+</html>
