@@ -1165,20 +1165,28 @@ def admin_management():
     if "admin_id" not in session:
         return redirect("/admin_login")
 
+    db = get_db_connection()
     cur = db.cursor()
+
     cur.execute("SELECT id, username, email FROM admin")
     admins = cur.fetchall()
 
-    # Convert id explicitly to int
+    cur.close()
+    db.close()
+
     admin_list = [
-        {"id": int(a[0]), "username": a[1], "email": a[2]}
+        {
+            "id": int(a["id"]),
+            "username": a["username"],
+            "email": a["email"]
+        }
         for a in admins
     ]
 
     return render_template(
         "admin_management.html",
         admins=admin_list,
-        logged_admin_id=int(session["admin_id"])  # make sure this is int
+        logged_admin_id=int(session["admin_id"])
     )
 
 
