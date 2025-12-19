@@ -30,18 +30,46 @@ TWILIO_TO = os.getenv("TWILIO_TO")
 # --------------------------------
 # Routes
 # --------------------------------
-@app.route("/")
+@app.route('/')
 def index():
-    return render_template("index.html")
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+    return render_template("index.html", username=session.get('user_name'))
 
-@app.route("/earthquake")
+@app.route('/earthquake')
 def earthquake():
-    return render_template("earthq.html")
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+    return render_template("earthq.html", username=session.get('user_name'))
+
+@app.route('/flood')
+def flood():
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+    return render_template("floods.html", username=session.get('user_name'))
+
+@app.route('/login')
+def login_page():
+    return render_template("login.html")
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login_page'))
+
+
 
 @app.route("/predict", methods=["POST"])
 def predict():
+    # -----------------------------
+    # Session protection
+    # -----------------------------
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
 
+    # -----------------------------
     # Convert date → epoch seconds
+    # -----------------------------
     def mapdateTotime(date_str):
         epoch = datetime(1970, 1, 1)
         try:

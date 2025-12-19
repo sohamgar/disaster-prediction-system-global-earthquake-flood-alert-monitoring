@@ -8,7 +8,7 @@ import re
 from io import BytesIO
 from fpdf import FPDF
 from werkzeug.utils import secure_filename
-
+import textwrap
 from reportlab.pdfgen import canvas
 # Standard Libraries
 import os
@@ -46,11 +46,20 @@ import requests
 
 # Database
 import pymysql
+from dotenv import load_dotenv
+load_dotenv()
 
 
 weather_data = []
 weather_labels = []
-db = pymysql.connect(host="localhost",user="root",passwd="",db="dmnat")
+db = pymysql.connect(
+    host=os.getenv("MYSQL_HOST"),
+    user=os.getenv("MYSQL_USER"),
+    password=os.getenv("MYSQL_PASSWORD"),
+    database=os.getenv("MYSQL_DATABASE"),
+    port=int(os.getenv("MYSQL_PORT", 3306))
+)
+
 # Write your API key here.
 api_key = "AIzaSyDYPhWrJ_gi7we9v3G9CwBeQIfb9Je4wl4"
 
@@ -816,7 +825,7 @@ def admin_login():
             sender_pass = "pwjdjogjwnzwuhle"  # Gmail App Password
             receiver_email = admin[3]
 
-            message_body = f"""
+            message_body = textwrap.dedent(f"""
             Hello {admin[1]},
 
             We received a request to log in to the Disaster Alert System using your
@@ -839,8 +848,7 @@ def admin_login():
             Regards,
             Disaster Alert System
             (Security Team – Automated Message)
-            """
-
+            """).strip()
             msg = MIMEText(message_body)
             msg['Subject'] = "Admin OTP Verification"
             msg['From'] = sender_email
@@ -982,7 +990,7 @@ def admin_resend_otp():
         sender_email = "sohamgarud0806@gmail.com"
         sender_pass = "pwjdjogjwnzwuhle"
 
-        msg_body = f"""
+        msg_body = textwrap.dedent(f"""
         Hello {admin_name},
 
         We received a request to generate a new One-Time Password (OTP) for
@@ -1005,8 +1013,7 @@ def admin_resend_otp():
         Regards,
         Disaster Alert System
         (Security Team – Automated Message)
-        """
-
+        """).strip()
         msg = MIMEText(msg_body)
         msg["Subject"] = "Your New Admin Login OTP"
         msg["From"] = sender_email
