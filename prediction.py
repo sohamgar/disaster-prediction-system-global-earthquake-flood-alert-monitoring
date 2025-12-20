@@ -53,13 +53,13 @@ load_dotenv()
 weather_data = []
 weather_labels = []
 db = pymysql.connect(
-    host=os.getenv("MYSQL_HOST"),
-    user=os.getenv("MYSQL_USER"),
-    password=os.getenv("MYSQL_PASSWORD"),
-    database=os.getenv("MYSQL_DATABASE"),
-    port=int(os.getenv("MYSQL_PORT", 3306))
+    host=os.getenv("MYSQL_HOST", "").strip(),
+    user=os.getenv("MYSQL_USER", "").strip(),
+    password=os.getenv("MYSQL_PASSWORD", "").strip(),
+    database=os.getenv("MYSQL_DATABASE", "").strip(),
+    port=int((os.getenv("MYSQL_PORT") or "3306").strip()),
+    connect_timeout=10
 )
-
 # Write your API key here.
 api_key = "AIzaSyDYPhWrJ_gi7we9v3G9CwBeQIfb9Je4wl4"
 
