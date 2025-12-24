@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 24, 2025 at 12:12 PM
+-- Generation Time: Dec 24, 2025 at 03:38 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -40,7 +40,8 @@ CREATE TABLE `admin` (
 --
 
 INSERT INTO `admin` (`id`, `username`, `password`, `created_at`, `email`) VALUES
-(1, 'Admin', 'scrypt:32768:8:1$jmXj1xesrghtAINM$6909862ffa4d6db952b1dcd92775ebfe9de7d8becfc3fa6df2ddbcffdb9c93cf8fbc514e39e16834e2ba4e1a4b55fd94ee8ea269ecb144110442e9313e32f292', '2025-12-09 09:15:51', 'sohamgarud0806@gmail.com');
+(1, 'Admin', 'scrypt:32768:8:1$wpxabxHNCeosami2$1cadf98a7665425f96e0ddc8576c8a00254940a3b1bf686dce8d36652373ac8b030c9619c386ad7665b40401b38038d276d03d205afb4a8a063ebb5b123a70ce', '2025-12-09 09:15:51', 'sohamgarud0806@gmail.com'),
+(19, 'Subodh', 'scrypt:32768:8:1$yD8wmJQi1zp8K4mR$754a4038258027bf1d83f6b3c1927c9edc4d73ebe087a6b91cd2d388984fe696d7d217d7ce12e478ae76c00f28a6c7f7f065dafb389da05528ce8ed5c8428a53', '2025-12-24 13:33:35', 's9920323546@gmail.com');
 
 -- --------------------------------------------------------
 
@@ -9880,7 +9881,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `name`, `email`, `password`, `mobile`, `latitude`, `longitude`, `avatar`) VALUES
-(15, 'Soham_123', 'Soham  Vijay Garud', 'sohamgarud0806@gmail.com', 'scrypt:32768:8:1$ErKlWPhPR9yTxgqL$bc09c91aeea2660d656a2397969301939ad84a1fc965ff4ee9e34ee67e8b567e97dd21fda0d6a71b1729b719f288362cbf7b1d7586d4a7a5801f6e25549f3de2', '9920323546', 19.159, 72.9986, 'user_15.jpg'),
+(15, 'Soham_123', 'Soham  Vijay Garud', 'sohamgarud0806@gmail.com', 'scrypt:32768:8:1$wJTF9akjpSVcOw1a$995f2b0cd22ff9b152a29060ba23db4cc226f72fa0fcf225f3706ff88c30cd282970215da4aa7ce8bc8f18c2d7ba022bb0a9748464b738be31510e5b1455e900', '9920323546', 19.159, 72.9986, 'user_15.jpg'),
 (16, 'Soham123', 'Soham Vijay Garud', 's9920323546@gmail.com', 'scrypt:32768:8:1$BChnjwwqqVC5gwhd$f19515a2e627097f44cd1c422207cfdc48332bceb129f2559c1ef101924424ee14bd2b574ca190c2da262f6c499ed6f844d03c2468a37f0f023a363944a6d23d', '9920323546', 19.159, 72.9986, NULL);
 
 --
@@ -9892,7 +9893,8 @@ INSERT INTO `users` (`id`, `username`, `name`, `email`, `password`, `mobile`, `l
 --
 ALTER TABLE `admin`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `username` (`username`);
+  ADD UNIQUE KEY `username` (`username`),
+  ADD UNIQUE KEY `unique_admin_email` (`email`);
 
 --
 -- Indexes for table `earth`
@@ -9969,7 +9971,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `admin`
 --
 ALTER TABLE `admin`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `earth`

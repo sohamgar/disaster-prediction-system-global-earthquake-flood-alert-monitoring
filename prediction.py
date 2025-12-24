@@ -695,6 +695,12 @@ Security & Authentication Team
 
     return render_template("login.html")
 
+@app.route("/terms")
+def terms():
+    return render_template("terms.html")
+
+
+
 @app.route("/settings")
 def settings():
     if 'user_id' not in session:
@@ -1326,24 +1332,51 @@ def delete_admin(admin_id):
         db.close()
 
 
+from pymysql.err import IntegrityError
+from werkzeug.security import generate_password_hash
+
 @app.route("/admin/add_admin", methods=["POST"])
 def add_admin():
+
     if "admin_id" not in session:
+        flash("Please login first.", "warning")
         return redirect("/admin_login")
 
-    username = request.form.get("username")
-    email = request.form.get("email")
-    password = request.form.get("password")
+    username = request.form.get("username", "").strip()
+    email = request.form.get("email", "").strip().lower()
+    password = request.form.get("password", "").strip()
+
+    if not username or not email or not password:
+        flash("All fields are required.", "danger")
+        return redirect("/admin/admins")
 
     hashed = generate_password_hash(password)
 
     cur = db.cursor()
-    cur.execute(
-        "INSERT INTO admin (username, email, password) VALUES (%s,%s,%s)",
-        (username, email, hashed)
-    )
-    db.commit()
 
+    try:
+        cur.execute(
+            "INSERT INTO admin (username, email, password) VALUES (%s,%s,%s)",
+            (username, email, hashed)
+        )
+        db.commit()
+
+    except IntegrityError as e:
+        db.rollback()
+
+        error_msg = str(e)
+
+        if "username" in error_msg:
+            flash("Username already exists.", "danger")
+        elif "email" in error_msg:
+            flash("Email already exists.", "danger")
+        else:
+            flash("Admin already exists.", "danger")
+
+        cur.close()
+        return redirect("/admin/admins")
+
+    cur.close()
     flash("New admin added successfully!", "success")
     return redirect("/admin/admins")
 
