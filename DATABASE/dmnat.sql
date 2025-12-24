@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 19, 2025 at 04:57 AM
+-- Generation Time: Dec 24, 2025 at 12:12 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -40,7 +40,7 @@ CREATE TABLE `admin` (
 --
 
 INSERT INTO `admin` (`id`, `username`, `password`, `created_at`, `email`) VALUES
-(1, 'Admin', 'scrypt:32768:8:1$KRiLfIgJYd6fHKD5$c54290940823b0dddc91b2cb625888a06f66e8964b1bd432e921efbbe605b752d2d60018b19261c36032b60673a1ee3453f762e54c8be1578e4bfaf234ad7a04', '2025-12-09 09:15:51', 'sohamgarud0806@gmail.com');
+(1, 'Admin', 'scrypt:32768:8:1$jmXj1xesrghtAINM$6909862ffa4d6db952b1dcd92775ebfe9de7d8becfc3fa6df2ddbcffdb9c93cf8fbc514e39e16834e2ba4e1a4b55fd94ee8ea269ecb144110442e9313e32f292', '2025-12-09 09:15:51', 'sohamgarud0806@gmail.com');
 
 -- --------------------------------------------------------
 
@@ -458,17 +458,23 @@ CREATE TABLE `feedback` (
   `type` varchar(50) DEFAULT NULL,
   `message` text NOT NULL,
   `date` datetime DEFAULT NULL,
-  `disaster_type` varchar(50) DEFAULT NULL
+  `disaster_type` varchar(50) DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `feedback`
 --
 
-INSERT INTO `feedback` (`id`, `type`, `message`, `date`, `disaster_type`) VALUES
-(3, 'Complaint', 'earthquake is happening', '2025-12-15 10:01:49', 'Earthquake'),
-(5, 'Query', 'this is query', '2025-12-18 11:01:46', 'Earthquake'),
-(6, 'Complaint', 'No earthquake Happens', '2025-12-18 23:14:59', 'Earthquake');
+INSERT INTO `feedback` (`id`, `type`, `message`, `date`, `disaster_type`, `user_id`) VALUES
+(22, 'Query', 'I get this query', '2025-12-22 10:32:50', 'Earthquake', NULL),
+(23, 'System Issue', 'very small text', '2025-12-22 10:33:05', 'Flood', NULL),
+(26, 'Complaint', 'This is my fedback', '2025-12-22 23:51:52', 'Earthquake', NULL),
+(27, 'Query', 'This is the query', '2025-12-22 23:52:11', 'Flood', NULL),
+(28, 'Query', 'This is query', '2025-12-23 14:46:34', 'Earthquake', NULL),
+(29, 'Complaint', 'website is nice', '2025-12-23 22:23:48', 'Earthquake', 15),
+(30, 'Query', 'website also goods for flood and predict very nicely no complaint nothing', '2025-12-23 22:24:24', 'Flood', 15),
+(31, 'Complaint', 'solving issue', '2025-12-24 14:18:17', 'Flood', 15);
 
 -- --------------------------------------------------------
 
@@ -9787,18 +9793,21 @@ CREATE TABLE `historical_floods` (
 CREATE TABLE `replies` (
   `id` int(11) NOT NULL,
   `feedback_id` int(11) NOT NULL,
+  `admin_id` int(11) NOT NULL,
   `message` text NOT NULL,
-  `date` datetime DEFAULT current_timestamp()
+  `date` datetime DEFAULT current_timestamp(),
+  `admin_username` varchar(100) NOT NULL DEFAULT 'Admin'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `replies`
 --
 
-INSERT INTO `replies` (`id`, `feedback_id`, `message`, `date`) VALUES
-(5, 3, 'ok', '2025-12-18 10:43:40'),
-(6, 5, 'ok', '2025-12-18 11:03:34'),
-(8, 6, 'you are now safe.\n', '2025-12-18 23:16:31');
+INSERT INTO `replies` (`id`, `feedback_id`, `admin_id`, `message`, `date`, `admin_username`) VALUES
+(28, 27, 1, 'ok', '2025-12-23 14:11:43', 'Admin'),
+(30, 30, 1, 'ok any complaint pls rely here we are help to solve', '2025-12-23 22:28:29', 'Admin'),
+(31, 29, 1, 'ok any complaint pls rely here we are help to solve', '2025-12-23 22:28:42', 'Admin'),
+(32, 31, 1, 'ok solve', '2025-12-24 14:22:46', 'Admin');
 
 -- --------------------------------------------------------
 
@@ -9871,8 +9880,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `name`, `email`, `password`, `mobile`, `latitude`, `longitude`, `avatar`) VALUES
-(3, 'Soham_123', 'Soham Vijay Garud', 'sohamgarud0806@gmail.com', 'scrypt:32768:8:1$VZXWChOj2lsWMH1R$2e82c37b11c32089ea5dab90e32e6a657fa93de8c75ff52971dbc906ea9ca1924f68c5700eddddaf2cccfd6a691b26d496e9503e0cafde9580c057aa474e78b1', '9920323546', 19.159, 72.9986, 'user_3.jpg'),
-(5, 'Soham123', 'Soham Garud', 's9920323546@gmail.com', 'scrypt:32768:8:1$9yzjzZWGzDKwTM4T$3e87fd3140304638a42c51cf42fc7340cf7aa1b3af119a8550e4bfdc625c8f1887cf687b218606c30af2f06c1ee91710986bec241ad20f4c37a974ac28f0ca4a', '9920323546', 63.5888, -154.4931, NULL);
+(15, 'Soham_123', 'Soham  Vijay Garud', 'sohamgarud0806@gmail.com', 'scrypt:32768:8:1$ErKlWPhPR9yTxgqL$bc09c91aeea2660d656a2397969301939ad84a1fc965ff4ee9e34ee67e8b567e97dd21fda0d6a71b1729b719f288362cbf7b1d7586d4a7a5801f6e25549f3de2', '9920323546', 19.159, 72.9986, 'user_15.jpg'),
+(16, 'Soham123', 'Soham Vijay Garud', 's9920323546@gmail.com', 'scrypt:32768:8:1$BChnjwwqqVC5gwhd$f19515a2e627097f44cd1c422207cfdc48332bceb129f2559c1ef101924424ee14bd2b574ca190c2da262f6c499ed6f844d03c2468a37f0f023a363944a6d23d', '9920323546', 19.159, 72.9986, NULL);
 
 --
 -- Indexes for dumped tables
@@ -9895,7 +9904,8 @@ ALTER TABLE `earth`
 -- Indexes for table `feedback`
 --
 ALTER TABLE `feedback`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_feedback_user` (`user_id`);
 
 --
 -- Indexes for table `flood_alerts`
@@ -9921,7 +9931,8 @@ ALTER TABLE `historical_floods`
 --
 ALTER TABLE `replies`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_feedback` (`feedback_id`);
+  ADD KEY `fk_feedback` (`feedback_id`),
+  ADD KEY `fk_replies_admin` (`admin_id`);
 
 --
 -- Indexes for table `reply`
@@ -9958,7 +9969,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `admin`
 --
 ALTER TABLE `admin`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `earth`
@@ -9970,7 +9981,7 @@ ALTER TABLE `earth`
 -- AUTO_INCREMENT for table `feedback`
 --
 ALTER TABLE `feedback`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `flood_alerts`
@@ -9994,7 +10005,7 @@ ALTER TABLE `historical_floods`
 -- AUTO_INCREMENT for table `replies`
 --
 ALTER TABLE `replies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT for table `reply`
@@ -10012,11 +10023,17 @@ ALTER TABLE `system_logs`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `feedback`
+--
+ALTER TABLE `feedback`
+  ADD CONSTRAINT `fk_feedback_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `flood_alerts`
@@ -10028,7 +10045,8 @@ ALTER TABLE `flood_alerts`
 -- Constraints for table `replies`
 --
 ALTER TABLE `replies`
-  ADD CONSTRAINT `fk_feedback` FOREIGN KEY (`feedback_id`) REFERENCES `feedback` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_feedback` FOREIGN KEY (`feedback_id`) REFERENCES `feedback` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_replies_admin` FOREIGN KEY (`admin_id`) REFERENCES `admin` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `reply`
