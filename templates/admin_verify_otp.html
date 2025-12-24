@@ -245,11 +245,30 @@ inputs.forEach((input, index) => {
 });
 
 // Toggle OTP visibility
+// Toggle OTP visibility (FIXED – cursor & focus safe)
+toggleOtp.addEventListener("mousedown", e => e.preventDefault());
+
 toggleOtp.addEventListener("click", () => {
   showOtp = !showOtp;
-  inputs.forEach(i => i.type = showOtp ? "text" : "password");
+
+  const activeInput = document.activeElement;
+  const cursorPos = activeInput?.selectionStart ?? 0;
+
+  inputs.forEach(i => {
+    i.type = showOtp ? "text" : "password";
+  });
+
   toggleOtp.classList.toggle("fa-eye-slash", showOtp);
+
+  // restore focus + cursor
+  if (activeInput && activeInput.classList.contains("otp-input")) {
+    requestAnimationFrame(() => {
+      activeInput.focus();
+      activeInput.setSelectionRange(cursorPos, cursorPos);
+    });
+  }
 });
+
 
 // Countdown Timer
 let timeLeft = 30;

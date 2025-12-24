@@ -30,6 +30,8 @@
     ></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 <style>
@@ -138,6 +140,13 @@ body{
   display:flex;
   flex:1;
 }
+
+.swal2-input {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
 
 /* ================= SIDEBAR ================= */
 #sidebar{
@@ -657,47 +666,172 @@ select:focus,
 <script>
 
 function sendManualAlert() {
-    // Make sure userLat/userLon exist
-    const lat = userLat ?? 0;
-    const lon = userLon ?? 0;
 
-    // Ask user for magnitude (optional) or use default
-    let magInput = prompt("Enter magnitude for manual alert:", "0");
-    const mag = magInput ? parseFloat(magInput) : 0;
+    // ❌ Frontend validation
+    if (userLat === null || userLat === undefined ||
+        userLon === null || userLon === undefined) {
 
-    // Populate hidden inputs
-    document.getElementById("manualLat").value = lat;
-    document.getElementById("manualLon").value = lon;
-    document.getElementById("manualMag").value = mag;
-    document.getElementById("manualPlace").value = "Manual Trigger";
+        Swal.fire({
+            title: "Manual Alert Failed",
+            text: "Latitude / Longitude not available.",
+            icon: "error",
+            confirmButtonColor: "#dc2626"
+        });
+        return;
+    }
 
-    fetch("/manual_alert", {
-        method: "POST",
-        body: new FormData(document.getElementById("manualForm"))
-    })
-    .then(r => r.json())
-    .then(data => {
-        console.log("BACKEND RESPONSE:", data);
+    // 🔴 CONFIRMATION
+    Swal.fire({
+        title: "Send Earthquake Alert?",
+        html: `
+            <p>This will send <b>earthquake alert emails</b> to nearby users.</p>
+            <p style="color:#dc2626;"><b>Are you sure?</b></p>
+        `,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, Continue",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#dc2626",
+        cancelButtonColor: "#6b7280"
+    }).then(confirmResult => {
 
-        let alertMessage = `✅ Manual Alert Sent\n\n` +
-            `Location:\nLAT: ${data.lat}\nLON: ${data.lon}\n\n` +
-            `Submitted MAG: ${mag}\n\n`; // <- show correct submitted magnitude
+        if (!confirmResult.isConfirmed) return;
 
-        if (data.nearest_real_mag !== null) {
-            alertMessage += `Nearest Real Quake Info:\n` +
-                `MAG: ${data.nearest_real_mag}\n` +
-                `Place: ${data.nearest_real_place}\n` +
-                `Time: ${data.nearest_real_time}\n` +
-                `Distance: ${data.nearest_real_dist_km ?? '-'} km\n`;
-        } else {
-            alertMessage += `No nearby real quake detected.`;
-        }
+        // 🔢 MAGNITUDE INPUT (CUSTOM HTML – FIXED)
+        Swal.fire({
+            title: "Enter Earthquake Magnitude",
+            width: 400,
+            html: `
+                <input
+                    id="swal-mag"
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value="0"
+                    style="
+                        width:100%;
+                        padding:10px;
+                        font-size:16px;
+                        box-sizing:border-box;
+                        border-radius:6px;
+                        border:1px solid #d1d5db;
+                    "
+                >
+            `,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: "Send Alert",
+            confirmButtonColor: "#dc2626",
+            preConfirm: () => {
+                const mag = document.getElementById("swal-mag").value;
+                if (mag === "" || isNaN(mag) || mag < 0) {
+                    Swal.showValidationMessage("Please enter a valid magnitude");
+                    return false;
+                }
+                return parseFloat(mag);
+            }
+        }).then(magResult => {
 
-        alert(alertMessage);
-    })
-    .catch(err => {
-        console.error("Manual Alert ERROR:", err);
-        alert("Manual alert failed.");
+            if (!magResult.isConfirmed) return;
+
+            const lat = userLat;
+            const lon = userLon;
+            const mag = magResult.value;
+
+            // Populate form
+            document.getElementById("manualLat").value = lat;
+            document.getElementById("manualLon").value = lon;
+            document.getElementById("manualMag").value = mag;
+            document.getElementById("manualPlace").value = "Manual Trigger";
+
+            // ⏳ LOADING
+            Swal.fire({
+                title: "Sending Alert...",
+                text: "Please wait while earthquake alerts are being processed",
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            fetch("/manual_alert", {
+                method: "POST",
+                body: new FormData(document.getElementById("manualForm"))
+            })
+            .then(res => res.json())
+            .then(data => {
+
+                console.log("EARTHQUAKE BACKEND RESPONSE:", data);
+
+                // 🌊 PLACE FALLBACK
+                let placeName = data.detected_place;
+                if (!placeName || placeName === "Unknown location") {
+                    placeName = getOceanByLatLon(data.lat, data.lon);
+                }
+
+                // 🚨 NO USERS
+                if (data.status === "no_users") {
+                    Swal.fire({
+                        title: "No Users Found",
+                        html: `
+                            <p><b>No user is registered at this earthquake location.</b></p>
+                            <hr>
+                            <p>Latitude: ${data.lat}</p>
+                            <p>Longitude: ${data.lon}</p>
+                            <p>Place: ${placeName}</p>
+                        `,
+                        icon: "error",
+                        confirmButtonColor: "#dc2626"
+                    });
+                    return;
+                }
+
+                // ❌ ERROR
+                if (data.status !== "success") {
+                    Swal.fire({
+                        title: "Error",
+                        text: data.msg || "Manual earthquake alert failed",
+                        icon: "error",
+                        confirmButtonColor: "#dc2626"
+                    });
+                    return;
+                }
+
+                // ✅ SUCCESS
+                let successHtml = `
+                    <p><b>Earthquake Alert Sent Successfully</b></p>
+                    <hr>
+                    <p>Latitude: ${data.lat}</p>
+                    <p>Longitude: ${data.lon}</p>
+                    <p>Place: ${placeName}</p>
+                    <p><b>Submitted Magnitude:</b> ${data.submitted_mag}</p>
+                `;
+
+                if (data.nearest_real_mag !== null) {
+                    successHtml += `
+                        <hr>
+                        <p><b>Nearest Real Earthquake</b></p>
+                        <p>Magnitude: ${data.nearest_real_mag}</p>
+                        <p>Place: ${data.nearest_real_place}</p>
+                        <p>Time: ${data.nearest_real_time}</p>
+                        <p>Distance: ${data.nearest_real_dist_km ?? "-"} km</p>
+                    `;
+                }
+
+                Swal.fire({
+                    title: "Alert Sent",
+                    html: successHtml,
+                    icon: "success",
+                    confirmButtonColor: "#16a34a"
+                });
+            })
+            .catch(() => {
+                Swal.fire({
+                    title: "Server Error",
+                    text: "Unable to send earthquake alert",
+                    icon: "error",
+                    confirmButtonColor: "#dc2626"
+                });
+            });
+        });
     });
 }
 
@@ -802,18 +936,52 @@ function earlyWarning(quake, distance) {
    REVERSE GEOCODE WITH CACHE
 ============================ */
 let cachedUserPlace = null;
+
+
+function getOceanByLatLon(lat, lon) {
+    if (lat >= -60 && lat <= 60 && lon >= -180 && lon <= -100)
+        return "Pacific Ocean";
+    if (lat >= -60 && lat <= 60 && lon >= -100 && lon <= -20)
+        return "Atlantic Ocean";
+    if (lat >= -60 && lat <= 30 && lon >= 20 && lon <= 120)
+        return "Indian Ocean";
+    if (lat > 60)
+        return "Arctic Ocean";
+    if (lat < -60)
+        return "Southern Ocean";
+    return "Open Ocean";
+}
+
 async function getCachedUserPlace() {
-    if(!cachedUserPlace && userLat!=null && userLon!=null){
+    if (!cachedUserPlace && userLat != null && userLon != null) {
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${userLat}&lon=${userLon}`);
+            const res = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${userLat}&lon=${userLon}`,
+                { headers: { "User-Agent": "DisasterApp/1.0" } }
+            );
             const data = await res.json();
-            cachedUserPlace = data.display_name || "Unknown location";
-        } catch(e){
-            cachedUserPlace = "Unknown location";
+            const addr = data?.address || {};
+
+            // ✅ LAND FIRST → then SEA/OCEAN → then MANUAL OCEAN ZONE
+            cachedUserPlace =
+                addr.city ||
+                addr.town ||
+                addr.village ||
+                addr.suburb ||
+                addr.neighbourhood ||
+                addr.county ||
+                addr.state ||
+                addr.sea ||
+                addr.ocean ||
+                getOceanByLatLon(userLat, userLon);
+
+        } catch (e) {
+            cachedUserPlace = getOceanByLatLon(userLat, userLon);
         }
     }
-    return cachedUserPlace ?? "-";
+    return cachedUserPlace;
 }
+
 
 /* ============================
    FETCH EARTHQUAKE DATA
@@ -868,17 +1036,55 @@ async function findNearest(quakes){
    FETCH & DISPLAY
 ============================ */
 async function getPlaceFromCoords(lat, lon) {
+    /* 1️⃣ Nominatim */
     try {
         const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`,
             { headers: { "User-Agent": "quake-map-script" } }
         );
         const data = await res.json();
-        return data.display_name || "Unknown location";
-    } catch (e) {
-        return "Unknown location";
-    }
+        const addr = data?.address || {};
+
+        // ✅ LAND
+        const landPlace =
+            addr.city ||
+            addr.town ||
+            addr.village ||
+            addr.suburb ||
+            addr.neighbourhood ||
+            addr.county ||
+            addr.state;
+
+        if (landPlace) {
+            return landPlace;
+        }
+
+        // 🌊 NAMED OCEAN / SEA (VERY IMPORTANT)
+        if (addr.ocean) {
+            return addr.ocean;
+        }
+        if (addr.sea) {
+            return addr.sea;
+        }
+    } catch (e) {}
+
+    /* 2️⃣ MarineRegions (if available) */
+    try {
+        const marineRes = await fetch(
+            `https://www.marineregions.org/rest/getGazetteerRecordsByLatLong.json?lat=${lat}&long=${lon}`
+        );
+        const marineData = await marineRes.json();
+
+        if (Array.isArray(marineData) && marineData.length > 0) {
+            return marineData[0].preferredGazetteerName;
+        }
+    } catch (e) {}
+
+    /* 3️⃣ FINAL — deep ocean / trench */
+    return "North Pacific Ocean";
 }
+
+
 
 
 

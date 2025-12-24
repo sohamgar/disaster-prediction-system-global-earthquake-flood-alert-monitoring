@@ -6,6 +6,8 @@
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
 
 <style>
 body {
@@ -129,6 +131,14 @@ body {
   border: none;
   backdrop-filter: blur(8px);
 }
+
+  .password-toggle {
+  cursor: pointer;
+  user-select: none;
+}
+.password-toggle i {
+  width: 18px;
+}
 </style>
 </head>
 
@@ -163,7 +173,20 @@ body {
         <form method="POST" action="/admin/add_admin">
           <input class="form-control mb-3" name="username" placeholder="Username" required>
           <input class="form-control mb-3" name="email" type="email" placeholder="Email address" required>
-          <input class="form-control mb-3" name="password" type="password" placeholder="Temporary password" required>
+         <div class="input-group mb-3">
+  <input type="password"
+         class="form-control"
+         name="password"
+         id="temp_password"
+         placeholder="Temporary password"
+         required>
+
+  <span class="input-group-text password-toggle"
+        onclick="togglePassword('temp_password', this)">
+    <i class="fa-solid fa-eye"></i>
+  </span>
+</div>
+
           <button class="btn btn-success w-100">Create Admin</button>
         </form>
       </div>
@@ -174,9 +197,24 @@ body {
       <div class="glass-card">
         <div class="section-title">🔒 Change Password</div>
         <form method="POST" action="/admin/change_password">
-          <input class="form-control mb-3" type="password" name="old_password" placeholder="Current password" required>
-          <input class="form-control mb-3" type="password" name="new_password" placeholder="New password" required>
-          <button class="btn btn-warning w-100">Update Password</button>
+       <!-- Current Password -->
+<div class="input-group mb-3">
+  <input type="password" class="form-control" name="old_password" id="old_password"
+         placeholder="Current password" required>
+  <span class="input-group-text password-toggle" onclick="togglePassword('old_password', this)">
+    <i class="fa fa-eye"></i>
+  </span>
+</div>
+
+<!-- New Password -->
+<div class="input-group mb-3">
+  <input type="password" class="form-control" name="new_password" id="new_password"
+         placeholder="New password" required>
+  <span class="input-group-text password-toggle" onclick="togglePassword('new_password', this)">
+    <i class="fa fa-eye"></i>
+  </span>
+</div>
+   <button class="btn btn-warning w-100">Update Password</button>
         </form>
       </div>
     </div>
@@ -233,7 +271,29 @@ body {
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-setTimeout(() => {
+
+  function togglePassword(inputId, el) {
+  const input = document.getElementById(inputId);
+  const icon = el.querySelector("i");
+
+  // 🔒 Save cursor position
+  const start = input.selectionStart;
+  const end = input.selectionEnd;
+
+  // Toggle type
+  input.type = input.type === "password" ? "text" : "password";
+
+  // Restore focus + cursor
+  input.focus();
+  input.setSelectionRange(start, end);
+
+  // Toggle icon
+  icon.classList.toggle("fa-eye");
+  icon.classList.toggle("fa-eye-slash");
+}
+
+
+  setTimeout(() => {
   document.querySelectorAll('.alert').forEach(a => new bootstrap.Alert(a).close());
 }, 4500);
 </script>

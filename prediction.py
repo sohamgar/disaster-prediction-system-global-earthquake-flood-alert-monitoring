@@ -46,20 +46,29 @@ import requests
 
 # Database
 import pymysql
-from dotenv import load_dotenv
-load_dotenv()
+
 
 
 weather_data = []
 weather_labels = []
+
+ENV = os.getenv("APP_ENV", "local")
+
+if ENV == "local":
+    from dotenv import load_dotenv
+    load_dotenv()
+
 db = pymysql.connect(
-    host=os.getenv("MYSQL_HOST", "").strip(),
-    user=os.getenv("MYSQL_USER", "").strip(),
-    password=os.getenv("MYSQL_PASSWORD", "").strip(),
-    database=os.getenv("MYSQL_DATABASE", "").strip(),
-    port=int((os.getenv("MYSQL_PORT") or "3306").strip()),
+    host=os.environ["MYSQL_HOST"],
+    user=os.environ["MYSQL_USER"],
+    password=os.environ["MYSQL_PASSWORD"],
+    database=os.environ["MYSQL_DATABASE"],
+    port=int(os.environ.get("MYSQL_PORT", "3306")),
     connect_timeout=10
 )
+print("RENDER =", os.getenv("RENDER"))
+print("MYSQL_HOST =", os.getenv("MYSQL_HOST"))
+
 # Write your API key here.
 api_key = "AIzaSyDYPhWrJ_gi7we9v3G9CwBeQIfb9Je4wl4"
 
@@ -100,10 +109,11 @@ import pymysql
 
 def get_db_connection():
     return pymysql.connect(
-        host="localhost",
-        user="root",
-        password="",
-        database="dmnat",
+        host=os.environ["MYSQL_HOST"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PASSWORD"],
+        database=os.environ["MYSQL_DATABASE"],
+        port=int(os.environ.get("MYSQL_PORT", "3306")),
         cursorclass=pymysql.cursors.DictCursor,
         autocommit=True
     )
@@ -413,6 +423,8 @@ def update_profile():
     if 'user_id' not in session:
         return redirect(url_for('login_page'))
 
+    user_id = session['user_id']
+
     full_name = request.form.get("full_name")
     email = request.form.get("email")
     phone = request.form.get("phone")
@@ -421,11 +433,32 @@ def update_profile():
 
     db = get_db_connection()
     cursor = db.cursor()
+
+    # -----------------------------
+    # EMAIL DUPLICATE CHECK
+    # -----------------------------
+    cursor.execute("""
+        SELECT id FROM users 
+        WHERE email = %s AND id != %s
+    """, (email, user_id))
+
+    existing_user = cursor.fetchone()
+
+    if existing_user:
+        cursor.close()
+        db.close()
+        flash("This email is already used by another account", "danger")
+        return redirect(url_for("settings"))
+
+    # -----------------------------
+    # UPDATE PROFILE
+    # -----------------------------
     cursor.execute("""
         UPDATE users 
         SET name=%s, email=%s, mobile=%s, latitude=%s, longitude=%s 
         WHERE id=%s
-    """, (full_name, email, phone, latitude, longitude, session['user_id']))
+    """, (full_name, email, phone, latitude, longitude, user_id))
+
     db.commit()
     cursor.close()
     db.close()
@@ -519,8 +552,8 @@ def remove_avatar():
 
 @app.route("/settings/password", methods=["POST"])
 def update_password():
-    if 'user_id' not in session:
-        return redirect(url_for('login_page'))
+    if "user_id" not in session:
+        return redirect(url_for("login_page"))
 
     old_password = request.form.get("old_password")
     new_password = request.form.get("new_password")
@@ -535,23 +568,36 @@ def update_password():
         return redirect(url_for("settings"))
 
     db = get_db_connection()
-    cursor = db.cursor()
-    cursor.execute("SELECT password FROM users WHERE id=%s", (session['user_id'],))
+    cursor = db.cursor()  # DictCursor already applied globally
+
+    cursor.execute(
+        "SELECT password FROM users WHERE id = %s",
+        (session["user_id"],)
+    )
     user = cursor.fetchone()
 
-    if not user or not check_password_hash(user['password'], old_password):
+    if not user or not check_password_hash(user["password"], old_password):
         flash("Old password is incorrect", "warning")
         cursor.close()
         db.close()
         return redirect(url_for("settings"))
 
     hashed_password = generate_password_hash(new_password)
-    cursor.execute("UPDATE users SET password=%s WHERE id=%s", (hashed_password, session['user_id']))
-    db.commit()
+
+    cursor.execute(
+        "UPDATE users SET password = %s WHERE id = %s",
+        (hashed_password, session["user_id"])
+    )
+
+    # ✅ autocommit=True handles saving
+    if cursor.rowcount == 1:
+        flash("Password updated successfully", "success")
+    else:
+        flash("Password update failed", "danger")
+
     cursor.close()
     db.close()
 
-    flash("Password updated successfully", "success")
     return redirect(url_for("settings"))
 
 
@@ -559,69 +605,93 @@ def update_password():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_page():
-    if request.method == 'POST':
-        username_input = request.form['username']
-        password_input = request.form['password']
 
-        cursor = db.cursor()
+    if request.method == 'GET':
+        session.pop("pending_user", None)
+        session.pop("pending_otp", None)
+        session.pop("otp_expiry", None)
+
+
+    if request.method == 'POST':
+        username_input = request.form.get('username')
+        password_input = request.form.get('password')
+
+        # ✅ USE SAME DB CONNECTION AS PASSWORD UPDATE
+        db = get_db_connection()
+        cursor = db.cursor(pymysql.cursors.DictCursor) # DictCursor (important)
+
         cursor.execute(
-            "SELECT id, username, name, email, password, latitude, longitude "
-            "FROM users WHERE username=%s OR email=%s",
+            """
+            SELECT id, username, name, email, password, latitude, longitude
+            FROM users
+            WHERE username = %s OR email = %s
+            """,
             (username_input, username_input)
         )
+
         user = cursor.fetchone()
+        cursor.close()
+        db.close()
 
         if not user:
             flash("Invalid Username!", "danger")
             return redirect(url_for('login_page'))
 
-        # unpack row
-        user_id, username, name, email, hashed_pass, lat, lng = user
+        # ✅ CHECK UPDATED PASSWORD HASH
+        if not check_password_hash(user["password"], password_input):
+            flash("Incorrect Password!", "danger")
+            return redirect(url_for('login_page'))
 
-        # password check
-        if check_password_hash(hashed_pass, password_input):
+        # ---------- GENERATE OTP ----------
+        otp_code = str(random.randint(100000, 999999))
 
-            # ---------- GENERATE OTP ----------
-            otp_code = str(random.randint(100000, 999999))
+        # ---------- SAVE OTP + USER INFO ----------
+        session['pending_otp'] = otp_code
+        session['otp_expiry'] = time.time() + 300  # 5 minutes
 
-            # ---------- SAVE OTP + USER INFO IN SESSION ----------
-            session['pending_otp'] = otp_code
-            session['otp_expiry'] = time.time() + 300  # OTP valid for 5 minutes
+        session['pending_user'] = {
+            "user_id": user["id"],
+            "username": user["username"],
+            "name": user["name"],
+            "email": user["email"]
+        }
 
-            session['pending_user'] = {
-                "user_id": user_id,
-                "username": username,
-                "name": name,
-                "email": email
-            }
+        # ---------- SEND OTP EMAIL ----------
+        msg = Message(
+            "Your Login Verification Code",
+            sender="sohamgarud0806@gmail.com",
+            recipients=[user["email"]]
+        )
 
-            # ---------- SEND OTP EMAIL ----------
-            msg = Message(
-                "Your Login Verification Code",
-                sender="sohamgarud0806@gmail.com",
-                recipients=[email]
-            )
-            msg.body = (
-                f"Hello {session['pending_user']['username']},\n\n"
-                f"We received a request to sign in to your Disaster Alert System account.\n\n"
-                f"To verify your identity, please use the One-Time Password (OTP) provided below:\n\n"
-                f"🔐 OTP Code: {otp_code}\n\n"
-                f"This code is valid for the next 5 minutes. For your security, please do not share "
-                f"this code with anyone — not even with our support team.\n\n"
-                f"If you did not try to log in, your account may be safe. You can simply ignore this email. "
-                f"If you feel something is wrong or you notice suspicious activity, please contact our support team immediately.\n\n"
-                f"Stay safe,\n"
-                f"Disaster Alert System Security Team"
+        msg.body = f"""
+Hello {user["username"]},
 
-            )
+ We received a request to sign in to your Disaster Alert System account.
 
-            mail.send(msg)
+To ensure the security of your account, we require you to verify your identity using a One-Time Password (OTP). Please use the code below to complete your login:
 
-            flash("Authentication code sent to your email!", "info")
-            return redirect(url_for('verify_otp_page'))
+🔐 One-Time Password (OTP): {otp_code}
 
-        flash("Incorrect Password!", "danger")
-        return redirect(url_for('login_page'))
+ ⏳ Validity: This OTP is valid for the next 5 minutes only.
+ ⚠️ Security Notice:
+• Do NOT share this OTP with anyone.
+• Our team will NEVER ask you for this code.
+• Enter this code only on the official Disaster Alert System website.
+
+If you did NOT attempt to sign in, your account may still be safe. You can safely ignore this message. However, if you notice any suspicious activity, we strongly recommend updating your password immediately.
+
+Thank you for helping us keep your account secure.
+
+ Stay alert. Stay safe.
+
+ — Disaster Alert System  
+Security & Authentication Team
+        """
+
+        mail.send(msg)
+
+        flash("Authentication code sent to your email!", "info")
+        return redirect(url_for('verify_otp_page'))
 
     return render_template("login.html")
 
@@ -803,6 +873,14 @@ print(generate_password_hash("Admin@123"))
 
 @app.route("/admin_login", methods=["GET", "POST"])
 def admin_login():
+
+    if request.method == "GET":
+        session.pop("admin_id", None)
+        session.pop("admin_username", None)
+        session.pop("temp_admin", None)
+        session.pop("admin_otp", None)
+        session.pop("admin_otp_time", None)
+
     if request.method == "POST":
         email = request.form.get("email", "").strip()
         password = request.form.get("password", "").strip()
@@ -826,28 +904,28 @@ def admin_login():
             receiver_email = admin[3]
 
             message_body = textwrap.dedent(f"""
-            Hello {admin[1]},
+        Hello {admin[1]},
 
-            We received a request to log in to the Disaster Alert System using your
-            administrator account.
+We received a request to log in to the Disaster Alert System using your
+administrator account.
 
-            Your Admin Login Verification Code is:
+Your Admin Login Verification Code is:
 
-            🔑 OTP: {otp}
+🔑 OTP: {otp}
 
-            ⏳ This OTP is valid for 5 minutes only.
-            Please do not share this code with anyone. Our team will never ask
-            for your OTP.
+⏳ This OTP is valid for 5 minutes only.
+Please do not share this code with anyone. Our team will never ask
+for your OTP.
 
-            ⚠️ Security Alert:
-            If you did NOT initiate this login request, please secure your account
-            immediately by changing your password and contacting support.
+⚠️ Security Alert:
+If you did NOT initiate this login request, please secure your account
+immediately by changing your password and contacting support.
 
-            Thank you for helping us keep your account secure.
+Thank you for helping us keep your account secure.
 
-            Regards,
-            Disaster Alert System
-            (Security Team – Automated Message)
+Regards,
+Disaster Alert System
+(Security Team – Automated Message)
             """).strip()
             msg = MIMEText(message_body)
             msg['Subject'] = "Admin OTP Verification"
@@ -893,12 +971,18 @@ def admin_logout():
 
 @app.route("/admin_verify_otp", methods=["GET", "POST"])
 def admin_verify_otp():
+
+    # Already logged in → dashboard
+    if "admin_id" in session:
+        return redirect(url_for("admin_dashboard"))
+
+    # OTP page without temp login → login
     if "temp_admin" not in session:
         flash("Please login first.", "warning")
         return redirect(url_for("admin_login"))
 
     if request.method == "POST":
-        entered_otp = request.form.get("otp")
+        entered_otp = request.form.get("otp", "").strip()
         if not entered_otp:
             flash("Please enter the OTP.", "warning")
             return redirect(url_for("admin_verify_otp"))
@@ -906,30 +990,29 @@ def admin_verify_otp():
         otp_valid = session.get("admin_otp")
         otp_time = session.get("admin_otp_time")
 
-        if otp_valid and otp_time:
-            otp_age = datetime.now() - datetime.fromisoformat(otp_time)
-            if otp_age.total_seconds() > 300:  # 5 minutes
-                flash("OTP expired. Please login again.", "danger")
-                session.pop("temp_admin", None)
-                session.pop("admin_otp", None)
-                session.pop("admin_otp_time", None)
-                return redirect(url_for("admin_login"))
+        if not otp_valid or not otp_time:
+            flash("Invalid session. Please login again.", "danger")
+            return redirect(url_for("admin_login"))
 
-            if str(otp_valid) == entered_otp:
-                # Correct OTP → full admin session
-                session["admin_id"] = session["temp_admin"]["id"]
-                session["admin_username"] = session["temp_admin"]["username"]
+        otp_age = datetime.now() - datetime.fromisoformat(otp_time)
+        if otp_age.total_seconds() > 300:
+            flash("OTP expired. Please login again.", "danger")
+            session.clear()
+            return redirect(url_for("admin_login"))
 
-                # Clear temp session
-                session.pop("temp_admin", None)
-                session.pop("admin_otp", None)
-                session.pop("admin_otp_time", None)
+        if str(otp_valid) == entered_otp:
+            # ✅ REAL LOGIN
+            session["admin_id"] = session["temp_admin"]["id"]
+            session["admin_username"] = session["temp_admin"]["username"]
 
-                #flash("Login successful!", "success")
-                return redirect(url_for("admin_login_success"))
-            else:
-                flash("Incorrect OTP. Please try again!", "danger")
-                return redirect(url_for("admin_verify_otp"))
+            # cleanup
+            session.pop("temp_admin", None)
+            session.pop("admin_otp", None)
+            session.pop("admin_otp_time", None)
+
+            return redirect(url_for("admin_login_success"))
+
+        flash("Incorrect OTP. Please try again!", "danger")
 
     return render_template("admin_verify_otp.html")
 
@@ -942,12 +1025,16 @@ def admin_login_success():
     return render_template("admin_login_success.html")
 
 
-@app.route("/admin_resend_otp")
+@app.route("/admin_resend_otp", methods=["POST"])
+
 def admin_resend_otp():
     import random
     import smtplib
     from email.mime.text import MIMEText
     from datetime import datetime, timedelta
+
+    if "admin_id" in session:
+        return redirect(url_for("admin_dashboard"))
 
     # Ensure user is still in OTP stage
     if "temp_admin" not in session:
@@ -984,6 +1071,7 @@ def admin_resend_otp():
     session["admin_otp"] = new_otp
     session["admin_otp_time"] = now.isoformat()
     session["last_otp_sent"] = now.isoformat()
+    session.pop("last_otp_sent", None)
 
     # Send email properly with MIME
     try:
@@ -991,13 +1079,13 @@ def admin_resend_otp():
         sender_pass = "pwjdjogjwnzwuhle"
 
         msg_body = textwrap.dedent(f"""
-        Hello {admin_name},
+                        Hello {admin_name},
 
         We received a request to generate a new One-Time Password (OTP) for
         your administrator account on the Disaster Alert System.
 
-        🔐 Your NEW OTP is:
-        {new_otp}
+        🔐 Your NEW OTP is: {new_otp}
+        
 
         ⏳ This OTP is valid for 5 minutes only and can be used once.
         For your security, please do not share this OTP with anyone.
@@ -1292,11 +1380,22 @@ def admin_users():
     if "admin_id" not in session:
         return redirect("/admin_login")
 
-    cur = db.cursor()
-    cur.execute("SELECT id, username, name, email, mobile, latitude, longitude FROM users")
-    users = cur.fetchall()
+    db = get_db_connection()          # 🔥 FRESH CONNECTION
+    cursor = db.cursor()
 
-    return render_template("admin_users.html", users=users)
+    try:
+        cursor.execute("""
+            SELECT id, username, name, email, mobile, latitude, longitude
+            FROM users
+            ORDER BY id DESC
+        """)
+        users = cursor.fetchall()
+
+        return render_template("admin_users.html", users=users)
+
+    finally:
+        cursor.close()
+        db.close()
 
 
 from werkzeug.security import generate_password_hash
@@ -1317,43 +1416,44 @@ def add_user():
 
     password = generate_password_hash(password_input)
 
-    cursor = get_db_connection()
-
-    # IMPORTANT: select specific columns
-    cursor.execute(
-        "SELECT username, email FROM users WHERE username=%s OR email=%s",
-        (username, email)
-    )
-    existing = cursor.fetchone()
-
-    if existing:
-        # existing is a TUPLE → index based access
-        if existing[0] == username:
-            flash("Username already exists.", "danger")
-        if existing[1] == email:
-            flash("Email already exists.", "danger")
-        cursor.close()
-        return redirect("/admin/users")
+    db = get_db_connection()
+    cursor = db.cursor()
 
     try:
+        # ---------- DUPLICATE CHECK ----------
+        cursor.execute(
+            "SELECT id FROM users WHERE username=%s OR email=%s",
+            (username, email)
+        )
+        if cursor.fetchone():
+            flash("Username or Email already exists.", "danger")
+            return redirect("/admin/users")
+
+        # ---------- INSERT USER ----------
         cursor.execute("""
-            INSERT INTO users 
+            INSERT INTO users
             (username, name, email, password, mobile, latitude, longitude)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (username, name, email, password, mobile, latitude, longitude))
 
-        db.commit()
+        db.commit()   # ✅ COMMIT FIRST (IMPORTANT)
 
-        send_registration_email(email, name, latitude, longitude)
-
-        flash("User added successfully! Welcome email sent.", "success")
+        # ---------- SEND EMAIL (SAFE) ----------
+        try:
+            send_registration_email(email, name, latitude, longitude)
+            flash("User added successfully! Welcome email sent.", "success")
+        except Exception as mail_error:
+            print("EMAIL ERROR:", mail_error)
+            flash("User added, but email could not be sent.", "warning")
 
     except Exception as e:
         db.rollback()
-        flash(f"Error adding user: {str(e)}", "danger")
+        print("DB ERROR:", e)
+        flash("Database error while adding user.", "danger")
 
     finally:
         cursor.close()
+        db.close()
 
     return redirect("/admin/users")
 
@@ -1472,46 +1572,64 @@ def user_feedback():
 # API to get all feedback
 @app.route("/api/feedback", methods=["GET"])
 def get_feedback():
+    if "user_id" not in session:
+        return jsonify([])
+
+    user_id = session["user_id"]
+
     db = get_db_connection()
-    cursor = db.cursor()   # ✅ correct for PyMySQL
+    cursor = db.cursor(pymysql.cursors.DictCursor)
 
-    cursor.execute("""
-        SELECT id, type, message, disaster_type, date
-        FROM feedback
-        ORDER BY date DESC
-    """)
-    feedbacks = cursor.fetchall()
-
-    result = []
-
-    for f in feedbacks:
+    try:
         cursor.execute("""
-            SELECT message, date
-            FROM replies
-            WHERE feedback_id = %s
-            ORDER BY date ASC
-        """, (f["id"],))
+            SELECT f.id, f.type, f.message, f.disaster_type, f.date,
+                   u.id AS user_id, u.name, u.email, u.mobile, u.avatar
+            FROM feedback f
+            JOIN users u ON f.user_id = u.id
+            WHERE f.user_id = %s
+            ORDER BY f.date DESC
+        """, (user_id,))
+        feedbacks = cursor.fetchall()
 
-        replies = cursor.fetchall()
+        result = []
 
-        result.append({
-            "id": f["id"],
-            "type": f["type"],
-            "message": f["message"],
-            "disaster_type": f["disaster_type"],
-            "date": f["date"].strftime("%Y-%m-%d %H:%M"),
-            "replies": [
-                {
-                    "message": r["message"],
-                    "date": r["date"].strftime("%Y-%m-%d %H:%M")
-                } for r in replies
-            ]
-        })
+        for f in feedbacks:
+            # ✅ FETCH ADMIN NAME ALSO
+            cursor.execute("""
+                SELECT admin_username, message, date
+                FROM replies
+                WHERE feedback_id = %s
+                ORDER BY date ASC
+            """, (f["id"],))
+            replies = cursor.fetchall()
 
-    cursor.close()
-    db.close()
+            result.append({
+                "id": f["id"],
+                "type": f["type"],
+                "message": f["message"],
+                "disaster_type": f["disaster_type"],
+                "date": f["date"].strftime("%Y-%m-%d %H:%M") if f["date"] else "",
+                "replies": [
+                    {
+                        "admin_username": r["admin_username"],
+                        "message": r["message"],
+                        "date": r["date"].strftime("%Y-%m-%d %H:%M") if r["date"] else ""
+                    } for r in replies
+                ],
+                "user": {
+                    "id": f["user_id"],
+                    "name": f["name"],
+                    "email": f["email"],
+                    "mobile": f["mobile"],
+                    "avatar": f["avatar"]
+                }
+            })
 
-    return jsonify(result)
+        return jsonify(result)
+
+    finally:
+        cursor.close()
+        db.close()
 
 
 # API to add new feedback
@@ -1521,22 +1639,28 @@ def add_feedback():
     data = request.get_json()
 
     if not data.get("type") or not data.get("message") or not data.get("disaster_type"):
-        return jsonify({"error": "Type, message, and disaster type are required"}), 400
+        return jsonify({"error": "Missing fields"}), 400
 
-    cursor = db.cursor()
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-    cursor.execute("""
-        INSERT INTO feedback (type, message, disaster_type, date)
-        VALUES (%s, %s, %s, NOW())
-    """, (
-        data["type"],
-        data["message"],
-        data["disaster_type"]
-    ))
+    try:
+        cursor.execute("""
+            INSERT INTO feedback (user_id, type, message, disaster_type, date)
+            VALUES (%s, %s, %s, %s, NOW())
+        """, (
+            session.get("user_id"),   # 🔥 THIS IS REQUIRED
+            data["type"],
+            data["message"],
+            data["disaster_type"]
+        ))
 
-    db.commit()
+        conn.commit()
+        return jsonify({"success": True})
 
-    return jsonify({"success": True})
+    finally:
+        cursor.close()
+        conn.close()
 
 
 @app.route('/api/feedback/download/excel/<disaster_type>')
@@ -1607,38 +1731,101 @@ def reply_feedback(feedback_id):
     if not reply_msg:
         return jsonify({"error": "Reply message required"}), 400
 
-    # Get DB connection
+    # ✅ STRICT ADMIN CHECK
+    if "admin_id" not in session:
+        return jsonify({"error": "Admin not logged in"}), 401
+
+    admin_id = session["admin_id"]
+    admin_username = session.get("admin_username", "Admin")
+
     conn = get_db_connection()
-    cursor = conn.cursor()   # ✅ FIXED
+    cursor = conn.cursor()
 
     try:
-        # Check if feedback exists
-        cursor.execute(
-            "SELECT id FROM feedback WHERE id = %s",
-            (feedback_id,)
-        )
-        feedback = cursor.fetchone()
-
-        if not feedback:
+        # feedback exists?
+        cursor.execute("SELECT id FROM feedback WHERE id=%s", (feedback_id,))
+        if not cursor.fetchone():
             return jsonify({"error": "Feedback not found"}), 404
 
-        # Insert reply
+        # ✅ INSERT WITH VALID admin_id
         cursor.execute("""
-            INSERT INTO replies (feedback_id, message, date)
-            VALUES (%s, %s, NOW())
-        """, (feedback_id, reply_msg))
+            INSERT INTO replies (feedback_id, admin_id, admin_username, message, date)
+            VALUES (%s, %s, %s, %s, NOW())
+        """, (feedback_id, admin_id, admin_username, reply_msg))
 
         conn.commit()
-
-        return jsonify({
-            "success": True,
-            "feedback_id": feedback_id,
-            "message": reply_msg
-        })
+        return jsonify({"success": True})
 
     finally:
         cursor.close()
         conn.close()
+
+@app.route("/api/admin/feedback", methods=["GET"])
+def get_admin_feedback():
+    if "admin_id" not in session:
+        return jsonify([]), 401
+
+    db = get_db_connection()
+    cursor = db.cursor(pymysql.cursors.DictCursor)
+
+    try:
+        cursor.execute("""
+            SELECT f.id, f.type, f.message, f.disaster_type, f.date,
+                   u.id AS user_id, u.name, u.email, u.mobile, u.avatar
+            FROM feedback f
+            JOIN users u ON f.user_id = u.id
+            ORDER BY f.date DESC
+        """)
+
+        feedbacks = cursor.fetchall()
+        result = []
+
+        for f in feedbacks:
+            # ---------------- Replies ----------------
+            cursor.execute("""
+                SELECT admin_username, message, date
+                FROM replies
+                WHERE feedback_id = %s
+                ORDER BY date ASC
+            """, (f["id"],))
+            replies = cursor.fetchall()
+
+            # ---------------- AVATAR FIX (SAFE) ----------------
+            avatar = f["avatar"]
+            if not avatar:
+                avatar = generate_default_avatar(f["name"] or "User", f["user_id"])
+                cursor.execute("UPDATE users SET avatar=%s WHERE id=%s", (avatar, f["user_id"]))
+                db.commit()
+
+            result.append({
+                "id": f["id"],
+                "type": f["type"],
+                "message": f["message"],
+                "disaster_type": f["disaster_type"],
+                "date": f["date"].strftime("%Y-%m-%d %H:%M") if f["date"] else "",
+                "replies": [
+                    {
+                        "admin_username": r["admin_username"],
+                        "message": r["message"],
+                        "date": r["date"].strftime("%Y-%m-%d %H:%M") if r["date"] else ""
+                    } for r in replies
+                ],
+                "user": {
+                    "id": f["user_id"],
+                    "name": f["name"],
+                    "email": f["email"],
+                    "mobile": f["mobile"],
+                    "avatar": avatar
+                }
+            })
+
+        return jsonify(result)
+
+    finally:
+        cursor.close()
+        db.close()
+
+
 
 # API to delete feedback
 @app.route("/api/feedback/delete/<int:fid>", methods=["POST"])
@@ -1714,6 +1901,8 @@ def flood_real_time():
         })
 
     return render_template("admin_flood_real_time.html", data=user_flood_data)
+
+
 
 @app.route("/api/get_users_locations")
 def get_users_locations():
@@ -2817,9 +3006,7 @@ def predicts():
     return render_template('floodres.html',predictions = m_prediction)
 
 def check_live_earthquakes():
-    import requests
-    import ssl
-    import smtplib
+    import requests, ssl, smtplib
     from datetime import datetime, timedelta
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
@@ -2830,9 +3017,7 @@ def check_live_earthquakes():
     print("==============================")
 
     try:
-        # ---------------------------------------------------------
-        # MULTI-FEED SOURCES (global + EMSC 1-min)
-        # ---------------------------------------------------------
+        # ----------------- MULTI-FEED -----------------
         FEEDS = {
             "USGS": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson",
             "EMSC": "https://www.seismicportal.eu/fdsnws/event/1/query?format=geojson&limit=200&orderby=time",
@@ -2840,213 +3025,121 @@ def check_live_earthquakes():
         }
 
         live_quakes = []
-        print("\n🌍 Fetching real-time global earthquake data…")
 
         for name, feed in FEEDS.items():
-            print(f"\n→ Fetching from {name}: {feed}")
             try:
                 r = requests.get(feed, timeout=10)
-                print(f"   HTTP Status: {r.status_code}")
                 if not r.ok:
-                    print("   ❌ Feed failed, skipping.")
+                    print(f"❌ Feed {name} failed, skipping.")
                     continue
 
                 data = r.json()
-
-                # ---------------------------------------------------------
-                # USGS / IRIS (GeoJSON format)
-                # ---------------------------------------------------------
-                if isinstance(data, dict) and data.get("features"):
-                    print(f"   ✔ {name} returned {len(data['features'])} events.")
-                    for q in data["features"]:
-                        props = q.get("properties", {})
-                        geom = q.get("geometry", {})
-                        coords = geom.get("coordinates") or []
-
-                        if len(coords) < 2:
-                            continue
-
-                        lon, lat = coords[0], coords[1]
-                        depth = coords[2] if len(coords) > 2 else "-"
-                        mag = props.get("mag")
-                        place = props.get("place") or "Unknown"
-                        t_ms = props.get("time")
-
-                        try:
-                            qtime = datetime.utcfromtimestamp(t_ms / 1000).strftime("%Y-%m-%d %H:%M:%S")
-                        except:
-                            qtime = "-"
-
-                        live_quakes.append({
-                            "lat": lat,
-                            "lon": lon,
-                            "depth": depth,
-                            "mag": mag,
-                            "place": place,
-                            "time": qtime,
-                            "source": name
-                        })
-
-            except Exception as e:
-                print(f"   ❌ {name} feed error:", e)
-
-        # ---------------------------------------------------------
-        # EMSC Feed (1-minute recent quakes)
-        # ---------------------------------------------------------
-        try:
-            now = datetime.utcnow()
-            start = (now - timedelta(minutes=1)).isoformat()
-            end = now.isoformat()
-            emsc_url = f"https://www.seismicportal.eu/fdsnws/event/1/query?format=geojson&limit=200&start={start}&end={end}"
-            r = requests.get(emsc_url, timeout=10)
-            if r.ok:
-                data = r.json()
-                features = data.get("features", [])
-                print(f"\n✔ EMSC returned {len(features)} events (1-min).")
-                for q in features:
-                    props = q.get("properties", {})
-                    geom = q.get("geometry", {})
-                    coords = geom.get("coordinates", [])
+                for q in data.get("features", []):
+                    coords = q.get("geometry", {}).get("coordinates", [])
                     if len(coords) < 2:
                         continue
-                    lon, lat = coords[0], coords[1]
-                    depth = coords[2] if len(coords) > 2 else "-"
-                    mag = props.get("mag")
-                    place = props.get("flynn_region") or "Unknown"
-                    t_ms = props.get("time")
-                    try:
-                        qtime = datetime.utcfromtimestamp(t_ms / 1000).strftime("%Y-%m-%d %H:%M:%S")
-                    except:
-                        qtime = "-"
-                    live_quakes.append({
-                        "lat": lat,
-                        "lon": lon,
-                        "depth": depth,
-                        "mag": mag,
-                        "place": place,
-                        "time": qtime,
-                        "source": "EMSC"
-                    })
-        except Exception as e:
-            print("   ❌ EMSC 1-min feed error:", e)
 
-        # ---------------------------------------------------------
-        # REMOVE DUPLICATES
-        # ---------------------------------------------------------
-        unique, seen = [], set()
-        for q in live_quakes:
-            key = (q["lat"], q["lon"], q["time"])
-            if key not in seen:
-                seen.add(key)
-                unique.append(q)
-        live_quakes = unique
+                    t_ms = q.get("properties", {}).get("time")
+                    qtime = datetime.utcfromtimestamp(t_ms / 1000).strftime("%Y-%m-%d %H:%M:%S") if t_ms else "-"
+
+                    live_quakes.append({
+                        "lat": float(coords[1]),
+                        "lon": float(coords[0]),
+                        "depth": coords[2] if len(coords) > 2 else 0,
+                        "mag": q.get("properties", {}).get("mag"),
+                        "place": q.get("properties", {}).get("place", "Unknown"),
+                        "time": qtime,
+                        "source": name
+                    })
+            except Exception as e:
+                print(f"❌ Feed {name} error:", e)
 
         if not live_quakes:
-            print("\n⚠ NO EARTHQUAKES FETCHED FROM ANY FEED")
+            print("⚠ No earthquakes found")
             return
 
-        # ---------------------------------------------------------
-        # PRINT SAMPLE OF LATEST QUAKES
-        # ---------------------------------------------------------
-        print(f"\n✔ TOTAL LIVE QUAKES: {len(live_quakes)}")
-        print("📌 Showing first 5 events:")
-        for q in live_quakes[:5]:
-            print(
-                f"   → Mag {q['mag']} | Depth {q['depth']} km | Source: {q['source']}\n"
-                f"     Place: {q['place']}\n"
-                f"     Lat/Lon: {q['lat']}, {q['lon']}\n"
-                f"     Time (UTC): {q['time']}\n"
-            )
-
-        # ---------------------------------------------------------
-        # FETCH USERS FROM DB
-        # ---------------------------------------------------------
+        # ----------------- USERS -----------------
         print("\n👥 Loading users from database…")
+        db = get_db_connection()
         cur = db.cursor()
         cur.execute("SELECT name, email, latitude, longitude FROM users")
         users = cur.fetchall()
         print(f"✔ Users loaded: {len(users)}")
 
-        # ---------------------------------------------------------
-        # HAVERSINE
-        # ---------------------------------------------------------
+        # ----------------- HAVERSINE -----------------
         def haversine(lat1, lon1, lat2, lon2):
             R = 6371
             dlat = radians(lat2 - lat1)
             dlon = radians(lon2 - lon1)
-            a = sin(dlat / 2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2)**2
+            a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
             return R * (2 * atan2(sqrt(a), sqrt(1 - a)))
 
-        # ---------------------------------------------------------
-        # EMAIL CONFIG
-        # ---------------------------------------------------------
+        # ----------------- EMAIL -----------------
         SMTP_SERVER = "smtp.gmail.com"
         SMTP_PORT = 465
         SMTP_SENDER = "sohamgarud0806@gmail.com"
         SMTP_PASSWORD = "pwjdjogjwnzwuhle"
 
-        # ---------------------------------------------------------
-        # ALERT USERS NEAR EARTHQUAKES
-        # ---------------------------------------------------------
         print("\n📡 Checking for users near earthquake zones…")
 
         for quake in live_quakes:
-            print(
-                f"\n➡ Checking quake from {quake['source']}:\n"
-                f"   Mag {quake['mag']} | Depth {quake['depth']} km\n"
-                f"   Place: {quake['place']}\n"
-                f"   Lat/Lon: {quake['lat']}, {quake['lon']}\n"
-                f"   Time (UTC): {quake['time']}"
-            )
-
             for user in users:
-                uname, uemail, ulat, ulon = user
-                if ulat is None or ulon is None:
-                    print(f"   - Skipping {uname}: no coordinates.")
+                ulat = user["latitude"]
+                ulon = user["longitude"]
+
+                if not ulat or not ulon:
                     continue
 
-                distance = haversine(float(ulat), float(ulon), quake["lat"], quake["lon"])
-                print(f"   - {uname} at distance {distance:.2f} km")
+                try:
+                    distance = haversine(float(ulat), float(ulon), quake["lat"], quake["lon"])
+                except Exception as e:
+                    print("❌ Distance calculation error:", e)
+                    continue
 
+                # ----------------- PRINT FOR LOGGING -----------------
+                print(
+                    f"👤 {user['name']} | Quake: {quake['place']} | "
+                    f"Distance: {distance:.2f} km | Mag: {quake['mag']}"
+                )
+
+                # ----------------- EMAIL ALERT -----------------
                 if distance <= 10:
-                    print(f"     🚨 ALERT: {uname} in danger zone ({distance:.2f} km)")
-
-                    msg = MIMEMultipart("alternative")
-                    msg["Subject"] = "⚠️ EARTHQUAKE ALERT — Stay Safe"
+                    print("🚨 ALERT TRIGGERED (<=10 km)")
+                    msg = MIMEMultipart()
+                    msg["Subject"] = "⚠️ EARTHQUAKE ALERT"
                     msg["From"] = SMTP_SENDER
-                    msg["To"] = uemail
+                    msg["To"] = user["email"]
 
                     maps_url = f"https://www.google.com/maps?q={quake['lat']},{quake['lon']}"
-
                     text = f"""
-                    EARTHQUAKE WARNING!
-                    Dear {uname},\n\n
-                    An earthquake has been detected near your area!\n\n
-                    Magnitude: {quake['mag']}
-                    Depth: {quake['depth']} km
-                    Location: {quake['place']}
-                    Latitude: {quake['lat']}
-                    Longitude: {quake['lon']}
-                    Time (UTC): {quake['time']}
-                    Source: {quake['source']}
+EARTHQUAKE WARNING!
 
-                    Live Map:
-                    {maps_url}
+Dear {user['name']},
 
-                    Distance from you: {distance:.2f} km
-                    Stay Safe
-                    """
+Magnitude: {quake['mag']}
+Depth: {quake['depth']} km
+Location: {quake['place']}
+Distance: {distance:.2f} km
+Time: {quake['time']}
+Source: {quake['source']}
 
-                    msg.attach(MIMEText(text, "plain", "utf-8"))
+Live Map:
+{maps_url}
+
+Stay Safe
+"""
+                    msg.attach(MIMEText(text, "plain"))
 
                     try:
                         ctx = ssl.create_default_context()
                         with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, context=ctx) as server:
                             server.login(SMTP_SENDER, SMTP_PASSWORD)
-                            server.sendmail(SMTP_SENDER, uemail, msg.as_string().encode("utf-8"))
-                        print(f"     ✔ Email sent to {uname} ({uemail})")
+                            server.sendmail(SMTP_SENDER, user["email"], msg.as_string())
                     except Exception as e:
-                        print(f"     ❌ Email failed for {uname}: {e}")
+                        print(f"❌ Failed to send email to {user['name']}:", e)
+
+        cur.close()
+        db.close()
 
         print("\n==============================")
         print("✅ EARTHQUAKE CHECK COMPLETE")
@@ -3063,6 +3156,10 @@ def predict():
     from tensorflow.keras import losses, metrics
     from flask import request, render_template
     from math import radians, sin, cos, sqrt, atan2
+
+    if "user_id" not in session:
+        return redirect(url_for("login_page"))
+
 
     # ------------------------
     # Date parsing helpers
@@ -3240,138 +3337,83 @@ def predict():
 
 @app.route('/manual_alert', methods=['POST'])
 def manual_alert():
-    import requests
+    import requests, smtplib, ssl
     from math import radians, sin, cos, sqrt, atan2
-    import smtplib, ssl
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
     from datetime import datetime
     from flask import request, jsonify
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
 
-    # ------------------------
-    # Read form
-    # ------------------------
+    # -------------------------------
+    # READ FORM DATA
+    # -------------------------------
     try:
-        qlat = float(request.form['lat'])
-        qlon = float(request.form['lon'])
-        submitted_mag = float(request.form.get('mag', 0))  # keep original submitted magnitude
-        print(f"[DEBUG] Received form data: lat={qlat}, lon={qlon}, submitted_mag={submitted_mag}")
-    except Exception as e:
-        print(f"[ERROR] Invalid form data: {e}")
-        return jsonify({"status": "error", "msg": "Invalid form data"}), 400
+        qlat = float(request.form.get("lat"))
+        qlon = float(request.form.get("lon"))
+        submitted_mag = float(request.form.get("mag", 0))
+    except:
+        return jsonify({"status": "error", "msg": "Invalid input"}), 400
 
     qtime = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"[DEBUG] Current UTC time: {qtime}")
 
-    # ------------------------
-    # Haversine function
-    # ------------------------
+    # -------------------------------
+    # HAVERSINE
+    # -------------------------------
     def haversine(lat1, lon1, lat2, lon2):
-        R = 6371.0
+        R = 6371
         dlat = radians(lat2 - lat1)
         dlon = radians(lon2 - lon1)
         a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
-        c = 2 * atan2(sqrt(a), sqrt(1 - a))
-        return R * c
+        return 2 * R * atan2(sqrt(a), sqrt(1 - a))
 
-    # ------------------------
-    # Reverse geocode
-    # ------------------------
-    def reverse_geocode(lat, lon):
-        try:
-            res = requests.get(
-                f"https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat={lat}&lon={lon}",
-                headers={"User-Agent": "manual-alert-script"}, timeout=10
-            )
-            if res.ok:
-                data = res.json()
-                return data.get("display_name", "Unknown location")
-        except Exception as e:
-            print(f"[ERROR] Reverse geocode failed: {e}")
-        return "Unknown location"
-
-    detected_place = reverse_geocode(qlat, qlon)
-    print(f"[DEBUG] Detected place from reverse geocode: {detected_place}")
-
-    # ------------------------
-    # Fetch live quakes
-    # ------------------------
-    FEEDS = [
-        "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&limit=200&orderby=time",
-        "https://www.seismicportal.eu/fdsnws/event/1/query?format=json&limit=200&orderby=time",
-        "https://service.iris.edu/fdsnws/event/1/query?format=geojson&limit=200&orderby=time"
-    ]
-
-    live_quakes = []
-    for feed in FEEDS:
-        try:
-            r = requests.get(feed, timeout=10)
-            if not r.ok: continue
-            data = r.json()
-            features = data.get("features") or []
-            for f in features:
-                geom = f.get("geometry") or {}
-                props = f.get("properties") or {}
-                coords = geom.get("coordinates") or []
-                if len(coords) >= 2:
-                    lon_f, lat_f = coords[0], coords[1]
-                    depth_f = coords[2] if len(coords) > 2 else 0
-                    mag_f = props.get("mag", 0)
-                    place_f = props.get("place", "Unknown")
-                    t_ms = props.get("time")
-                    try:
-                        time_f = datetime.utcfromtimestamp(t_ms/1000).strftime("%Y-%m-%d %H:%M:%S") if t_ms else "-"
-                    except:
-                        time_f = "-"
-                    live_quakes.append({
-                        "lat": lat_f,
-                        "lon": lon_f,
-                        "depth": depth_f,
-                        "magnitude": mag_f,
-                        "place": place_f,
-                        "time": time_f
-                    })
-        except Exception as e:
-            print(f"[ERROR] Fetch feed failed ({feed}): {e}")
-            continue
-
-    print(f"[DEBUG] Total live quakes fetched: {len(live_quakes)}")
-
-    # ------------------------
-    # Find nearest quake
-    # ------------------------
-    nearest = None
-    nearest_dist = None
-    for q in live_quakes:
-        try:
-            d = haversine(qlat, qlon, q["lat"], q["lon"])
-        except:
-            continue
-        if nearest is None or d < nearest_dist:
-            nearest = q
-            nearest_dist = d
-
-    if nearest and nearest_dist <= 100:
-        nearest_real_mag = nearest.get("magnitude", 0)
-        nearest_real_place = nearest.get("place", detected_place)
-        nearest_real_time = nearest.get("time", qtime)
-        nearest_real_depth = nearest.get("depth", 0)
-        nearest_real_dist = round(nearest_dist, 2)
-        print(f"[DEBUG] Nearest real quake: mag={nearest_real_mag}, place={nearest_real_place}, "
-              f"time={nearest_real_time}, distance={nearest_real_dist} km")
-    else:
-        nearest_real_mag = None
-        nearest_real_place = None
-        nearest_real_time = None
-        nearest_real_depth = None
-        nearest_real_dist = None
-        print("[DEBUG] No nearby real quake found within threshold")
-
-    # ------------------------
-    # Send emails (optional)
-    # ------------------------
-    sent_count = 0
+    # -------------------------------
+    # REVERSE GEOCODE
+    # -------------------------------
     try:
+        geo = requests.get(
+            f"https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat={qlat}&lon={qlon}",
+            headers={"User-Agent": "manual-alert"},
+            timeout=10
+        )
+        detected_place = geo.json().get("display_name", "Unknown location") if geo.ok else "Unknown location"
+    except:
+        detected_place = "Unknown location"
+
+    # -------------------------------
+    # FETCH LIVE EARTHQUAKES
+    # -------------------------------
+    nearest_real = None
+    try:
+        r = requests.get(
+            "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&limit=200",
+            timeout=10
+        )
+        if r.ok:
+            for f in r.json().get("features", []):
+                coords = f["geometry"]["coordinates"]
+                mag = f["properties"].get("mag")
+                if mag is None:
+                    continue
+
+                dist = haversine(qlat, qlon, coords[1], coords[0])
+                if dist <= 100:
+                    nearest_real = {
+                        "mag": mag,
+                        "place": f["properties"].get("place"),
+                        "time": datetime.utcfromtimestamp(
+                            f["properties"]["time"] / 1000
+                        ).strftime("%Y-%m-%d %H:%M:%S"),
+                        "distance_km": round(dist, 2)
+                    }
+                    break
+    except:
+        pass
+
+    # -------------------------------
+    # FETCH USERS
+    # -------------------------------
+    try:
+        db = get_db_connection()
         cur = db.cursor()
         cur.execute("SELECT name, email, latitude, longitude FROM users")
         users = cur.fetchall()
@@ -3383,120 +3425,149 @@ def manual_alert():
     SMTP_SENDER = "sohamgarud0806@gmail.com"
     SMTP_PASSWORD = "pwjdjogjwnzwuhle"
 
-    for uname, uemail, ulat, ulon in users:
+    sent = 0
+    matched = 0
+
+    # -------------------------------
+    # PROCESS USERS
+    # -------------------------------
+    for u in users:
+        uname = u["name"]
+        uemail = u["email"]
+        ulat = u["latitude"]
+        ulon = u["longitude"]
+
         if ulat is None or ulon is None:
             continue
-        try:
-            distance_to_user = haversine(float(ulat), float(ulon), qlat, qlon)
-        except:
-            continue
-        if distance_to_user > 10:
+
+        dist = haversine(float(ulat), float(ulon), qlat, qlon)
+        if dist > 10:
             continue
 
-        maps_link = f"https://www.google.com/maps/dir/{ulat},{ulon}/{qlat},{qlon}"
-        static_map = (
-            "https://maps.googleapis.com/maps/api/staticmap"
-            f"?size=640x300&maptype=roadmap"
-            f"&markers=color:blue%7Clabel:U%7C{ulat},{ulon}"
-            f"&markers=color:red%7Clabel:E%7C{qlat},{qlon}"
-        )
+        matched += 1
+
+        if submitted_mag >= 6:
+            level = "🚨 SEVERE EARTHQUAKE"
+        elif submitted_mag >= 4:
+            level = "⚠️ MODERATE EARTHQUAKE"
+        else:
+            level = "🟡 MINOR EARTHQUAKE"
 
         text = f"""
 EARTHQUAKE ALERT
 
-An earthquake of magnitude {submitted_mag} has been reported at {detected_place} 
-(latitude {qlat}, longitude {qlon}) at {qtime} UTC.
-Approx. {distance_to_user:.2f} km from your location.
-"""
+{level}
 
-        html = f"""
-<html><body>
-<h3>⚠️ EARTHQUAKE ALERT</h3>
-<p><b>User:</b> {uname}</p>
-<p>An earthquake of magnitude <b>{submitted_mag}</b> has been reported at <b>{detected_place}</b>
-(latitude <b>{qlat}</b>, longitude <b>{qlon}</b>) at <b>{qtime} UTC</b>.</p>
-<p>Approx. <b>{distance_to_user:.2f} km</b> from your location.</p>
-<p><a href="{maps_link}">View on Google Maps</a></p>
-<img src="{static_map}" style="max-width:100%; border:1px solid #ccc;">
-<p>Stay safe and take necessary precautions.</p>
-</body></html>
+Magnitude: {submitted_mag}
+Location: {detected_place}
+Time: {qtime} UTC
+Distance from you: {dist:.2f} km
 """
 
         try:
-            msg = MIMEMultipart("alternative")
+            msg = MIMEMultipart()
             msg["Subject"] = "⚠️ EARTHQUAKE ALERT"
             msg["From"] = SMTP_SENDER
             msg["To"] = uemail
             msg.attach(MIMEText(text, "plain", "utf-8"))
-            msg.attach(MIMEText(html, "html", "utf-8"))
 
             ctx = ssl.create_default_context()
             with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, context=ctx) as s:
                 s.login(SMTP_SENDER, SMTP_PASSWORD)
                 s.sendmail(SMTP_SENDER, uemail, msg.as_bytes())
-            sent_count += 1
-        except Exception as e:
-            print(f"[ERROR] Sending email to {uemail} failed: {e}")
-            continue
 
-    print(f"[DEBUG] Total emails sent: {sent_count}")
+            sent += 1
+        except:
+            pass
 
-    # ------------------------
-    # Return JSON
-    # ------------------------
+    try:
+        cur.close()
+        db.close()
+    except:
+        pass
+
+    # -------------------------------
+    # RESPONSE
+    # -------------------------------
+    if matched == 0:
+        return jsonify({
+            "status": "no_users",
+            "msg": "No users within 10 km radius",
+            "lat": qlat,
+            "lon": qlon,
+            "detected_place": detected_place
+        })
+
     return jsonify({
         "status": "success",
-        "msg": f"Manual alerts sent: {sent_count}",
+        "alerts_sent": sent,
+
+        # 👇 frontend needs these
         "lat": qlat,
         "lon": qlon,
-        "submitted_mag": submitted_mag,  # always the submitted value
         "detected_place": detected_place,
-        "detected_time": qtime,
-        "nearest_real_mag": nearest_real_mag,
-        "nearest_real_place": nearest_real_place,
-        "nearest_real_time": nearest_real_time,
-        "nearest_real_dist_km": nearest_real_dist
+        "submitted_mag": submitted_mag,
+        "time": qtime,
+
+        # 👇 flatten nearest quake
+        "nearest_real_mag": nearest_real["mag"] if nearest_real else None,
+        "nearest_real_place": nearest_real["place"] if nearest_real else None,
+        "nearest_real_time": nearest_real["time"] if nearest_real else None,
+        "nearest_real_dist_km": nearest_real["distance_km"] if nearest_real else None
     })
+
 
 @app.route('/manual_flood_alert', methods=['POST'])
 def manual_flood_alert():
     from math import radians, sin, cos, sqrt, atan2
-    import smtplib, ssl
+    from datetime import datetime
+    from flask import request, jsonify
+    import requests, smtplib, ssl
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
     from email.header import Header
-    from datetime import datetime
-    from flask import request, jsonify
-    import requests
 
     # -------------------------------
-    # Read form data
+    # READ FORM DATA
     # -------------------------------
     try:
-        qlat = float(request.form['lat'])
-        qlon = float(request.form['lon'])
-    except Exception as e:
-        return jsonify({"status": "error", "msg": "Invalid form data"}), 400
+        qlat = float(request.form.get("lat"))
+        qlon = float(request.form.get("lon"))
+    except:
+        return jsonify({"status": "error", "msg": "Invalid lat/lon"}), 400
 
     qtime = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
     # -------------------------------
-    # Fetch real-time weather/flood info
+    # FETCH LIVE WEATHER (FRESH)
     # -------------------------------
     apiKey = "fb116bebc392ccc8ab251927edcb55d6"
+
     try:
-        weather_res = requests.get(
-            f"https://api.openweathermap.org/data/2.5/weather?lat={qlat}&lon={qlon}&units=metric&appid={apiKey}"
-        ).json()
-        weatherDesc = weather_res.get('weather', [{}])[0].get('description', 'N/A')
-        temp = weather_res.get('main', {}).get('temp', 0)
-        humidity = weather_res.get('main', {}).get('humidity', 0)
-        rain = weather_res.get('rain', {}).get('1h', 0)
-        snow = weather_res.get('snow', {}).get('1h', 0)
-        precipitation = rain + snow
-        # Optional: reverse geocode using OpenWeatherMap or Google API for actual place name
-        real_place = weather_res.get('name', 'Unknown location')
-    except Exception as e:
+        res = requests.get(
+            f"https://api.openweathermap.org/data/2.5/weather"
+            f"?lat={qlat}&lon={qlon}&units=metric&appid={apiKey}",
+            timeout=10
+        )
+
+        if res.status_code != 200:
+            raise Exception("Weather API failed")
+
+        data = res.json()
+
+        weatherDesc = data.get("weather", [{}])[0].get("description", "N/A")
+        temp = data.get("main", {}).get("temp", 0)
+        humidity = data.get("main", {}).get("humidity", 0)
+
+        rain1 = data.get("rain", {}).get("1h", 0)
+        rain3 = data.get("rain", {}).get("3h", 0)
+        snow1 = data.get("snow", {}).get("1h", 0)
+        snow3 = data.get("snow", {}).get("3h", 0)
+
+        precipitation = max(rain1, rain3, snow1, snow3, 0)
+        real_place = data.get("name", "Unknown location")
+
+    except Exception:
         weatherDesc = "N/A"
         temp = 0
         humidity = 0
@@ -3504,7 +3575,7 @@ def manual_flood_alert():
         real_place = "Unknown location"
 
     # -------------------------------
-    # Haversine distance function
+    # HAVERSINE FUNCTION
     # -------------------------------
     def haversine(lat1, lon1, lat2, lon2):
         R = 6371
@@ -3514,14 +3585,15 @@ def manual_flood_alert():
         return 2 * R * atan2(sqrt(a), sqrt(1 - a))
 
     # -------------------------------
-    # Fetch users from DB
+    # FETCH USERS (SAFE)
     # -------------------------------
     try:
+        db = get_db_connection()
         cur = db.cursor()
         cur.execute("SELECT name, email, latitude, longitude FROM users")
         users = cur.fetchall()
     except:
-        return jsonify({"status": "error", "msg": "Database fetch error"}), 500
+        return jsonify({"status": "error", "msg": "DB error"}), 500
 
     SMTP_SERVER = "smtp.gmail.com"
     SMTP_PORT = 465
@@ -3529,8 +3601,17 @@ def manual_flood_alert():
     SMTP_PASSWORD = "pwjdjogjwnzwuhle"
 
     sent_count = 0
+    nearby_users_found = False
 
-    for uname, uemail, ulat, ulon in users:
+    # -------------------------------
+    # PROCESS USERS
+    # -------------------------------
+    for u in users:
+        uname = u["name"]
+        uemail = u["email"]
+        ulat = u["latitude"]
+        ulon = u["longitude"]
+
         if ulat is None or ulon is None:
             continue
 
@@ -3539,70 +3620,43 @@ def manual_flood_alert():
         except:
             continue
 
-        if dist <= 10:  # Only nearby users
+        if dist <= 10:
+            nearby_users_found = True
+
+            # Flood risk logic (FRESH)
+            if precipitation >= 30:
+                riskText = "🚨 FLOOD ALERT (VERY HIGH)"
+            elif precipitation >= 20:
+                riskText = "⚠️ FLOOD WARNING"
+            elif precipitation >= 10:
+                riskText = "🟡 POSSIBLE FLOOD RISK"
+            else:
+                riskText = "✅ No Flood Risk"
+
             maps_link = f"https://www.google.com/maps/search/?api=1&query={qlat},{qlon}"
 
-            static_map = (
-                f"https://maps.googleapis.com/maps/api/staticmap?size=640x300&maptype=roadmap"
-                f"&markers=color:red%7Clabel:F%7C{qlat},{qlon}"
-            )
-
-            try:
-                static_map += f"&key={apiKey}"
-            except:
-                pass
-
-            # Determine flood risk
-            if precipitation > 3:
-                riskText = "🚨 Flood Risk: Very High"
-            elif precipitation > 2:
-                riskText = "⚠️ Flood Risk: Moderate"
-            elif precipitation > 1:
-                riskText = "🟡 Flood Risk: Low"
-            else:
-                riskText = "✅ Flood Risk: None"
-
-            # Text email
             text = f"""
-🌊 FLOOD ALERT — Real-Time Trigger
+🌊 FLOOD ALERT
+
+{riskText}
 
 Rainfall: {precipitation} mm
-Weather: {weatherDesc}, {temp}°C, {humidity}%
+Weather: {weatherDesc}
+Temperature: {temp}°C
+Humidity: {humidity}%
 Distance: {dist:.2f} km
 Location: {real_place}
-Coordinates: {qlat}, {qlon}
 Time (UTC): {qtime}
 
-Google Maps: {maps_link}
+{maps_link}
 """
 
-            # HTML email
-            html = f"""
-<html><body>
-<h2 style="color:#0047ab">🌊 FLOOD ALERT — Real-Time Trigger</h2>
-<p>Hello <b>{uname}</b>,</p>
-<ul>
-<li><b>Rainfall:</b> {precipitation} mm</li>
-<li><b>Weather:</b> {weatherDesc}, {temp}°C, {humidity}%</li>
-<li><b>Distance:</b> {dist:.2f} km</li>
-<li><b>Location:</b> {real_place}</li>
-<li><b>Coordinates:</b> {qlat}, {qlon}</li>
-<li><b>Time (UTC):</b> {qtime}</li>
-</ul>
-<p><a href="{maps_link}">View on Google Maps</a></p>
-<img src="{static_map}" style="max-width:100%;border:1px solid #ccc">
-<p>Stay safe!</p>
-</body></html>
-"""
-
-            # Send email
             try:
-                msg = MIMEMultipart("alternative")
-                msg["Subject"] = Header("🌊 FLOOD ALERT — Real-Time Trigger", "utf-8")
+                msg = MIMEMultipart()
+                msg["Subject"] = Header("🌊 Flood Alert", "utf-8")
                 msg["From"] = SMTP_SENDER
                 msg["To"] = uemail
                 msg.attach(MIMEText(text, "plain", "utf-8"))
-                msg.attach(MIMEText(html, "html", "utf-8"))
 
                 ctx = ssl.create_default_context()
                 with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, context=ctx) as server:
@@ -3612,9 +3666,32 @@ Google Maps: {maps_link}
                 sent_count += 1
 
             except Exception as e:
-                print(f"Failed to send flood alert to {uemail}: {e}")
+                print("Mail failed:", e)
 
-    return jsonify({"status": "success", "msg": f"Flood alerts sent: {sent_count}"}), 200
+    cur.close()
+    db.close()
+
+    # -------------------------------
+    # RESPONSE
+    # -------------------------------
+    if not nearby_users_found:
+        return jsonify({
+            "status": "no_users",
+            "msg": "No users found in 10 km radius",
+            "lat": qlat,
+            "lon": qlon,
+            "detected_place": real_place
+        }), 200
+
+    return jsonify({
+        "status": "success",
+        "msg": f"Flood alerts sent to {sent_count} users",
+        "alerts_sent": sent_count,
+        "lat": qlat,
+        "lon": qlon,
+        "detected_place": real_place,
+        "rainfall_mm": precipitation
+    }), 200
 
 
 def get_weather_data(lat, lon):
@@ -4254,155 +4331,154 @@ def check_live_floods_scheduler():
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
     from datetime import datetime
-    from math import radians, sin, cos, sqrt, atan2
+    import pymysql
 
+    print("\n==============================")
+    print("🌧 FLOOD SCHEDULER STARTED")
+    print("==============================")
+
+    OPENWEATHER_KEY = "fb116bebc392ccc8ab251927edcb55d6"
+
+    SMTP_SENDER = "sohamgarud0806@gmail.com"
+    SMTP_PASSWORD = "pwjdjogjwnzwuhle"
+    SMTP_SERVER = "smtp.gmail.com"
+    SMTP_PORT = 465
+
+    THRESHOLD_FLOOD = 30
+    THRESHOLD_WARNING = 20
+
+    # -------------------------------
+    # DB FETCH (🔥 FIX HERE)
+    # -------------------------------
     try:
-        print("\n==============================")
-        print("🌧 FLOOD SCHEDULER STARTED")
-        print("==============================")
+        print("\n📌 Connecting to DB...")
+        db = get_db_connection()
 
-        # -------------------------------
-        # API KEYS
-        # -------------------------------
-        OPENWEATHER_KEY = "fb116bebc392ccc8ab251927edcb55d6"
+        # ✅ IMPORTANT FIX
+        cur = db.cursor(pymysql.cursors.DictCursor)
 
-        try:
-            GOOGLE_API_KEY = api_key
-        except:
-            GOOGLE_API_KEY = ""
-
-        # -------------------------------
-        # EMAIL SETTINGS
-        # -------------------------------
-        SMTP_SENDER = "sohamgarud0806@gmail.com"
-        SMTP_PASSWORD = "pwjdjogjwnzwuhle"
-        SMTP_SERVER = "smtp.gmail.com"
-        SMTP_PORT = 465
-
-        # -------------------------------
-        # FLOOD THRESHOLDS
-        # -------------------------------
-        THRESHOLD_FLOOD = 30       # RED ALERT
-        THRESHOLD_WARNING = 20     # ORANGE WARNING
-
-        # -------------------------------
-        # HAVERSINE FUNCTION
-        # -------------------------------
-        def haversine(lat1, lon1, lat2, lon2):
-            R = 6371.0
-            dlat = radians(lat2 - lat1)
-            dlon = radians(lon2 - lon1)
-            a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
-            return R * (2 * atan2(sqrt(a), sqrt(1-a)))
-
-        # -------------------------------
-        # FETCH USERS
-        # -------------------------------
-        print("📌 Loading users...")
-        cur = db.cursor()
         cur.execute("SELECT name, email, latitude, longitude FROM users")
         users = cur.fetchall()
-        print(f"✔ Users found: {len(users)}")
 
-        # -------------------------------
-        # CHECK FLOOD FOR EACH USER
-        # -------------------------------
-        for user in users:
+        print(f"✔ Users fetched: {len(users)}")
+
+    except Exception as e:
+        print("❌ DB ERROR:", e)
+        return
+
+    # -------------------------------
+    # PROCESS USERS
+    # -------------------------------
+    for user in users:
+        print("\n--------------------------------")
+        print("👤 USER")
+        print("--------------------------------")
+
+        try:
+            # ✅ FIX: dict access
+            name = user["name"]
+            email = user["email"]
+            lat = user["latitude"]
+            lon = user["longitude"]
+
+            print(f"Name      : {name}")
+            print(f"Email     : {email}")
+            print(f"Latitude  : {lat}")
+            print(f"Longitude : {lon}")
+
+            # -------------------------------
+            # VALIDATE COORDINATES
+            # -------------------------------
             try:
-                name, email, lat, lon = user
-                print(f"\n➡ Checking: {name} ({lat}, {lon})")
-
-                if lat is None or lon is None:
-                    print("   ❌ No coordinates, skipping user.")
-                    continue
-
                 lat = float(lat)
                 lon = float(lon)
+            except:
+                print("❌ INVALID COORDINATES → SKIPPED")
+                continue
 
-                # -------------------------------
-                # WEATHER API CALL
-                # -------------------------------
-                weather_url = (
-                    f"https://api.openweathermap.org/data/2.5/weather"
-                    f"?lat={lat}&lon={lon}&appid={OPENWEATHER_KEY}&units=metric"
-                )
+            # -------------------------------
+            # WEATHER API
+            # -------------------------------
+            weather_url = (
+                "https://api.openweathermap.org/data/2.5/weather"
+                f"?lat={lat}&lon={lon}&appid={OPENWEATHER_KEY}&units=metric"
+            )
 
-                print(f"   🌐 Calling API...")
+            print("\n🌐 Calling OpenWeather API")
+            print("URL:", weather_url)
 
-                try:
-                    r = requests.get(weather_url, timeout=10)
-                    if r.status_code != 200:
-                        print(f"   ❌ API Error: {r.status_code}")
-                        continue
+            try:
+                r = requests.get(weather_url, timeout=10)
+                print("Status Code:", r.status_code)
 
-                    data = r.json()
-                    print("   ✔ Weather data received")
-
-                except Exception as e:
-                    print("   ❌ API Connection Failed:", e)
+                if r.status_code != 200:
+                    print("❌ Weather API FAILED")
+                    print("Response:", r.text)
                     continue
 
-                # -------------------------------
-                # EXTRACT PRECIPITATION
-                # -------------------------------
-                weather_desc = data.get("weather", [{}])[0].get("description", "N/A")
-                temp = data.get("main", {}).get("temp", 0)
-                humidity = data.get("main", {}).get("humidity", 0)
+                data = r.json()
+                print("✔ API RESPONSE RECEIVED")
 
-                rain1 = data.get("rain", {}).get("1h", 0)
-                rain3 = data.get("rain", {}).get("3h", 0)
-                snow1 = data.get("snow", {}).get("1h", 0)
-                snow3 = data.get("snow", {}).get("3h", 0)
+            except Exception as e:
+                print("❌ API REQUEST ERROR:", e)
+                continue
 
-                # Combine rain + snow
-                precipitation = max(rain1, rain3, snow1, snow3, 0)
+            # -------------------------------
+            # RAW WEATHER DATA
+            # -------------------------------
+            print("\n📦 RAW WEATHER DATA:")
+            print(data)
 
-                print(f"   🌧 Rain: {rain1}/{rain3} mm | ❄ Snow: {snow1}/{snow3} mm")
-                print(f"   👉 Final Precipitation = {precipitation} mm")
+            weather_desc = data.get("weather", [{}])[0].get("description", "N/A")
+            temp = data.get("main", {}).get("temp", 0)
+            humidity = data.get("main", {}).get("humidity", 0)
 
-                # -------------------------------
-                # DETECTION LOGIC
-                # -------------------------------
-                is_flood = precipitation >= THRESHOLD_FLOOD
-                is_warning = THRESHOLD_WARNING <= precipitation < THRESHOLD_FLOOD
+            rain1 = data.get("rain", {}).get("1h", 0)
+            rain3 = data.get("rain", {}).get("3h", 0)
+            snow1 = data.get("snow", {}).get("1h", 0)
+            snow3 = data.get("snow", {}).get("3h", 0)
 
-                if not is_flood and not is_warning:
-                    print("   ➖ Below 20 mm → No alert")
-                    continue
+            precipitation = max(rain1, rain3, snow1, snow3, 0)
 
-                if is_flood:
-                    alert_level = "🚨 REAL FLOOD ALERT"
-                else:
-                    alert_level = "⚠️ FLOOD WARNING"
+            # -------------------------------
+            # EXTRACTED VALUES
+            # -------------------------------
+            print("\n📊 EXTRACTED WEATHER")
+            print("Description    :", weather_desc)
+            print("Temperature    :", temp, "°C")
+            print("Humidity       :", humidity, "%")
+            print("Rain 1h        :", rain1)
+            print("Rain 3h        :", rain3)
+            print("Snow 1h        :", snow1)
+            print("Snow 3h        :", snow3)
+            print("➡ Precipitation:", precipitation, "mm")
 
-                print(f"   🔥 ALERT TRIGGERED: {alert_level}")
+            # -------------------------------
+            # FLOOD LOGIC
+            # -------------------------------
+            if precipitation < THRESHOLD_WARNING:
+                print("➖ BELOW WARNING LEVEL → NO ALERT")
+                continue
 
-                # -------------------------------
-                # MAP LINKS
-                # -------------------------------
-                maps_link = f"https://www.google.com/maps/search/?api=1&query={lat},{lon}"
+            alert_level = (
+                "🚨 REAL FLOOD ALERT"
+                if precipitation >= THRESHOLD_FLOOD
+                else "⚠️ FLOOD WARNING"
+            )
 
-                static_map = (
-                    f"https://maps.googleapis.com/maps/api/staticmap"
-                    f"?center={lat},{lon}&zoom=10&size=600x300"
-                    f"&markers=color:red%7C{lat},{lon}"
-                )
-                if GOOGLE_API_KEY:
-                    static_map += f"&key={GOOGLE_API_KEY}"
+            print("⚠ ALERT LEVEL:", alert_level)
 
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            maps_link = f"https://www.google.com/maps/search/?api=1&query={lat},{lon}"
 
-                # -------------------------------
-                # EMAIL CONTENT
-                # -------------------------------
-                subject = f"{alert_level} - {precipitation} mm"
+            # -------------------------------
+            # EMAIL
+            # -------------------------------
+            subject = f"{alert_level} - {precipitation} mm"
 
-                text = f"""
+            text = f"""
 {alert_level}
 
-Heavy precipitation detected near your location.
-
-Details:
 Precipitation: {precipitation} mm
 Weather: {weather_desc}
 Temperature: {temp}°C
@@ -4411,63 +4487,47 @@ Humidity: {humidity}%
 Location: {lat}, {lon}
 Time: {timestamp}
 
-Google Maps: {maps_link}
+{maps_link}
 """
 
-                html = f"""
-<html><body style="font-family:Arial;">
-<div style="max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:10px;">
-    <h2 style="color:#c40000;">{alert_level}</h2>
-    <p>Hello <b>{name}</b>,</p>
-    <p>Strong precipitation detected near your area.</p>
+            print("\n📧 PREPARING EMAIL")
+            print("To      :", email)
+            print("Subject :", subject)
 
-    <ul>
-        <li><b>Precipitation:</b> {precipitation} mm</li>
-        <li><b>Weather:</b> {weather_desc}</li>
-        <li><b>Temperature:</b> {temp}°C</li>
-        <li><b>Humidity:</b> {humidity}%</li>
-        <li><b>Time:</b> {timestamp}</li>
-    </ul>
+            msg = MIMEMultipart()
+            msg["Subject"] = subject
+            msg["From"] = SMTP_SENDER
+            msg["To"] = email
+            msg.attach(MIMEText(text, "plain", "utf-8"))
 
-    <p><a href="{maps_link}" target="_blank">📍 Open in Google Maps</a></p>
-    <img src="{static_map}" style="width:100%;border-radius:8px;">
-</div>
-</body></html>
-"""
+            try:
+                print("🔐 Connecting SMTP...")
+                ctx = ssl.create_default_context()
+                with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, context=ctx) as server:
+                    server.login(SMTP_SENDER, SMTP_PASSWORD)
+                    server.sendmail(SMTP_SENDER, email, msg.as_bytes())
 
-                # -------------------------------
-                # SEND EMAIL
-                # -------------------------------
-                print("   📧 Sending alert email...")
-
-                msg = MIMEMultipart("alternative")
-                msg["Subject"] = subject
-                msg["From"] = SMTP_SENDER
-                msg["To"] = email
-                msg.attach(MIMEText(text, "plain", "utf-8"))
-                msg.attach(MIMEText(html, "html", "utf-8"))
-
-                try:
-                    ctx = ssl.create_default_context()
-                    with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, context=ctx) as server:
-                        server.login(SMTP_SENDER, SMTP_PASSWORD)
-                        server.sendmail(SMTP_SENDER, email, msg.as_bytes())
-
-                    print(f"   ✔ Email sent to {email}")
-
-                except Exception as e:
-                    print("   ❌ Email failed:", e)
+                print("✔ EMAIL SENT SUCCESSFULLY")
 
             except Exception as e:
-                print("User processing error:", e)
+                print("❌ EMAIL ERROR:", e)
 
-        print("\n==============================")
-        print("✅ FLOOD SCHEDULER COMPLETED")
-        print("==============================")
+        except Exception as e:
+            print("❌ USER PROCESS ERROR:", e)
 
-    except Exception as e:
-        print("Flood Scheduler Error:", e)
+    # -------------------------------
+    # CLEANUP
+    # -------------------------------
+    try:
+        cur.close()
+        db.close()
+        print("\n🔒 DB CONNECTION CLOSED")
+    except:
+        pass
 
+    print("\n==============================")
+    print("✅ FLOOD SCHEDULER COMPLETED")
+    print("==============================")
 
 @app.route('/predflood', methods=['GET', 'POST'])
 def predflood():
@@ -4481,6 +4541,10 @@ def predflood():
     from flask import request, render_template
     import requests
     from datetime import datetime
+
+    if "user_id" not in session:
+        return redirect(url_for("login_page"))
+
 
     # -----------------------
     # Config / keys

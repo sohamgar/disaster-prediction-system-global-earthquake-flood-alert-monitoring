@@ -616,27 +616,81 @@ function getFloodStatus(precipitation) {
     else
         return { heading: "No Flood", riskText: "✅ Flood Risk: None", colorClass: "text-success", markerColor: "green" };
 }
+function getGuaranteedWaterName(lat, lon) {
+    if (lat > 60) return "Arctic Ocean";
+    if (lat < -60) return "Southern Ocean";
 
-/* ---------------- REVERSE GEOCODING ---------------- */
-function fetchLocationName(lat, lon) {
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
-        .then(res => res.json())
-        .then(data => {
-            const place =
-                data.address?.city ||
-                data.address?.town ||
-                data.address?.village ||
-                data.address?.state ||
-                "Unknown location";
+    if (lon < -70) return "Pacific Ocean";
+    if (lon > 20 && lon < 120 && lat < 0) return "Indian Ocean";
+    if (lon > -70 && lon < 20) return "Atlantic Ocean";
 
-            document.getElementById("location").innerHTML =
-                `📍 ${place}<br><small>Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}</small>`;
-        })
-        .catch(() => {
-            document.getElementById("location").innerHTML =
-                `📍 Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`;
-        });
+    return "Open Ocean";
 }
+
+function fetchLocationName(lat, lon) {
+    fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&email=test@example.com`
+    )
+    .then(res => {
+        if (!res.ok) throw new Error("Nominatim blocked");
+        return res.json();
+    })
+    .then(data => {
+        const addr = data.address || {};
+
+        /* ======================
+           ✅ FORCE LAND DETECTION
+           ====================== */
+        const isLand =
+            data.display_name &&               // Nominatim found a place
+            data.class !== "water" &&           // not water object
+            !addr.ocean &&
+            !addr.sea;
+
+        if (isLand) {
+            const place =
+                addr.suburb ||
+                addr.neighbourhood ||
+                addr.city ||
+                addr.town ||
+                addr.village ||
+                addr.county ||
+                addr.state ||
+                addr.country ||
+                data.display_name;
+
+            document.getElementById("location").innerHTML =
+                `📍 ${place}<br>
+                 <small>Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}</small>`;
+            return;
+        }
+
+        /* ======================
+           🌊 EXPLICIT SEA / OCEAN
+           ====================== */
+        if (addr.sea || addr.ocean) {
+            document.getElementById("location").innerHTML =
+                `🌊 ${addr.sea || addr.ocean}<br>
+                 <small>Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}</small>`;
+            return;
+        }
+
+        /* ======================
+           🌍 TRUE OCEAN FALLBACK
+           ====================== */
+        document.getElementById("location").innerHTML =
+            `🌍 ${getGuaranteedWaterName(lat, lon)}<br>
+             <small>Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}</small>`;
+    })
+    .catch(() => {
+        document.getElementById("location").innerHTML =
+            `🌍 ${getGuaranteedWaterName(lat, lon)}<br>
+             <small>Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}</small>`;
+    });
+}
+
+
+
 
 /* ---------------- WEATHER + FLOOD LOGIC ---------------- */
 function fetchWeather(lat, lon, callback=null) {
@@ -803,9 +857,7 @@ function sendFloodAlert() {
         title: "Sending Alert...",
         text: "Please wait while flood alerts are being sent",
         allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
+        didOpen: () => Swal.showLoading()
     });
 
     fetch(form.action, {
@@ -814,30 +866,72 @@ function sendFloodAlert() {
     })
     .then(res => res.json())
     .then(data => {
-        if (data.status === "success") {
+
+        console.log("FLOOD BACKEND RESPONSE:", data);
+
+        // ✅ FINAL PLACE RESOLUTION (NO UNKNOWN)
+        const finalPlace =
+            data.detected_place &&
+            data.detected_place !== "Unknown" &&
+            data.detected_place !== "Unknown location"
+                ? data.detected_place
+                : getGuaranteedWaterName(data.lat, data.lon);
+
+        // 🚨 NO USER REGISTERED
+        if (data.status === "no_users") {
             Swal.fire({
-                title: "Alert Sent Successfully",
-                text: data.msg,
-                icon: "success",
-                confirmButtonColor: "#16a34a"
+                title: "No Users Found",
+                html: `
+                    <p><b>No user is registered in this flood-affected area.</b></p>
+                    <hr>
+                    <p><b>Location</b></p>
+                    <p>Latitude: ${data.lat}</p>
+                    <p>Longitude: ${data.lon}</p>
+                    <p>Place: <b>${finalPlace}</b></p>
+                `,
+                icon: "error",
+                confirmButtonColor: "#dc2626"
             });
-        } else {
+            return;
+        }
+
+        // ❌ Other errors
+        if (data.status !== "success") {
             Swal.fire({
                 title: "Error",
                 text: data.msg || "Failed to send flood alert",
                 icon: "error",
                 confirmButtonColor: "#dc2626"
             });
+            return;
         }
+
+        // ✅ SUCCESS
+        Swal.fire({
+            title: "Flood Alert Sent Successfully",
+            html: `
+                <p>${data.msg}</p>
+                <hr>
+                <p><b>Location</b></p>
+                <p>Latitude: ${data.lat}</p>
+                <p>Longitude: ${data.lon}</p>
+                <p>Place: <b>${finalPlace}</b></p>
+            `,
+            icon: "success",
+            confirmButtonColor: "#16a34a"
+        });
     })
-    .catch(() => {
+    .catch(err => {
+        console.error("Flood Alert ERROR:", err);
         Swal.fire({
             title: "Server Error",
             text: "Unable to send flood alert",
-            icon: "error"
+            icon: "error",
+            confirmButtonColor: "#dc2626"
         });
     });
 }
+
 </script>
 
 

@@ -434,7 +434,6 @@ date,area,latitude,longitude,severity,description
 15-01-2015,Colombia,5.991404,-75.153419,Medium,Flash floods following extreme storms — reported impact in nearby communities.
 06-01-2015,Sichuan China,31.028188,107.314004,Medium,Flash floods in mountainous catchments — reported impact in nearby communities.
 04-01-2015,Mexico,23.906079,-104.467923,High,River overflow and levee breaches after intense rains — reported impact in nearby communities.
-17-12-2014,Assam India,26.825667,91.614264,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
 09-12-2014,Western Germany,50.288482,4.790008,Medium,River overflow and levee breaches after intense rains — reported impact in nearby communities.
 08-12-2014,UK (Yorkshire),55.013098,-1.336525,High,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
 30-11-2014,Thailand,16.690482,101.753411,High,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
@@ -992,4 +991,3 @@ date,area,latitude,longitude,severity,description
 26-01-2000,Kansai Japan,34.658173,137.874837,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
 24-01-2000,Northern Territory Australia,-25.87267,135.141133,Medium,Dam release and downstream flooding — reported impact in nearby communities.
 10-01-2000,Canada (British Columbia),53.813747,-128.096111,Medium,Monsoon-related widespread flooding — reported impact in nearby communities.
-2025-12-14,Navi Mumbai,19.0166,72.9986,Low,Earthquake was strong

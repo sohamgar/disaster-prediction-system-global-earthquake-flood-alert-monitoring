@@ -180,11 +180,12 @@
           <input type="email" name="email" class="form-control" placeholder="Admin Email" required>
         </div>
 
-        <div class="icon-input">
-          <i class="fa fa-lock input-icon"></i>
-          <input type="password" name="password" class="form-control" placeholder="Password" required>
-          <i class="fa fa-eye toggle-pass" id="togglePassword"></i>
-        </div>
+<div class="icon-input">
+  <i class="fa fa-lock input-icon"></i>
+  <input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
+  <i class="fa fa-eye toggle-pass" id="togglePassword"></i>
+</div>
+
 
         <button type="submit" class="btn-login" id="loginSubmit">Admin Login</button>
       </form>
@@ -193,40 +194,62 @@
 
   </div>
 
-  <script>
-    document.getElementById('userBtn').addEventListener('click', () => {
-      window.location.href = '/login';
-    });
+<script>
+  // USER BUTTON CLICK
+  document.getElementById('userBtn').addEventListener('click', () => {
+    window.location.href = '/login';
+  });
 
-    const togglePass = document.getElementById("togglePassword");
-    const passwordInput = document.querySelector("input[name='password']");
+  // PASSWORD TOGGLE FIX
+  const togglePass = document.getElementById("togglePassword");
+  const passwordInput = document.querySelector("input[name='password']");
 
-    togglePass.addEventListener("mousedown", e => e.preventDefault());
-    togglePass.addEventListener("click", () => {
-      passwordInput.type = (passwordInput.type === "password") ? "text" : "password";
-      togglePass.classList.toggle("fa-eye-slash");
-      togglePass.classList.toggle("fa-eye");
-    });
+  // Prevent icon from stealing focus
+  togglePass.addEventListener("mousedown", e => e.preventDefault());
 
-    window.onload = () => {
-      const alerts = document.querySelectorAll('.auto-alert');
-      const wrapper = document.querySelector('.card-wrapper');
+  togglePass.addEventListener("click", () => {
+    // Save cursor position and focus state
+    const cursorPos = passwordInput.selectionStart;
+    const wasFocused = document.activeElement === passwordInput;
 
-      if (alerts.length > 0) {
-        setTimeout(() => {
-          wrapper.classList.add('shake-wrapper');
-          setTimeout(() => wrapper.classList.remove('shake-wrapper'), 500);
-        }, 200);
-      }
+    // Toggle type
+    passwordInput.type = (passwordInput.type === "password") ? "text" : "password";
 
+    // Toggle icon classes
+    togglePass.classList.toggle("fa-eye");
+    togglePass.classList.toggle("fa-eye-slash");
+
+    // Restore focus and cursor after browser repaint
+    if (wasFocused) {
+      requestAnimationFrame(() => {
+        passwordInput.focus();
+        passwordInput.setSelectionRange(cursorPos, cursorPos);
+      });
+    }
+  });
+
+  // ALERTS & SHAKE EFFECT
+  window.onload = () => {
+    const alerts = document.querySelectorAll('.auto-alert');
+    const wrapper = document.querySelector('.card-wrapper');
+
+    // Shake on error alerts
+    if (alerts.length > 0) {
       setTimeout(() => {
-        alerts.forEach(alert => {
-          alert.classList.add('slide-up');
-          setTimeout(() => alert.remove(), 600);
-        });
-      }, 3500);
-    };
-  </script>
+        wrapper.classList.add('shake-wrapper');
+        setTimeout(() => wrapper.classList.remove('shake-wrapper'), 500);
+      }, 200);
+    }
+
+    // Auto dismiss alerts
+    setTimeout(() => {
+      alerts.forEach(alert => {
+        alert.classList.add('slide-up');
+        setTimeout(() => alert.remove(), 600);
+      });
+    }, 3500);
+  };
+</script>
 
 </body>
 </html>

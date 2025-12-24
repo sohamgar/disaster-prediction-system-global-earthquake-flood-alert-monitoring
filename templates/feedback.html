@@ -185,7 +185,7 @@ button.btn-success:hover {
         <h5>Submit Earthquake Feedback</h5>
         <form class="feedbackForm">
             <select class="form-select feedbackType mb-3" required>
-                <option disabled selected>Select type</option>
+                 <option value="" selected>Select type</option>
                 <option>Complaint</option>
                 <option>Query</option>
                 <option>System Issue</option>
@@ -218,7 +218,7 @@ button.btn-success:hover {
         <h5>Submit Flood Feedback</h5>
         <form class="feedbackForm">
             <select class="form-select feedbackType mb-3" required>
-                <option disabled selected>Select type</option>
+                 <option value="" selected>Select type</option>
                 <option>Complaint</option>
                 <option>Query</option>
                 <option>System Issue</option>
@@ -253,6 +253,9 @@ button.btn-success:hover {
 const earthquakeTable = document.getElementById("earthquakeTable");
 const floodTable = document.getElementById("floodTable");
 
+/* ============================
+   LOAD FEEDBACK
+============================ */
 async function loadFeedback() {
     const res = await fetch("/api/feedback");
     const data = await res.json();
@@ -261,19 +264,21 @@ async function loadFeedback() {
     floodTable.innerHTML = "";
 
     data.forEach(f => {
-        let replies = "";
+let replies = "";
 
-        if (f.replies && f.replies.length > 0) {
-            f.replies.forEach(r => {
-                replies += `
-                    <div class="reply-box">
-                        <b>Admin:</b> ${r.message}
-                        <br><small class="text-muted">${r.date}</small>
-                    </div>`;
-            });
-        } else {
-            replies = `<div class="reply-box text-muted">No reply yet</div>`;
-        }
+if (f.replies?.length) {
+    f.replies.forEach(r => {
+        replies += `
+            <div class="reply-box">
+                <b>${r.admin_username || "Admin"}:</b> ${r.message}
+                <br><small class="text-muted">${r.date}</small>
+            </div>
+        `;
+    });
+} else {
+    replies = `<div class="reply-box text-muted">No reply yet</div>`;
+}
+
 
         const row = `
             <tr>
@@ -281,7 +286,11 @@ async function loadFeedback() {
                 <td>${f.type}</td>
                 <td>${f.message}${replies}</td>
                 <td>${f.date}</td>
-                <td><button class="btn-delete" onclick="deleteFeedback(${f.id})"><i class="fa fa-trash"></i></button></td>
+                <td>
+                    <button class="btn-delete" onclick="deleteFeedback(${f.id})">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
             </tr>
         `;
 
@@ -290,33 +299,74 @@ async function loadFeedback() {
     });
 }
 
+/* ============================
+   FORM SUBMIT (FIXED)
+============================ */
 document.querySelectorAll(".feedbackForm").forEach(form => {
     form.addEventListener("submit", async e => {
         e.preventDefault();
-        const type = form.querySelector(".feedbackType").value;
-        const message = form.querySelector(".feedbackMessage").value;
-        const disaster_type = form.closest(".tab-pane").id === "earthquake" ? "Earthquake" : "Flood";
+
+        const typeSelect = form.querySelector(".feedbackType");
+        const messageInput = form.querySelector(".feedbackMessage");
+
+        /* 🔥 HARD VALIDATION */
+        if (typeSelect.value === "") {
+            alert("Please select feedback type");
+            typeSelect.focus();
+            return;
+        }
+
+        if (!messageInput.value.trim()) {
+            alert("Please enter feedback message");
+            messageInput.focus();
+            return;
+        }
+
+        const tabPane = form.closest(".tab-pane");
+        const disaster_type =
+            tabPane?.id === "earthquake"
+                ? "Earthquake"
+                : tabPane?.id === "flood"
+                ? "Flood"
+                : null;
+
+        if (!disaster_type) {
+            alert("Please select Earthquake or Flood tab.");
+            return;
+        }
 
         const res = await fetch("/api/feedback/add", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ type, message, disaster_type })
+            body: JSON.stringify({
+                type: typeSelect.value,
+                message: messageInput.value.trim(),
+                disaster_type
+            })
         });
 
         if (res.ok) {
             form.reset();
             loadFeedback();
-            alert("Feedback submitted!");
+            alert("Feedback submitted successfully!");
+        } else {
+            alert("Error submitting feedback.");
         }
     });
 });
 
+/* ============================
+   DELETE
+============================ */
 async function deleteFeedback(id) {
-    if(!confirm("Are you sure to delete this feedback?")) return;
+    if (!confirm("Are you sure to delete this feedback?")) return;
     const res = await fetch(`/api/feedback/delete/${id}`, { method: "POST" });
-    if(res.ok) loadFeedback();
+    if (res.ok) loadFeedback();
 }
 
+/* ============================
+   INIT
+============================ */
 loadFeedback();
 </script>
 

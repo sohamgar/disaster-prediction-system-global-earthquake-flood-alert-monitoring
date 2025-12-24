@@ -71,7 +71,8 @@
       border-radius: 14px;
       border: none;
       outline: none;
-      font-size: 24px;
+      font-size: 28px;
+      line-height: 1.2;
       text-align: center;
       background: rgba(255, 255, 255, 0.2);
       color: #fff;
@@ -200,12 +201,29 @@
 
   // SHOW/HIDE OTP
   let otpVisible = false;
+toggleBtn.addEventListener("mousedown", e => e.preventDefault());
+
   toggleBtn.addEventListener("click", () => {
     otpVisible = !otpVisible;
-    inputs.forEach(i => i.type = otpVisible ? "text" : "password");
+
+    const activeInput = document.activeElement;
+    const cursorPos = activeInput?.selectionStart ?? 0;
+
+    inputs.forEach(i => {
+      i.type = otpVisible ? "text" : "password";
+    });
+
     toggleBtn.innerHTML = otpVisible
       ? '<i class="fa fa-eye-slash"></i> Hide OTP'
       : '<i class="fa fa-eye"></i> Show OTP';
+
+    // restore focus + cursor
+    if (activeInput && activeInput.classList.contains("otp-box")) {
+      requestAnimationFrame(() => {
+        activeInput.focus();
+        activeInput.setSelectionRange(cursorPos, cursorPos);
+      });
+    }
   });
 
   // AUTO-MOVE + BACKSPACE FIX + AUTO-SUBMIT

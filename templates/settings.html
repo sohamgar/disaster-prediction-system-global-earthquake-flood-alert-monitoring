@@ -41,6 +41,21 @@
       transition: background 0.3s ease;
     }
 
+    .toggle-eye {
+  position: absolute;
+  right: 16px;
+  top: 38px;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 16px;
+  user-select: none;
+}
+
+.password-field {
+  padding-right: 42px;
+}
+
+
     .glass-card {
       width: 100%;
       max-width: 720px;
@@ -262,18 +277,24 @@
   <div class="section-title">Security</div>
   <form method="post" action="{{ url_for('update_password') }}">
     <div class="row row-cols-2 g-3">
-      <div class="col">
-        <label>Old Password</label>
-        <input type="password" class="form-control" name="old_password" placeholder="Enter old password" required>
-      </div>
-      <div class="col">
-        <label>New Password</label>
-        <input type="password" class="form-control" name="new_password" placeholder="Enter new password" required>
-      </div>
-      <div class="col">
-        <label>Confirm Password</label>
-        <input type="password" class="form-control" name="confirm_password" placeholder="Confirm new password" required>
-      </div>
+<div class="col position-relative">
+  <label>Old Password</label>
+  <input type="password" class="form-control password-field" name="old_password" placeholder="Enter old password" required>
+  <i class="fa fa-eye toggle-eye"></i>
+</div>
+
+<div class="col position-relative">
+  <label>New Password</label>
+  <input type="password" class="form-control password-field" name="new_password" placeholder="Enter new password" required>
+  <i class="fa fa-eye toggle-eye"></i>
+</div>
+
+<div class="col position-relative">
+  <label>Confirm Password</label>
+  <input type="password" class="form-control password-field" name="confirm_password" placeholder="Confirm new password" required>
+  <i class="fa fa-eye toggle-eye"></i>
+</div>
+
     </div>
     <button class="btn btn-primary w-100 mt-3">
       <i class="fa fa-lock me-1"></i> Update Password
@@ -317,6 +338,28 @@
     };
     reader.readAsDataURL(event.target.files[0]);
   }
+
+ document.querySelectorAll(".toggle-eye").forEach(icon => {
+
+    icon.addEventListener("mousedown", e => e.preventDefault());
+
+    icon.addEventListener("click", () => {
+      const input = icon.previousElementSibling;
+
+      const pos = input.selectionStart;
+      const isPassword = input.type === "password";
+
+      input.type = isPassword ? "text" : "password";
+      icon.classList.toggle("fa-eye-slash", isPassword);
+      icon.classList.toggle("fa-eye", !isPassword);
+
+      requestAnimationFrame(() => {
+        input.focus();
+        input.setSelectionRange(pos, pos);
+      });
+    });
+  });
+
 
   // Theme Toggle
   const toggleBtn = document.getElementById("themeToggle");

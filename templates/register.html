@@ -300,10 +300,34 @@ h3 {
 
 
         // -------------------- TOGGLE PASSWORD --------------------
-        function togglePassword(id) {
-            const input = document.getElementById(id);
-            input.type = input.type === "password" ? "text" : "password";
-        }
+function togglePassword(inputId) {
+    const passwordInput = document.getElementById(inputId);
+    const toggleIcon = passwordInput.nextElementSibling; // assumes eye icon is right after input
+
+    // Save cursor position and focus state
+    const cursorPos = passwordInput.selectionStart;
+    const wasFocused = document.activeElement === passwordInput;
+
+    // Toggle type
+    passwordInput.type = (passwordInput.type === "password") ? "text" : "password";
+
+    // Toggle icon classes
+    toggleIcon.classList.toggle("fa-eye");
+    toggleIcon.classList.toggle("fa-eye-slash");
+
+    // Restore focus and cursor
+    if (wasFocused) {
+      requestAnimationFrame(() => {
+        passwordInput.focus();
+        passwordInput.setSelectionRange(cursorPos, cursorPos);
+      });
+    }
+  }
+
+  // Optional: prevent cursor jump if icon is clicked with mouse down
+  document.querySelectorAll(".toggle-pass").forEach(icon => {
+    icon.addEventListener("mousedown", e => e.preventDefault());
+  });
         const nameInput = document.getElementById("name");
         const usernameInput = document.getElementById("username");
         const emailInput = document.getElementById("email");

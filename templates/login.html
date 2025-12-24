@@ -248,11 +248,13 @@
         <input id="username" name="username" class="form-control" placeholder="Username or Email" required />
       </div>
 
-      <div class="icon-input">
-        <i class="fa fa-lock input-icon"></i>
-        <input id="password" name="password" type="password" class="form-control" placeholder="Password" required />
-        <i class="fa fa-eye toggle-pass" id="togglePassword"></i>
-      </div>
+<div class="icon-input">
+  <i class="fa fa-lock input-icon"></i>
+  <input id="password" name="password" type="password"
+         class="form-control" placeholder="Password" required>
+  <i class="fa fa-eye toggle-pass" id="togglePassword"></i>
+</div>
+
 
       <div class="forgot-password">
         <a href="/forgot_password" class="forgot-link">Forgot Password?</a>
@@ -274,63 +276,94 @@
     </form>
   </div>
 
-  <script>
-    const userBtn = document.getElementById('userBtn');
-    const adminBtn = document.getElementById('adminBtn');
-    const loginTitle = document.getElementById('loginTitle');
-    const loginSubtitle = document.getElementById('loginSubtitle');
-    const loginForm = document.getElementById('loginForm');
-    const loginSubmit = document.getElementById('loginSubmit');
-    const registerLink = document.getElementById('registerLink');
+ <script>
+  const userBtn = document.getElementById('userBtn');
+  const adminBtn = document.getElementById('adminBtn');
+  const loginTitle = document.getElementById('loginTitle');
+  const loginSubtitle = document.getElementById('loginSubtitle');
+  const loginForm = document.getElementById('loginForm');
+  const loginSubmit = document.getElementById('loginSubmit');
+  const registerLink = document.getElementById('registerLink');
 
-    userBtn.addEventListener('click', () => {
-      if (!userBtn.classList.contains('active')) {
-        userBtn.classList.add('active'); userBtn.classList.remove('inactive');
-        adminBtn.classList.add('inactive'); adminBtn.classList.remove('active');
+  /* =========================
+     USER / ADMIN SWITCH
+  ========================= */
+  userBtn.addEventListener('click', () => {
+    if (!userBtn.classList.contains('active')) {
+      userBtn.classList.add('active');
+      userBtn.classList.remove('inactive');
 
-        loginForm.classList.remove('fade-slide');
-        void loginForm.offsetWidth;
-        loginForm.classList.add('fade-slide');
+      adminBtn.classList.add('inactive');
+      adminBtn.classList.remove('active');
 
-        loginTitle.innerText = 'Welcome Back';
-        loginSubtitle.innerText = 'Login to continue receiving alerts';
-        loginForm.action = '/login';
-        loginSubmit.innerText = 'Login';
-        registerLink.style.display = 'block';
-      }
-    });
+      loginForm.classList.remove('fade-slide');
+      void loginForm.offsetWidth;
+      loginForm.classList.add('fade-slide');
 
-    adminBtn.addEventListener('click', () => {
-      window.location.href = '/admin_login';
-    });
+      loginTitle.innerText = 'Welcome Back';
+      loginSubtitle.innerText = 'Login to continue receiving alerts';
+      loginForm.action = '/login';
+      loginSubmit.innerText = 'Login';
+      registerLink.style.display = 'block';
+    }
+  });
 
-    const togglePass = document.getElementById("togglePassword");
-    const passwordInput = document.getElementById("password");
+  adminBtn.addEventListener('click', () => {
+    window.location.href = '/admin_login';
+  });
 
-    togglePass.addEventListener("mousedown", (e) => e.preventDefault());
-    togglePass.addEventListener("click", () => {
-      if (passwordInput.type === "password") {
-        passwordInput.type = "text";
-        togglePass.classList.replace("fa-eye", "fa-eye-slash");
-      } else {
-        passwordInput.type = "password";
-        togglePass.classList.replace("fa-eye-slash", "fa-eye");
-      }
-    });
+  /* =========================
+     PASSWORD TOGGLE (MAX FIX)
+  ========================= */
+  const togglePass = document.getElementById('togglePassword');
+  const passwordInput = document.getElementById('password');
 
-    window.onload = () => {
-      const alert = document.querySelector(".alert-danger");
-      if (alert) document.getElementById("loginCard").classList.add("shake");
-    };
+  togglePass.addEventListener('mousedown', e => e.preventDefault());
+
+  togglePass.addEventListener('click', () => {
+    const value = passwordInput.value;
+    const pos = passwordInput.selectionStart;
+
+    // browser-safe caret stabilization
+    passwordInput.value = '';
+    passwordInput.value = value;
+
+    if (passwordInput.type === 'password') {
+      passwordInput.type = 'text';
+      togglePass.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+      passwordInput.type = 'password';
+      togglePass.classList.replace('fa-eye-slash', 'fa-eye');
+    }
 
     setTimeout(() => {
-      document.querySelectorAll(".alert").forEach(a => {
-        a.classList.remove("show");
-        a.classList.add("fade");
-        setTimeout(() => a.remove(), 400);
-      });
-    }, 3000);
-  </script>
+      passwordInput.focus();
+      passwordInput.setSelectionRange(pos, pos);
+    }, 0);
+  });
+
+  /* =========================
+     SHAKE ON ERROR
+  ========================= */
+  window.addEventListener('load', () => {
+    const alert = document.querySelector('.alert-danger');
+    if (alert) {
+      document.getElementById('loginCard').classList.add('shake');
+    }
+  });
+
+  /* =========================
+     AUTO DISMISS ALERTS
+  ========================= */
+  setTimeout(() => {
+    document.querySelectorAll('.alert').forEach(a => {
+      a.classList.remove('show');
+      a.classList.add('fade');
+      setTimeout(() => a.remove(), 400);
+    });
+  }, 3000);
+</script>
+
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 

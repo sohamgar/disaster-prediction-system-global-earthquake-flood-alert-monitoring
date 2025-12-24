@@ -23,15 +23,9 @@ h2{font-weight:800;margin-bottom:30px}
     border-radius:18px;
     padding:25px;
 }
-.table{
-    color:#fff;
-}
-thead{
-    background:rgba(255,255,255,0.15);
-}
-tbody tr{
-    background:rgba(255,255,255,0.08);
-}
+.table{color:#fff}
+thead{background:rgba(255,255,255,0.15)}
+tbody tr{background:rgba(255,255,255,0.08)}
 .reply-box{
     background:rgba(255,255,255,0.15);
     padding:8px 12px;
@@ -41,6 +35,22 @@ tbody tr{
 textarea{
     background:rgba(255,255,255,0.15)!important;
     color:#fff!important;
+}
+.user-info{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+.user-info img{
+    width:35px;
+    height:35px;
+    border-radius:50%;
+    object-fit:cover;
+    border:1px solid rgba(255,255,255,0.4);
+}
+.user-details small{
+    display:block;
+    color:#ccc;
 }
 </style>
 </head>
@@ -60,6 +70,7 @@ textarea{
     <th>ID</th>
     <th>Disaster</th>
     <th>Type</th>
+    <th>User</th>
     <th>Message</th>
     <th>Admin Reply</th>
     <th>Action</th>
@@ -94,27 +105,76 @@ textarea{
 <script>
 let currentId = null;
 
+/* ============================
+   MASK MOBILE
+============================ */
+function maskMobile(mobile){
+    if(!mobile || mobile.length < 4) return "-";
+    return mobile.slice(0,2) + "XXXXXX" + mobile.slice(-2);
+}
+
+/* ============================
+   LOAD ADMIN FEEDBACK  ✅ FIXED
+============================ */
 async function loadFeedback(){
-    const res = await fetch("/api/feedback");
+    const res = await fetch("/api/admin/feedback"); // 🔥 ADMIN API
     const data = await res.json();
+
     const table = document.getElementById("feedbackTable");
     table.innerHTML = "";
 
-    data.forEach(f=>{
-        let replies = "";
-        if(f.replies && f.replies.length){
-            f.replies.forEach(r=>{
-                replies += `<div class="reply-box"><b>Admin:</b> ${r.message}</div>`;
-            });
-        }else{
-            replies = `<span class="text-warning">No reply yet</span>`;
-        }
+    if(!data.length){
+        table.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center text-warning">
+                    No feedback found
+                </td>
+            </tr>`;
+        return;
+    }
 
+    data.forEach(f=>{
+        /* ---------- Replies ---------- */
+ /* ---------- Replies ---------- */
+let replies = "";
+if(f.replies && f.replies.length){
+    f.replies.forEach(r=>{
+        replies += `
+            <div class="reply-box">
+                <b>${r.admin_username || "Admin"}:</b> ${r.message}
+                <br><small>${r.date}</small>
+            </div>
+        `;
+    });
+} else {
+    replies = `<span class="text-warning">No reply yet</span>`;
+}
+
+
+        /* ---------- User ---------- */
+        const user = f.user || {};
+        const avatarHtml = user.avatar
+            ? `<img src="/static/uploads/avatars/${user.avatar}" alt="avatar">`
+            : "";
+
+        const userHtml = `
+            <div class="user-info">
+                ${avatarHtml}
+                <div class="user-details">
+                    <b>${user.name || "Unknown"}</b>
+                    <small>${user.email || "-"}</small>
+                    <small>${maskMobile(user.mobile)}</small>
+                </div>
+            </div>
+        `;
+
+        /* ---------- Row ---------- */
         table.innerHTML += `
         <tr>
             <td>${f.id}</td>
             <td>${f.disaster_type}</td>
             <td>${f.type}</td>
+            <td>${userHtml}</td>
             <td>${f.message}</td>
             <td>${replies}</td>
             <td>
@@ -127,32 +187,47 @@ async function loadFeedback(){
     });
 }
 
+/* ============================
+   OPEN REPLY MODAL
+============================ */
 function openReply(id,msg){
     currentId = id;
-    document.getElementById("feedbackText").innerText =
-        decodeURIComponent(msg);
+    document.getElementById("feedbackText").innerText = decodeURIComponent(msg);
     document.getElementById("replyMessage").value = "";
     new bootstrap.Modal(document.getElementById("replyModal")).show();
 }
 
+/* ============================
+   SEND REPLY
+============================ */
 async function sendReply(){
-    const reply = document.getElementById("replyMessage").value;
-    if(!reply) return alert("Reply required");
+    const reply = document.getElementById("replyMessage").value.trim();
+    if(!reply){
+        alert("Reply required");
+        return;
+    }
 
-    await fetch(`/api/feedback/reply/${currentId}`,{
+    const res = await fetch(`/api/feedback/reply/${currentId}`,{
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({reply})
     });
 
-    bootstrap.Modal.getInstance(
-        document.getElementById("replyModal")
-    ).hide();
+    if(res.ok){
+        bootstrap.Modal.getInstance(
+            document.getElementById("replyModal")
+        ).hide();
 
-    loadFeedback();
-    alert("Reply sent");
+        loadFeedback();
+        alert("Reply sent successfully");
+    } else {
+        alert("Reply failed");
+    }
 }
 
+/* ============================
+   INIT
+============================ */
 loadFeedback();
 </script>
 
