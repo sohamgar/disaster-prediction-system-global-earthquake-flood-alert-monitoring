@@ -85,8 +85,14 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = "sohamgarud0806@gmail.com"      # CHANGE
 app.config['MAIL_PASSWORD'] = "pwjdjogjwnzwuhle"        # CHANGE
 serializer = URLSafeTimedSerializer(app.secret_key)
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:@localhost/dmnat"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    f"mysql+pymysql://{os.environ['MYSQL_USER']}:"
+    f"{os.environ['MYSQL_PASSWORD']}@"
+    f"{os.environ['MYSQL_HOST']}:"
+    f"{os.environ.get('MYSQL_PORT','3306')}/"
+    f"{os.environ['MYSQL_DATABASE']}"
+)
+
 
 # initialize SQLAlchemy
 sqldb.init_app(app)
