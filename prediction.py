@@ -62,20 +62,22 @@ if ENV == "local":
 # ---------- DATABASE (pymysql) ----------
 db = None
 
-# Always try to connect, local ya production
 try:
-    db = pymysql.connect(
-        host=os.environ["MYSQL_HOST"],
-        user=os.environ["MYSQL_USER"],
-        password=os.environ["MYSQL_PASSWORD"],
-        database=os.environ["MYSQL_DATABASE"],
-        port=int(os.environ.get("MYSQL_PORT", "3306")),
-        connect_timeout=10
-    )
-    print("✅ Database connected successfully")
+    if os.environ.get("RENDER") != "true":
+        db = pymysql.connect(
+            host=os.environ["MYSQL_HOST"],
+            user=os.environ["MYSQL_USER"],
+            password=os.environ["MYSQL_PASSWORD"],
+            database=os.environ["MYSQL_DATABASE"],
+            port=int(os.environ.get("MYSQL_PORT", "3306")),
+            connect_timeout=10
+        )
+        print("✅ DB connected (local)")
+    else:
+        print("ℹ️ Skipping global DB connect on Render")
 except Exception as e:
     db = None
-    print("⚠️ Database connection failed:", e)
+    print("⚠️ DB error:", e)
 
 
 # Write your API key here.
@@ -6893,16 +6895,14 @@ scheduler.start()
 atexit.register(lambda: scheduler.shutdown())
 
 
+print("🔄 Loading ML model...")
+lr = joblib.load("model.pkl")
+model_columns = joblib.load("model_columns.pkl")
+print("✅ ML model loaded")
 
 
 if __name__ == "__main__":
-    lr = joblib.load("model.pkl") # Load "model.pkl"
-    print ('Model loaded')
-    model_columns = joblib.load("model_columns.pkl") # Load "model_columns.pkl"
-    print ('Model columns loaded')
     app.run(debug=True)
-
-
 
 
 
