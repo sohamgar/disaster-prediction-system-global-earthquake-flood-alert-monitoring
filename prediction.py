@@ -101,11 +101,17 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.secret_key = "super_secret_key_123"
 
 # EMAIL SETTINGS
+# EMAIL SETTINGS (Render-friendly)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = "sohamgarud0806@gmail.com"      # CHANGE
-app.config['MAIL_PASSWORD'] = "pwjdjogjwnzwuhle"        # CHANGE
+app.config['MAIL_PORT'] = 465         # SSL port (Render pe TLS/587 sometimes block hota hai)
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True    # Use SSL instead of TLS
+app.config['MAIL_USERNAME'] = "sohamgarud0806@gmail.com"  # Tumhara email
+app.config['MAIL_PASSWORD'] = "pwjdjogjwnzwuhle"          # Gmail app password
+app.config['MAIL_DEFAULT_SENDER'] = app.config['MAIL_USERNAME']
+
+
+      # CHANGE
 serializer = URLSafeTimedSerializer(app.secret_key)
 app.config["SQLALCHEMY_DATABASE_URI"] = (
     f"mysql+pymysql://{os.environ['MYSQL_USER']}:"
