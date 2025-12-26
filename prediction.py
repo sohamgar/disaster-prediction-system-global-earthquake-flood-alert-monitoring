@@ -58,16 +58,19 @@ if ENV == "local":
     from dotenv import load_dotenv
     load_dotenv()
 
-db = pymysql.connect(
-    host=os.environ["MYSQL_HOST"],
-    user=os.environ["MYSQL_USER"],
-    password=os.environ["MYSQL_PASSWORD"],
-    database=os.environ["MYSQL_DATABASE"],
-    port=int(os.environ.get("MYSQL_PORT", "3306")),
-    connect_timeout=10
-)
-print("RENDER =", os.getenv("RENDER"))
-print("MYSQL_HOST =", os.getenv("MYSQL_HOST"))
+# ---------- DATABASE (pymysql) ----------
+db = None  # IMPORTANT
+
+if ENV == "local":
+    db = pymysql.connect(
+        host=os.environ["MYSQL_HOST"],
+        user=os.environ["MYSQL_USER"],
+        password=os.environ["MYSQL_PASSWORD"],
+        database=os.environ["MYSQL_DATABASE"],
+        port=int(os.environ.get("MYSQL_PORT", "3306")),
+        connect_timeout=10
+    )
+
 
 # Write your API key here.
 api_key = "AIzaSyDYPhWrJ_gi7we9v3G9CwBeQIfb9Je4wl4"

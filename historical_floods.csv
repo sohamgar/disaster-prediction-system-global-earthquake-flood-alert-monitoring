@@ -1,8 +1,5 @@
 date,area,latitude,longitude,severity,description
-03-11-2025,Colombia,5.139883,-71.854705,High,Flash floods in mountainous catchments — reported impact in nearby communities.
-20-10-2025,Ecuador,-3.13567,-77.178891,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
 09-09-2025,Kerala India,10.650052,74.947483,Medium,Flash floods following extreme storms — reported impact in nearby communities.
-01-09-2025,UK (Yorkshire),54.988913,-0.486644,Medium,Urban inundation from sudden cloudburst — reported impact in nearby communities.
 13-07-2025,Chennai India,14.585057,80.381842,Low,Monsoon-related widespread flooding — reported impact in nearby communities.
 05-07-2025,France (Occitanie),44.266701,4.168804,High,Urban inundation from sudden cloudburst — reported impact in nearby communities.
 23-06-2025,Bangladesh,24.2974,91.451759,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
@@ -72,7 +69,6 @@ date,area,latitude,longitude,severity,description
 15-12-2023,Western Germany,52.479572,6.11571,High,Monsoon-related widespread flooding — reported impact in nearby communities.
 09-12-2023,Sichuan China,29.786311,102.069651,Medium,Coastal flooding and storm surge impact — reported impact in nearby communities.
 09-12-2023,Mumbai India,20.977191,72.786709,Low,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
-08-12-2023,UK (Yorkshire),52.130595,-0.73406,Medium,Seasonal river flooding affecting agricultural areas — reported impact in nearby communities.
 23-11-2023,Thailand,15.061506,100.239864,Medium,Flash floods following extreme storms — reported impact in nearby communities.
 15-11-2023,Assam India,26.25665,93.694539,Medium,Severe flooding after prolonged heavy rainfall — reported impact in nearby communities.
 29-10-2023,Western Germany,50.248164,6.971098,Medium,Flash floods following extreme storms — reported impact in nearby communities.
