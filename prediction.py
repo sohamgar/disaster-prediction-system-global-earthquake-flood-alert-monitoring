@@ -101,8 +101,10 @@ app.config["SQLALCHEMY_DATABASE_URI"] = (
 sqldb.init_app(app)
 
 # create tables
-with app.app_context():
-    sqldb.create_all()
+if ENV == "local":
+    with app.app_context():
+        sqldb.create_all()
+
 mail = Mail(app)
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Only show warnings and errors
