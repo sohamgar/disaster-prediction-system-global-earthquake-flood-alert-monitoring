@@ -59,9 +59,11 @@ if ENV == "local":
     load_dotenv()
 
 # ---------- DATABASE (pymysql) ----------
-db = None  # IMPORTANT
+# ---------- DATABASE (pymysql) ----------
+db = None
 
-if ENV == "local":
+# Always try to connect, local ya production
+try:
     db = pymysql.connect(
         host=os.environ["MYSQL_HOST"],
         user=os.environ["MYSQL_USER"],
@@ -70,6 +72,10 @@ if ENV == "local":
         port=int(os.environ.get("MYSQL_PORT", "3306")),
         connect_timeout=10
     )
+    print("✅ Database connected successfully")
+except Exception as e:
+    db = None
+    print("⚠️ Database connection failed:", e)
 
 
 # Write your API key here.
