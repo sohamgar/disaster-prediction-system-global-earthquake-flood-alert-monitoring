@@ -60,25 +60,36 @@ if ENV == "local":
 
 # ---------- DATABASE (pymysql) ----------
 # ---------- DATABASE (pymysql) ----------
-db = None
+class SafeDB:
+    def __init__(self):
+        self.db = None
 
-try:
-    if os.environ.get("RENDER") != "true":
-        db = pymysql.connect(
+    def _connect(self):
+        self.db = pymysql.connect(
             host=os.environ["MYSQL_HOST"],
             user=os.environ["MYSQL_USER"],
             password=os.environ["MYSQL_PASSWORD"],
             database=os.environ["MYSQL_DATABASE"],
             port=int(os.environ.get("MYSQL_PORT", "3306")),
-            connect_timeout=10
+            connect_timeout=10,
+            autocommit=True
         )
-        print("✅ DB connected (local)")
-    else:
-        print("ℹ️ Skipping global DB connect on Render")
-except Exception as e:
-    db = None
-    print("⚠️ DB error:", e)
+        print("✅ DB connected / reconnected")
 
+    def cursor(self):
+        try:
+            if self.db is None or not self.db.open:
+                self._connect()
+        except Exception:
+            self._connect()
+        return self.db.cursor()
+
+    def __getattr__(self, name):
+        if self.db is None or not self.db.open:
+            self._connect()
+        return getattr(self.db, name)
+
+db = SafeDB()
 
 # Write your API key here.
 api_key = "AIzaSyDYPhWrJ_gi7we9v3G9CwBeQIfb9Je4wl4"
