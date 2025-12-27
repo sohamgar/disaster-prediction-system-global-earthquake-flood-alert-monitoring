@@ -60,36 +60,28 @@ if ENV == "local":
 
 # ---------- DATABASE (pymysql) ----------
 # ---------- DATABASE (pymysql) ----------
-class SafeDB:
-    def __init__(self):
-        self.db = None
+db = None
 
-    def _connect(self):
-        self.db = pymysql.connect(
-            host=os.environ["MYSQL_HOST"],
-            user=os.environ["MYSQL_USER"],
-            password=os.environ["MYSQL_PASSWORD"],
-            database=os.environ["MYSQL_DATABASE"],
-            port=int(os.environ.get("MYSQL_PORT", "3306")),
-            connect_timeout=10,
-            autocommit=True
-        )
-        print("✅ DB connected / reconnected")
+def connect_db():
+    global db
+    try:
+        if db is None or not db.open:
+            db = pymysql.connect(
+                host=os.environ["MYSQL_HOST"],
+                user=os.environ["MYSQL_USER"],
+                password=os.environ["MYSQL_PASSWORD"],
+                database=os.environ["MYSQL_DATABASE"],
+                port=int(os.environ.get("MYSQL_PORT", "3306")),
+                connect_timeout=10,
+                autocommit=True
+            )
+            print("✅ DB (re)connected")
+    except Exception as e:
+        db = None
+        print("⚠️ DB connection error:", e)
 
-    def cursor(self):
-        try:
-            if self.db is None or not self.db.open:
-                self._connect()
-        except Exception:
-            self._connect()
-        return self.db.cursor()
-
-    def __getattr__(self, name):
-        if self.db is None or not self.db.open:
-            self._connect()
-        return getattr(self.db, name)
-
-db = SafeDB()
+# 🔥 IMPORTANT: connect once at startup
+connect_db()
 
 # Write your API key here.
 api_key = "AIzaSyDYPhWrJ_gi7we9v3G9CwBeQIfb9Je4wl4"
@@ -101,17 +93,11 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.secret_key = "super_secret_key_123"
 
 # EMAIL SETTINGS
-# EMAIL SETTINGS (Render-friendly)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 465         # SSL port (Render pe TLS/587 sometimes block hota hai)
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_USE_SSL'] = True    # Use SSL instead of TLS
-app.config['MAIL_USERNAME'] = "sohamgarud0806@gmail.com"  # Tumhara email
-app.config['MAIL_PASSWORD'] = "pwjdjogjwnzwuhle"          # Gmail app password
-app.config['MAIL_DEFAULT_SENDER'] = app.config['MAIL_USERNAME']
-
-
-      # CHANGE
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = "sohamgarud0806@gmail.com"      # CHANGE
+app.config['MAIL_PASSWORD'] = "pwjdjogjwnzwuhle"        # CHANGE
 serializer = URLSafeTimedSerializer(app.secret_key)
 app.config["SQLALCHEMY_DATABASE_URI"] = (
     f"mysql+pymysql://{os.environ['MYSQL_USER']}:"
