@@ -76,11 +76,12 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.secret_key = "super_secret_key_123"
 
 # EMAIL SETTINGS
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = "sohamgarud0806@gmail.com"  # CHANGE
-app.config['MAIL_PASSWORD'] = "pwjdjogjwnzwuhle"  # CHANGE
+app.config['MAIL_SERVER'] = os.environ.get("MAIL_SERVER")
+app.config['MAIL_PORT'] = int(os.environ.get("MAIL_PORT", 587))
+app.config['MAIL_USE_TLS'] = os.environ.get("MAIL_USE_TLS") == "True"
+app.config['MAIL_USERNAME'] = os.environ.get("MAIL_USERNAME")
+app.config['MAIL_PASSWORD'] = os.environ.get("MAIL_PASSWORD")
+ # CHANGE
 serializer = URLSafeTimedSerializer(app.secret_key)
 
 
@@ -128,14 +129,7 @@ def get_db_connection():
 
 
 
-from threading import Thread
 
-def send_async_email_thread(app, msg):
-    with app.app_context():
-        mail.send(msg)
-
-def send_email_async(msg):
-    Thread(target=send_async_email_thread, args=(app, msg)).start()
 
 
 from flask import jsonify
@@ -310,7 +304,7 @@ def forgot_password():
                     </p>
                 </div>
             """
-            send_email_async(msg)
+            mail.send(msg)
             flash("Password reset email sent!", "success")
         else:
             flash("Email not found!", "danger")
