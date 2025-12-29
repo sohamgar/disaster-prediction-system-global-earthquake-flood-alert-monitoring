@@ -130,13 +130,12 @@ def get_db_connection():
 
 from threading import Thread
 
-def send_async_email(app, msg):
+def send_async_email_thread(app, msg):
     with app.app_context():
         mail.send(msg)
 
-def send_email(msg):
-    Thread(target=send_async_email, args=(app, msg)).start()
-
+def send_email_async(msg):
+    Thread(target=send_async_email_thread, args=(app, msg)).start()
 
 
 from flask import jsonify
@@ -311,7 +310,7 @@ def forgot_password():
                     </p>
                 </div>
             """
-            mail.send(msg)
+            send_email_async(msg)
             flash("Password reset email sent!", "success")
         else:
             flash("Email not found!", "danger")
