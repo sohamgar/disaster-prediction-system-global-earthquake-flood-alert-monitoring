@@ -34,20 +34,17 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
 import joblib
 import tensorflow.compat.v1 as tf
+
 tf.disable_v2_behavior()
-#tf.compat.v1.enable_eager_execution()
+# tf.compat.v1.enable_eager_execution()
 from bs4 import BeautifulSoup
 from models import sqldb, Feedback, Reply
-
-
 
 # HTTP requests
 import requests
 
 # Database
 import pymysql
-
-
 
 weather_data = []
 weather_labels = []
@@ -56,36 +53,22 @@ ENV = os.getenv("APP_ENV", "local")
 
 if ENV == "local":
     from dotenv import load_dotenv
+
     load_dotenv()
 
-# ---------- DATABASE (pymysql) ----------
-# ---------- DATABASE (pymysql) ----------
-db = None
-
-def connect_db():
-    global db
-    try:
-        if db is None or not db.open:
-            db = pymysql.connect(
-                host=os.environ["MYSQL_HOST"],
-                user=os.environ["MYSQL_USER"],
-                password=os.environ["MYSQL_PASSWORD"],
-                database=os.environ["MYSQL_DATABASE"],
-                port=int(os.environ.get("MYSQL_PORT", "3306")),
-                connect_timeout=10,
-                autocommit=True
-            )
-            print("✅ DB (re)connected")
-    except Exception as e:
-        db = None
-        print("⚠️ DB connection error:", e)
-
-# 🔥 IMPORTANT: connect once at startup
-connect_db()
+db = pymysql.connect(
+    host=os.environ["MYSQL_HOST"],
+    user=os.environ["MYSQL_USER"],
+    password=os.environ["MYSQL_PASSWORD"],
+    database=os.environ["MYSQL_DATABASE"],
+    port=int(os.environ.get("MYSQL_PORT", "3306")),
+    connect_timeout=10
+)
+print("RENDER =", os.getenv("RENDER"))
+print("MYSQL_HOST =", os.getenv("MYSQL_HOST"))
 
 # Write your API key here.
 api_key = "AIzaSyDYPhWrJ_gi7we9v3G9CwBeQIfb9Je4wl4"
-
 
 app = Flask(__name__)
 app.jinja_env.auto_reload = True
@@ -96,26 +79,18 @@ app.secret_key = "super_secret_key_123"
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = "sohamgarud0806@gmail.com"      # CHANGE
-app.config['MAIL_PASSWORD'] = "pwjdjogjwnzwuhle"        # CHANGE
+app.config['MAIL_USERNAME'] = "sohamgarud0806@gmail.com"  # CHANGE
+app.config['MAIL_PASSWORD'] = "pwjdjogjwnzwuhle"  # CHANGE
 serializer = URLSafeTimedSerializer(app.secret_key)
-app.config["SQLALCHEMY_DATABASE_URI"] = (
-    f"mysql+pymysql://{os.environ['MYSQL_USER']}:"
-    f"{os.environ['MYSQL_PASSWORD']}@"
-    f"{os.environ['MYSQL_HOST']}:"
-    f"{os.environ.get('MYSQL_PORT','3306')}/"
-    f"{os.environ['MYSQL_DATABASE']}"
-)
-
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:@localhost/dmnat"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # initialize SQLAlchemy
 sqldb.init_app(app)
 
 # create tables
-if ENV == "local":
-    with app.app_context():
-        sqldb.create_all()
-
+with app.app_context():
+    sqldb.create_all()
 mail = Mail(app)
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Only show warnings and errors
@@ -129,6 +104,7 @@ os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
 import pymysql
 
+
 def get_db_connection():
     return pymysql.connect(
         host=os.environ["MYSQL_HOST"],
@@ -141,12 +117,13 @@ def get_db_connection():
     )
 
 
-
 from flask import jsonify
 import csv
 
+
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 def crop_center_square(img: Image.Image) -> Image.Image:
     width, height = img.size
@@ -169,8 +146,8 @@ def generate_default_avatar(username, user_id):
     # Image settings
     size = (300, 300)
     bg_color = (66, 133, 244)
-   # Yellow / Gmail-like
-    text_color = (255, 255, 255) # White letter
+    # Yellow / Gmail-like
+    text_color = (255, 255, 255)  # White letter
 
     # Create image
     img = Image.new("RGB", size, bg_color)
@@ -203,6 +180,7 @@ def generate_default_avatar(username, user_id):
 
     return default_name
 
+
 @app.route("/api/get_historical_earthquakes")
 def get_historical_earthquakes():
     data = []
@@ -213,10 +191,10 @@ def get_historical_earthquakes():
 
             for row in reader:
                 data.append({
-                    "time": row["time"],          # ISO format
+                    "time": row["time"],  # ISO format
                     "latitude": float(row["latitude"]),
                     "longitude": float(row["longitude"]),
-                    "depth": float(row["depth"]), # km
+                    "depth": float(row["depth"]),  # km
                     "mag": float(row["mag"]),
                     "magType": row["magType"],
                     "place": row["place"],
@@ -230,6 +208,7 @@ def get_historical_earthquakes():
         }), 500
 
     return jsonify(data)
+
 
 @app.route("/api/get_historical_floods")
 def get_historical_floods():
@@ -253,6 +232,7 @@ def get_historical_floods():
         return jsonify({"status": "error", "message": str(e)})
 
     return jsonify(data)
+
 
 @app.route("/admin/overview")
 def admin_overview():
@@ -316,16 +296,13 @@ def forgot_password():
     return render_template('forgot_password.html')
 
 
-
-
 @app.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     try:
         email = serializer.loads(token, salt='password-reset-salt', max_age=3600)  # 1 hour
     except:
-        #flash("The reset link is invalid or expired.", "danger")
+        # flash("The reset link is invalid or expired.", "danger")
         return render_template('reset_link_expired.html')
-
 
     if request.method == 'POST':
         new_password = request.form['password'].strip()
@@ -340,10 +317,7 @@ def reset_password(token):
             flash("Password successfully reset!", "success")
             return redirect(url_for('login_page'))
 
-
     return render_template('reset_password.html')
-
-
 
 
 def send_registration_email(email, username, lat, lng):
@@ -423,9 +397,9 @@ def register_page():
         # INSERT
         try:
             sql = """
-                INSERT INTO users (username, name, email, password, mobile, latitude, longitude) 
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """
+                  INSERT INTO users (username, name, email, password, mobile, latitude, longitude)
+                  VALUES (%s, %s, %s, %s, %s, %s, %s) \
+                  """
             cursor.execute(sql, (username, name, email, password, mobile, lat, lng))
             db.commit()
 
@@ -439,6 +413,7 @@ def register_page():
             flash("Error: " + str(e), "danger")
 
     return render_template("register.html")
+
 
 @app.route("/settings/profile", methods=["POST"])
 def update_profile():
@@ -460,9 +435,11 @@ def update_profile():
     # EMAIL DUPLICATE CHECK
     # -----------------------------
     cursor.execute("""
-        SELECT id FROM users 
-        WHERE email = %s AND id != %s
-    """, (email, user_id))
+                   SELECT id
+                   FROM users
+                   WHERE email = %s
+                     AND id != %s
+                   """, (email, user_id))
 
     existing_user = cursor.fetchone()
 
@@ -476,10 +453,14 @@ def update_profile():
     # UPDATE PROFILE
     # -----------------------------
     cursor.execute("""
-        UPDATE users 
-        SET name=%s, email=%s, mobile=%s, latitude=%s, longitude=%s 
-        WHERE id=%s
-    """, (full_name, email, phone, latitude, longitude, user_id))
+                   UPDATE users
+                   SET name=%s,
+                       email=%s,
+                       mobile=%s,
+                       latitude=%s,
+                       longitude=%s
+                   WHERE id = %s
+                   """, (full_name, email, phone, latitude, longitude, user_id))
 
     db.commit()
     cursor.close()
@@ -542,6 +523,7 @@ def update_avatar():
     flash("Profile photo updated successfully", "success")
     return redirect(url_for("settings"))
 
+
 @app.route("/remove_avatar", methods=["POST"])
 def remove_avatar():
     if "user_id" not in session:
@@ -571,6 +553,7 @@ def remove_avatar():
 
     flash("Avatar removed", "success")
     return redirect(url_for("settings"))
+
 
 @app.route("/settings/password", methods=["POST"])
 def update_password():
@@ -623,16 +606,12 @@ def update_password():
     return redirect(url_for("settings"))
 
 
-
-
 @app.route('/login', methods=['GET', 'POST'])
 def login_page():
-
     if request.method == 'GET':
         session.pop("pending_user", None)
         session.pop("pending_otp", None)
         session.pop("otp_expiry", None)
-
 
     if request.method == 'POST':
         username_input = request.form.get('username')
@@ -640,13 +619,14 @@ def login_page():
 
         # ✅ USE SAME DB CONNECTION AS PASSWORD UPDATE
         db = get_db_connection()
-        cursor = db.cursor(pymysql.cursors.DictCursor) # DictCursor (important)
+        cursor = db.cursor(pymysql.cursors.DictCursor)  # DictCursor (important)
 
         cursor.execute(
             """
             SELECT id, username, name, email, password, latitude, longitude
             FROM users
-            WHERE username = %s OR email = %s
+            WHERE username = %s
+               OR email = %s
             """,
             (username_input, username_input)
         )
@@ -717,10 +697,10 @@ Security & Authentication Team
 
     return render_template("login.html")
 
+
 @app.route("/terms")
 def terms():
     return render_template("terms.html")
-
 
 
 @app.route("/settings")
@@ -732,9 +712,10 @@ def settings():
     cursor = db.cursor()
 
     cursor.execute("""
-        SELECT username, name, email, mobile, latitude, longitude, avatar
-        FROM users WHERE id=%s
-    """, (session['user_id'],))
+                   SELECT username, name, email, mobile, latitude, longitude, avatar
+                   FROM users
+                   WHERE id = %s
+                   """, (session['user_id'],))
 
     user = cursor.fetchone()
     cursor.close()
@@ -748,9 +729,8 @@ def settings():
         phone=user["mobile"],
         latitude=user["latitude"],
         longitude=user["longitude"],
-        avatar=user["avatar"]   # 🔥 THIS WAS MISSING
+        avatar=user["avatar"]  # 🔥 THIS WAS MISSING
     )
-
 
 
 @app.route("/verify-otp", methods=["GET", "POST"])
@@ -780,7 +760,7 @@ def verify_otp_page():
             session.pop("pending_user", None)
             session.pop("otp_email", None)
 
-            #flash("Login successful", "success")
+            # flash("Login successful", "success")
 
             # ✅ Redirect to login success page
             return redirect(url_for("login_success"))
@@ -790,6 +770,7 @@ def verify_otp_page():
 
     return render_template("verify_otp.html")
 
+
 @app.route("/login-success")
 def login_success():
     if 'user_id' not in session:  # Check if user is logged in
@@ -797,10 +778,8 @@ def login_success():
     return render_template("login_success.html", username=session.get('user_name'))
 
 
-
 @app.route("/resend-otp")
 def resend_otp():
-
     # ✅ If user already logged in, block OTP resend
     if "user_id" in session:
         return redirect(url_for("index"))
@@ -860,7 +839,6 @@ Disaster Alert Security Team
     return redirect(url_for("verify_otp_page"))
 
 
-
 @app.route("/check_username")
 def check_username():
     username = request.args.get("username", "").strip()
@@ -868,9 +846,11 @@ def check_username():
         return jsonify({"available": False})
 
     try:
-        cur = db.cursor()
-        cur.execute("SELECT 1 FROM users WHERE username=%s", (username,))
-        exists = cur.fetchone() is not None
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1 FROM users WHERE username=%s", (username,))
+            exists = cur.fetchone() is not None
+        conn.close()
         return jsonify({"available": not exists})
     except Exception as e:
         print("Username check error:", e)
@@ -884,9 +864,11 @@ def check_email():
         return jsonify({"available": False})
 
     try:
-        cur = db.cursor()
-        cur.execute("SELECT 1 FROM users WHERE email=%s", (email,))
-        exists = cur.fetchone() is not None
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1 FROM users WHERE email=%s", (email,))
+            exists = cur.fetchone() is not None
+        conn.close()
         return jsonify({"available": not exists})
     except Exception as e:
         print("Email check error:", e)
@@ -898,10 +880,8 @@ from werkzeug.security import generate_password_hash
 print(generate_password_hash("Admin@123"))
 
 
-
 @app.route("/admin_login", methods=["GET", "POST"])
 def admin_login():
-
     if request.method == "GET":
         session.pop("admin_id", None)
         session.pop("admin_username", None)
@@ -996,10 +976,8 @@ def admin_logout():
     return redirect(url_for("admin_login"))
 
 
-
 @app.route("/admin_verify_otp", methods=["GET", "POST"])
 def admin_verify_otp():
-
     # Already logged in → dashboard
     if "admin_id" in session:
         return redirect(url_for("admin_dashboard"))
@@ -1044,6 +1022,7 @@ def admin_verify_otp():
 
     return render_template("admin_verify_otp.html")
 
+
 @app.route("/admin_login_success")
 def admin_login_success():
     # If admin not logged in, prevent direct access
@@ -1054,7 +1033,6 @@ def admin_login_success():
 
 
 @app.route("/admin_resend_otp", methods=["POST"])
-
 def admin_resend_otp():
     import random
     import smtplib
@@ -1113,7 +1091,7 @@ def admin_resend_otp():
         your administrator account on the Disaster Alert System.
 
         🔐 Your NEW OTP is: {new_otp}
-        
+
 
         ⏳ This OTP is valid for 5 minutes only and can be used once.
         For your security, please do not share this OTP with anyone.
@@ -1149,9 +1127,9 @@ def admin_resend_otp():
     flash("A new OTP has been sent to your registered admin email.", "success")
     return redirect("/admin_verify_otp")
 
+
 @app.route("/admin/test_email")
 def admin_test_email():
-
     # Admin login check
     if "admin_id" not in session:
         flash("Please login first.", "warning")
@@ -1175,10 +1153,10 @@ def admin_test_email():
 
     # Get SMTP settings from DB
     cursor.execute("""
-        SELECT smtp_email, smtp_password
-        FROM system_settings
-        WHERE id=1
-    """)
+                   SELECT smtp_email, smtp_password
+                   FROM system_settings
+                   WHERE id = 1
+                   """)
     settings = cursor.fetchone()
 
     if not settings or not settings[0] or not settings[1]:
@@ -1234,12 +1212,13 @@ def admin_dashboard():
     }
     return render_template("admin_dashboard.html", admin=admin)
 
+
 from flask import render_template, request, redirect, session, flash
 from werkzeug.security import generate_password_hash
 
+
 @app.route("/admin/settings", methods=["GET", "POST"])
 def admin_settings():
-
     if "admin_id" not in session:
         flash("Please login first.", "warning")
         return redirect("/admin_login")
@@ -1256,24 +1235,24 @@ def admin_settings():
         if smtp_password:
             # ✅ Update WITH password
             cursor.execute("""
-                UPDATE system_settings SET
-                    rainfall_threshold=%s,
-                    flood_alert_enabled=%s,
-                    earthquake_magnitude=%s,
-                    smtp_email=%s,
-                    smtp_password=%s
-                WHERE id=1
-            """, (rainfall, flood_alert, magnitude, smtp_email, smtp_password))
+                           UPDATE system_settings
+                           SET rainfall_threshold=%s,
+                               flood_alert_enabled=%s,
+                               earthquake_magnitude=%s,
+                               smtp_email=%s,
+                               smtp_password=%s
+                           WHERE id = 1
+                           """, (rainfall, flood_alert, magnitude, smtp_email, smtp_password))
         else:
             # ✅ Update WITHOUT password
             cursor.execute("""
-                UPDATE system_settings SET
-                    rainfall_threshold=%s,
-                    flood_alert_enabled=%s,
-                    earthquake_magnitude=%s,
-                    smtp_email=%s
-                WHERE id=1
-            """, (rainfall, flood_alert, magnitude, smtp_email))
+                           UPDATE system_settings
+                           SET rainfall_threshold=%s,
+                               flood_alert_enabled=%s,
+                               earthquake_magnitude=%s,
+                               smtp_email=%s
+                           WHERE id = 1
+                           """, (rainfall, flood_alert, magnitude, smtp_email))
 
         db.commit()
         flash("System settings saved successfully.", "success")
@@ -1282,6 +1261,7 @@ def admin_settings():
     settings = cursor.fetchone()
 
     return render_template("admin_settings.html", settings=settings)
+
 
 @app.route("/admin/admins")
 def admin_management():
@@ -1357,9 +1337,9 @@ def delete_admin(admin_id):
 from pymysql.err import IntegrityError
 from werkzeug.security import generate_password_hash
 
+
 @app.route("/admin/add_admin", methods=["POST"])
 def add_admin():
-
     if "admin_id" not in session:
         flash("Please login first.", "warning")
         return redirect("/admin_login")
@@ -1402,6 +1382,7 @@ def add_admin():
     flash("New admin added successfully!", "success")
     return redirect("/admin/admins")
 
+
 @app.route("/admin/change_password", methods=["POST"])
 def change_admin_password():
     if "admin_id" not in session:
@@ -1429,21 +1410,20 @@ def change_admin_password():
     return redirect("/admin/admins")
 
 
-
 @app.route("/admin/users")
 def admin_users():
     if "admin_id" not in session:
         return redirect("/admin_login")
 
-    db = get_db_connection()          # 🔥 FRESH CONNECTION
+    db = get_db_connection()  # 🔥 FRESH CONNECTION
     cursor = db.cursor()
 
     try:
         cursor.execute("""
-            SELECT id, username, name, email, mobile, latitude, longitude
-            FROM users
-            ORDER BY id DESC
-        """)
+                       SELECT id, username, name, email, mobile, latitude, longitude
+                       FROM users
+                       ORDER BY id DESC
+                       """)
         users = cursor.fetchall()
 
         return render_template("admin_users.html", users=users)
@@ -1454,6 +1434,7 @@ def admin_users():
 
 
 from werkzeug.security import generate_password_hash
+
 
 @app.route("/admin/user/add", methods=["POST"])
 def add_user():
@@ -1486,12 +1467,12 @@ def add_user():
 
         # ---------- INSERT USER ----------
         cursor.execute("""
-            INSERT INTO users
-            (username, name, email, password, mobile, latitude, longitude)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (username, name, email, password, mobile, latitude, longitude))
+                       INSERT INTO users
+                           (username, name, email, password, mobile, latitude, longitude)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s)
+                       """, (username, name, email, password, mobile, latitude, longitude))
 
-        db.commit()   # ✅ COMMIT FIRST (IMPORTANT)
+        db.commit()  # ✅ COMMIT FIRST (IMPORTANT)
 
         # ---------- SEND EMAIL (SAFE) ----------
         try:
@@ -1512,6 +1493,7 @@ def add_user():
 
     return redirect("/admin/users")
 
+
 @app.route("/admin/user/<int:user_id>")
 def admin_user_view(user_id):
     if "admin_id" not in session:
@@ -1526,6 +1508,7 @@ def admin_user_view(user_id):
 
     return render_template("admin_user_view.html", user=user)
 
+
 @app.route("/admin/user/edit/<int:user_id>")
 def admin_user_edit(user_id):
     if "admin_id" not in session:
@@ -1539,6 +1522,7 @@ def admin_user_edit(user_id):
     user = cur.fetchone()
 
     return render_template("admin_user_edit.html", user=user)
+
 
 @app.route("/admin/user/update/<int:user_id>", methods=["POST"])
 def admin_user_update(user_id):
@@ -1571,15 +1555,15 @@ def admin_user_update(user_id):
     # If validation passes, update
     try:
         cur.execute("""
-            UPDATE users SET 
-                username=%s, 
-                name=%s, 
-                email=%s, 
-                mobile=%s, 
-                latitude=%s, 
-                longitude=%s
-            WHERE id=%s
-        """, (username, name, email, mobile, latitude, longitude, user_id))
+                    UPDATE users
+                    SET username=%s,
+                        name=%s,
+                        email=%s,
+                        mobile=%s,
+                        latitude=%s,
+                        longitude=%s
+                    WHERE id = %s
+                    """, (username, name, email, mobile, latitude, longitude, user_id))
         db.commit()
         flash("User updated successfully!", "success")
     except Exception as e:
@@ -1587,6 +1571,7 @@ def admin_user_update(user_id):
         flash(f"Error updating user: {e}", "danger")
 
     return redirect("/admin/users")
+
 
 @app.route("/admin/user/delete/<int:user_id>")
 def admin_user_delete(user_id):
@@ -1600,8 +1585,10 @@ def admin_user_delete(user_id):
     flash("User deleted!", "danger")
     return redirect("/admin/users")
 
+
 feedback_data = []
 feedback_id_counter = 1
+
 
 # -----------------------
 # Routes
@@ -1637,13 +1624,21 @@ def get_feedback():
 
     try:
         cursor.execute("""
-            SELECT f.id, f.type, f.message, f.disaster_type, f.date,
-                   u.id AS user_id, u.name, u.email, u.mobile, u.avatar
-            FROM feedback f
-            JOIN users u ON f.user_id = u.id
-            WHERE f.user_id = %s
-            ORDER BY f.date DESC
-        """, (user_id,))
+                       SELECT f.id,
+                              f.type,
+                              f.message,
+                              f.disaster_type,
+                              f.date,
+                              u.id AS user_id,
+                              u.name,
+                              u.email,
+                              u.mobile,
+                              u.avatar
+                       FROM feedback f
+                                JOIN users u ON f.user_id = u.id
+                       WHERE f.user_id = %s
+                       ORDER BY f.date DESC
+                       """, (user_id,))
         feedbacks = cursor.fetchall()
 
         result = []
@@ -1651,11 +1646,11 @@ def get_feedback():
         for f in feedbacks:
             # ✅ FETCH ADMIN NAME ALSO
             cursor.execute("""
-                SELECT admin_username, message, date
-                FROM replies
-                WHERE feedback_id = %s
-                ORDER BY date ASC
-            """, (f["id"],))
+                           SELECT admin_username, message, date
+                           FROM replies
+                           WHERE feedback_id = %s
+                           ORDER BY date ASC
+                           """, (f["id"],))
             replies = cursor.fetchall()
 
             result.append({
@@ -1701,14 +1696,14 @@ def add_feedback():
 
     try:
         cursor.execute("""
-            INSERT INTO feedback (user_id, type, message, disaster_type, date)
-            VALUES (%s, %s, %s, %s, NOW())
-        """, (
-            session.get("user_id"),   # 🔥 THIS IS REQUIRED
-            data["type"],
-            data["message"],
-            data["disaster_type"]
-        ))
+                       INSERT INTO feedback (user_id, type, message, disaster_type, date)
+                       VALUES (%s, %s, %s, %s, NOW())
+                       """, (
+                           session.get("user_id"),  # 🔥 THIS IS REQUIRED
+                           data["type"],
+                           data["message"],
+                           data["disaster_type"]
+                       ))
 
         conn.commit()
         return jsonify({"success": True})
@@ -1804,9 +1799,9 @@ def reply_feedback(feedback_id):
 
         # ✅ INSERT WITH VALID admin_id
         cursor.execute("""
-            INSERT INTO replies (feedback_id, admin_id, admin_username, message, date)
-            VALUES (%s, %s, %s, %s, NOW())
-        """, (feedback_id, admin_id, admin_username, reply_msg))
+                       INSERT INTO replies (feedback_id, admin_id, admin_username, message, date)
+                       VALUES (%s, %s, %s, %s, NOW())
+                       """, (feedback_id, admin_id, admin_username, reply_msg))
 
         conn.commit()
         return jsonify({"success": True})
@@ -1814,6 +1809,7 @@ def reply_feedback(feedback_id):
     finally:
         cursor.close()
         conn.close()
+
 
 @app.route("/api/admin/feedback", methods=["GET"])
 def get_admin_feedback():
@@ -1825,12 +1821,20 @@ def get_admin_feedback():
 
     try:
         cursor.execute("""
-            SELECT f.id, f.type, f.message, f.disaster_type, f.date,
-                   u.id AS user_id, u.name, u.email, u.mobile, u.avatar
-            FROM feedback f
-            JOIN users u ON f.user_id = u.id
-            ORDER BY f.date DESC
-        """)
+                       SELECT f.id,
+                              f.type,
+                              f.message,
+                              f.disaster_type,
+                              f.date,
+                              u.id AS user_id,
+                              u.name,
+                              u.email,
+                              u.mobile,
+                              u.avatar
+                       FROM feedback f
+                                JOIN users u ON f.user_id = u.id
+                       ORDER BY f.date DESC
+                       """)
 
         feedbacks = cursor.fetchall()
         result = []
@@ -1838,11 +1842,11 @@ def get_admin_feedback():
         for f in feedbacks:
             # ---------------- Replies ----------------
             cursor.execute("""
-                SELECT admin_username, message, date
-                FROM replies
-                WHERE feedback_id = %s
-                ORDER BY date ASC
-            """, (f["id"],))
+                           SELECT admin_username, message, date
+                           FROM replies
+                           WHERE feedback_id = %s
+                           ORDER BY date ASC
+                           """, (f["id"],))
             replies = cursor.fetchall()
 
             # ---------------- AVATAR FIX (SAFE) ----------------
@@ -1881,12 +1885,11 @@ def get_admin_feedback():
         db.close()
 
 
-
 # API to delete feedback
 @app.route("/api/feedback/delete/<int:fid>", methods=["POST"])
 def delete_feedback(fid):
     db = get_db_connection()
-    cursor = db.cursor()   # ✅ correct
+    cursor = db.cursor()  # ✅ correct
 
     # delete replies first
     cursor.execute(
@@ -1905,7 +1908,9 @@ def delete_feedback(fid):
 
     return jsonify({"success": True})
 
-WEATHER_KEY = "fb116bebc392ccc8ab251927edcb55d6"   # set this
+
+WEATHER_KEY = "fb116bebc392ccc8ab251927edcb55d6"  # set this
+
 
 @app.route("/admin/flood_real_time")
 def flood_real_time():
@@ -1958,7 +1963,6 @@ def flood_real_time():
     return render_template("admin_flood_real_time.html", data=user_flood_data)
 
 
-
 @app.route("/api/get_users_locations")
 def get_users_locations():
     cursor = db.cursor()
@@ -1968,7 +1972,7 @@ def get_users_locations():
     user_list = []
     for r in rows:
         user_list.append({
-            "id": r[0],         # include the user ID
+            "id": r[0],  # include the user ID
             "name": r[1],
             "lat": r[2],
             "lon": r[3]
@@ -2018,6 +2022,7 @@ def admin_flood_alert(user_id):
     flash("Flood alert sent successfully!", "success")
     return redirect("/admin/flood_real_time")
 
+
 def is_valid_email(email):
     pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
     return re.match(pattern, email)
@@ -2062,6 +2067,7 @@ Stay safe!
     except Exception as e:
         print(f"❌ Failed to send alert: {e}")
         return False
+
 
 # -------------------------
 # Route to send alert
@@ -2137,11 +2143,12 @@ def send_alert(user_id):
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
-#USGS_FEED_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson"
+# USGS_FEED_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson"
 
 @app.route("/admin/earthquake_dashboard")
 def earthquake_dashboard():
     return render_template("earthquake_dashboard.html")
+
 
 @app.route("/api/get_users_earthquakes")
 def get_users_earthquakes():
@@ -2175,7 +2182,7 @@ def get_users_earthquakes():
     earthquakes = []
 
     for eq in feed.get("features", []):
-        coords = eq.get("geometry", {}).get("coordinates", [0,0,0])
+        coords = eq.get("geometry", {}).get("coordinates", [0, 0, 0])
         props = eq.get("properties", {})
         earthquakes.append({
             "eq_lat": coords[1],
@@ -2196,6 +2203,7 @@ def get_users_earthquakes():
 
 earthquake_df = pd.read_csv('historical_earthquake.csv', encoding='latin1', engine='python')
 flood_df = pd.read_csv('historical_floods.csv', encoding='latin1', engine='python')
+
 
 # Merge historic data
 def get_historic_data():
@@ -2255,17 +2263,21 @@ def get_historic_data():
 
     return data
 
+
 @app.route('/api/historic_data')
 def historic_data_api():
     return jsonify(get_historic_data())
+
 
 @app.route('/admin/reports')
 def reports_page():
     return render_template('report.html')
 
+
 @app.route('/api/get_historic_data')
 def get_historic_data_api():
     return jsonify(get_historic_data())
+
 
 # Excel report
 @app.route('/api/generate_report/excel/<report_type>')
@@ -2290,6 +2302,7 @@ def generate_excel(report_type):
         download_name=f'{report_type}_report_{now}.xlsx',
         as_attachment=True
     )
+
 
 # ----------------------------------------------
 # PDF REPORT
@@ -2350,6 +2363,8 @@ try:
     flood_df = pd.read_csv("historical_floods.csv", encoding="latin1")
 except FileNotFoundError:
     flood_df = pd.DataFrame(columns=["date", "area", "latitude", "longitude", "severity", "description"])
+
+
 @app.route('/api/add_report', methods=['POST'])
 def add_report():
     global earthquake_df, flood_df
@@ -2361,7 +2376,7 @@ def add_report():
 
     # Severity must come from frontend
     severity_value = data.get("severity")
-    print("🔥 RECEIVED SEVERITY FROM FRONTEND =", severity_value)   # <-- RIGHT PLACE
+    print("🔥 RECEIVED SEVERITY FROM FRONTEND =", severity_value)  # <-- RIGHT PLACE
 
     if not severity_value or severity_value.strip() == "":
         return jsonify({"error": "Please select a severity"}), 400
@@ -2402,6 +2417,7 @@ def add_report():
 
     return jsonify({"success": True})
 
+
 # API: Delete a report by type and date+area+lat+lon
 @app.route('/api/delete_report', methods=['POST'])
 def delete_report():
@@ -2412,11 +2428,12 @@ def delete_report():
 
     try:
         if report_type == "earthquake":
-            earthquake_df = earthquake_df[~((earthquake_df['date']==data['date']) & (earthquake_df['area']==data['area']))]
+            earthquake_df = earthquake_df[
+                ~((earthquake_df['date'] == data['date']) & (earthquake_df['area'] == data['area']))]
             earthquake_df.to_csv('historical_earthquake.csv', index=False, encoding='latin1')
 
         elif report_type == "flood":
-            flood_df = flood_df[~((flood_df['date']==data['date']) & (flood_df['area']==data['area']))]
+            flood_df = flood_df[~((flood_df['date'] == data['date']) & (flood_df['area'] == data['area']))]
             flood_df.to_csv('historical_floods.csv', index=False, encoding='latin1')
 
         else:
@@ -2427,13 +2444,15 @@ def delete_report():
 
     return jsonify({"success": True})
 
+
 def haversine(lat1, lon1, lat2, lon2):
     R = 6371  # Radius of earth in km
     dlat = radians(lat2 - lat1)
     dlon = radians(lon2 - lon1)
-    a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+    a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
     c = 2 * asin(sqrt(a))
     return R * c
+
 
 # Function to send email
 def send_email(to_email, subject, body):
@@ -2453,6 +2472,7 @@ def send_email(to_email, subject, body):
     except Exception as e:
         print(f"Failed to send email to {to_email}: {e}")
 
+
 # API to send alert to users within a radius
 @app.route("/api/send_alert", methods=["POST"])
 def send_disaster_alert():
@@ -2465,10 +2485,11 @@ def send_disaster_alert():
     cursor = db.cursor()
 
     cursor.execute("""
-        SELECT id, username, name, email, latitude, longitude
-        FROM users
-        WHERE latitude IS NOT NULL AND longitude IS NOT NULL
-    """)
+                   SELECT id, username, name, email, latitude, longitude
+                   FROM users
+                   WHERE latitude IS NOT NULL
+                     AND longitude IS NOT NULL
+                   """)
     users = cursor.fetchall()
     alerted = []
 
@@ -2514,6 +2535,7 @@ Stay safe and follow local emergency instructions.
         "message": f"Alert sent to {len(alerted)} users within {ALERT_RADIUS_KM} km"
     })
 
+
 # ================= HELP / USER GUIDE =================
 @app.route("/help")
 def help_page():
@@ -2549,6 +2571,7 @@ def about():
 
     return render_template("about.html")
 
+
 @app.route("/emergency-contacts")
 def emergency_contacts():
     if 'user_id' not in session:
@@ -2559,11 +2582,13 @@ def emergency_contacts():
         username=session.get('user_name')
     )
 
+
 @app.route('/')
 def index():
     if 'user_id' not in session:
         return redirect(url_for('login_page'))
     return render_template("index.html", username=session.get('user_name'))
+
 
 @app.route('/logout')
 def logout():
@@ -2577,11 +2602,13 @@ def earthquake():
         return redirect(url_for('login_page'))
     return render_template('earthq.html')
 
+
 @app.route('/sent')
 def sent():
     if 'user_id' not in session:
         return redirect(url_for('login_page'))
     return render_template('senti.html')
+
 
 @app.route('/storm')
 def storm():
@@ -2589,11 +2616,13 @@ def storm():
         return redirect(url_for('login_page'))
     return render_template('weatherp2.html')
 
+
 @app.route('/new')
 def new():
     if 'user_id' not in session:
         return redirect(url_for('login_page'))
     return render_template('new.html')
+
 
 @app.route('/weather')
 def weather():
@@ -2601,11 +2630,13 @@ def weather():
         return redirect(url_for('login_page'))
     return render_template('weather.html')
 
+
 @app.route('/earthgraphs')
 def earthgraphs():
     if 'user_id' not in session:
         return redirect(url_for('login_page'))
     return render_template('earthgraph.html')
+
 
 @app.route('/covid')
 def covid():
@@ -2613,11 +2644,13 @@ def covid():
         return redirect(url_for('login_page'))
     return render_template('covid.html')
 
+
 @app.route('/covi_pred')
 def covi_pred():
     if 'user_id' not in session:
         return redirect(url_for('login_page'))
     return render_template('covid_pred.html')
+
 
 @app.route('/covistats')
 def covistats():
@@ -2625,11 +2658,13 @@ def covistats():
         return redirect(url_for('login_page'))
     return render_template('covid_stats.html')
 
+
 @app.route('/covi')
 def covi():
     if 'user_id' not in session:
         return redirect(url_for('login_page'))
     return render_template('covidhostpitals.html')
+
 
 @app.route('/cov')
 def cov():
@@ -2637,11 +2672,13 @@ def cov():
         return redirect(url_for('login_page'))
     return render_template('covidhostpitals1.html')
 
+
 @app.route('/covcity')
 def covcity():
     if 'user_id' not in session:
         return redirect(url_for('login_page'))
     return render_template('scity.html')
+
 
 @app.route('/covstate')
 def covstate():
@@ -2649,67 +2686,68 @@ def covstate():
         return redirect(url_for('login_page'))
     return render_template('states.html')
 
-@app.route('/covid_tom',methods=['GET','POST'])
+
+@app.route('/covid_tom', methods=['GET', 'POST'])
 def covid_tom():
-    import numpy as np 
+    import numpy as np
     import pandas as pd
     import os
     from sklearn.preprocessing import normalize
-    a=pd.read_csv('time_series_covid19_confirmed_global.csv')
+    a = pd.read_csv('time_series_covid19_confirmed_global.csv')
     print(a)
-    b=a.transpose()
+    b = a.transpose()
     print(b)
-    train=b[[131]].values
-    train_x=train[4:] 
-    y=[]
+    train = b[[131]].values
+    train_x = train[4:]
+    y = []
     for i in train_x:
         y.append(i[0])
     print(y)
-    x=list(range(len(y)))
+    x = list(range(len(y)))
     print(x)
     import seaborn as sns
     sns.relplot(data=pd.DataFrame(y))
-    x=np.array(x)
-    y=np.array(y)
+    x = np.array(x)
+    y = np.array(y)
 
-    x=x.astype('float32')
-    y=y.astype('float32')
+    x = x.astype('float32')
+    y = y.astype('float32')
     print(x)
     print(y)
     print(x.dtype)
     print(y.dtype)
-   
-    x=(x.reshape(-1,1))
-    y=(y.reshape(-1,1))
-    #x=normalize(x)
-    #y=normalize(y)
-   
+
+    x = (x.reshape(-1, 1))
+    y = (y.reshape(-1, 1))
+    # x=normalize(x)
+    # y=normalize(y)
+
     print(x)
     print(y)
     from tensorflow.keras import Sequential
     from tensorflow.keras.layers import Dense
     import tensorflow as tf
-    predict=Sequential([Dense(74,activation='relu'),
-                        Dense(74*2,activation='relu'),
-                        Dense(74*2*2,activation='relu'),
-                        Dense(74*2*2*2,activation='relu'),
-                        Dense(74*2*2*2,activation='relu'),
-                        Dense(1)])
-    predict.compile(optimizer='adam',loss='mse',metrics=['mse','mae'])
-    predict.fit(x,y,batch_size=75,epochs=10000)
-    loss=predict.history.history
-    loss_pd=pd.DataFrame(loss)
+    predict = Sequential([Dense(74, activation='relu'),
+                          Dense(74 * 2, activation='relu'),
+                          Dense(74 * 2 * 2, activation='relu'),
+                          Dense(74 * 2 * 2 * 2, activation='relu'),
+                          Dense(74 * 2 * 2 * 2, activation='relu'),
+                          Dense(1)])
+    predict.compile(optimizer='adam', loss='mse', metrics=['mse', 'mae'])
+    predict.fit(x, y, batch_size=75, epochs=10000)
+    loss = predict.history.history
+    loss_pd = pd.DataFrame(loss)
     loss_pd.plot()
-    #loss_pd.savefig('output3.png')
-    sn_plot3=sns.relplot(data=loss_pd)
+    # loss_pd.savefig('output3.png')
+    sn_plot3 = sns.relplot(data=loss_pd)
     sn_plot3.savefig('D:/project/Disaster-Prediction-main/static/covid/output3.png')
 
     predict.predict(np.array([[1]]))
-    predicted_values=[]
+    predicted_values = []
     for i in range(1000):
         predicted_values.append(float(predict.predict(np.array([[i]], dtype=np.float32))[0][0]))
     print(predicted_values)
-    future=[]
+    future = []
     for i in predicted_values:
         # Safely extract value from model output (float or nested array)
         if isinstance(i, (list, tuple, np.ndarray)):
@@ -2722,21 +2760,23 @@ def covid_tom():
             future.append(0)
         else:
             future.append(round(float(value)))
-    future_df=pd.DataFrame({'Infected_people':future})
+    future_df = pd.DataFrame({'Infected_people': future})
     print("Actual_graph")
-    sn_plot=sns.relplot(data=pd.DataFrame(y))
+    sn_plot = sns.relplot(data=pd.DataFrame(y))
     sn_plot.savefig('D:/project/Disaster-Prediction-main/static/covid/output1.png')
     print("predicted_graph")
-    sn_plot1=sns.relplot(data=future_df[:73])
+    sn_plot1 = sns.relplot(data=future_df[:73])
     sn_plot1.savefig('D:/project/Disaster-Prediction-main/static/covid/output2.png')
     print("Future predictions graph")
     sns.relplot(data=future_df[:100])
+
     def preprocess(day):
         return round(day)
-    day=68
+
+    day = 68
     if request.method == 'POST':
-        date = request.form['date'] 
-        month = request.form['month'] 
+        date = request.form['date']
+        month = request.form['month']
         year = request.form['year']
     # --- Convert month name to number safely ---
     month_str_to_num = {
@@ -2773,11 +2813,11 @@ def covid_tom():
         infected = 0
     else:
         infected = preprocess(pred_value)
-    print("The Predicted infected people on the day",day,"in India are :",infected)    
+    print("The Predicted infected people on the day", day, "in India are :", infected)
     sns.relplot(data=future_df[:day])
-    print(date) 
+    print(date)
     print(day)
-    return render_template('covid_pred.html',infected=infected,date=date,month=month,year=year)
+    return render_template('covid_pred.html', infected=infected, date=date, month=month, year=year)
 
 
 @app.route('/covid19', methods=['GET', 'POST'])
@@ -2972,12 +3012,13 @@ def covid19():
     )
 
 
-@app.route('/alert', methods=['GET','POST'])
+@app.route('/alert', methods=['GET', 'POST'])
 def alert():
     if request.method == 'POST':
         places = request.form['placess']
-        place=places.replace(" ","")
-    return render_template('cyclone.html',places=place)
+        place = places.replace(" ", "")
+    return render_template('cyclone.html', places=place)
+
 
 @app.route('/salert', methods=['GET', 'POST'])
 def salert():
@@ -3017,26 +3058,28 @@ Contact: {num}
 
     return render_template('cyclone.html', places=places, nm=num)
 
+
 @app.route('/cyclone')
 def cyclone():
     return render_template('cyclone.html')
-
 
 
 @app.route('/comp')
 def comp():
     return render_template('comp.html')
 
+
 @app.route('/hailstorm')
 def hailstorm():
     return render_template('near.html')
+
 
 @app.route('/flood')
 def flood():
     return render_template('floods.html')
 
 
-@app.route('/predicts', methods=['GET','POST'])
+@app.route('/predicts', methods=['GET', 'POST'])
 def predicts():
     if lr:
         try:
@@ -3047,18 +3090,19 @@ def predicts():
                 query = query.reindex(columns=model_columns, fill_value=0)
                 m_prediction = lr.predict(query)
                 print(m_prediction)
-            #json_ = request.json
-            #print(json_)
-            
-            #my_prediction = lr.predict(query)
-            #print(my_prediction)
+            # json_ = request.json
+            # print(json_)
+
+            # my_prediction = lr.predict(query)
+            # print(my_prediction)
         except:
 
             return jsonify({'trace': traceback.format_exc()})
     else:
-        print ('Train the model first')
+        print('Train the model first')
         return ('No model here to use')
-    return render_template('floodres.html',predictions = m_prediction)
+    return render_template('floodres.html', predictions=m_prediction)
+
 
 def check_live_earthquakes():
     import requests, ssl, smtplib
@@ -3126,7 +3170,7 @@ def check_live_earthquakes():
             R = 6371
             dlat = radians(lat2 - lat1)
             dlon = radians(lon2 - lon1)
-            a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+            a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
             return R * (2 * atan2(sqrt(a), sqrt(1 - a)))
 
         # ----------------- EMAIL -----------------
@@ -3203,6 +3247,7 @@ Stay Safe
     except Exception as e:
         print("❌ Scheduler crashed:", e)
 
+
 @app.route('/predict', methods=['GET', 'POST'])
 def predict():
     import os, numpy as np, pandas as pd, requests
@@ -3214,7 +3259,6 @@ def predict():
 
     if "user_id" not in session:
         return redirect(url_for("login_page"))
-
 
     # ------------------------
     # Date parsing helpers
@@ -3283,7 +3327,7 @@ def predict():
         R = 6371
         dlat = radians(lat2 - lat1)
         dlon = radians(lon2 - lon1)
-        a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+        a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
         return 2 * R * atan2(sqrt(a), sqrt(1 - a))
 
     # ------------------------
@@ -3307,7 +3351,7 @@ def predict():
                         "depth": dep,
                         "magnitude": props["mag"],
                         "place": props.get("place", "Unknown"),
-                        "time": datetime.utcfromtimestamp(props["time"]/1000).strftime("%Y-%m-%d %H:%M:%S")
+                        "time": datetime.utcfromtimestamp(props["time"] / 1000).strftime("%Y-%m-%d %H:%M:%S")
                     })
     except:
         pass
@@ -3418,7 +3462,7 @@ def manual_alert():
         R = 6371
         dlat = radians(lat2 - lat1)
         dlon = radians(lon2 - lon1)
-        a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+        a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
         return 2 * R * atan2(sqrt(a), sqrt(1 - a))
 
     # -------------------------------
@@ -3636,7 +3680,7 @@ def manual_flood_alert():
         R = 6371
         dlat = radians(lat2 - lat1)
         dlon = radians(lon2 - lon1)
-        a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+        a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
         return 2 * R * atan2(sqrt(a), sqrt(1 - a))
 
     # -------------------------------
@@ -3750,8 +3794,8 @@ Time (UTC): {qtime}
 
 
 def get_weather_data(lat, lon):
-
-    weather_api = urllib.request.urlopen("https://api.openweathermap.org/data/2.5/find?lat="+lat+"&lon="+lon+"&cnt=10&appid="+api_key).read()
+    weather_api = urllib.request.urlopen(
+        "https://api.openweathermap.org/data/2.5/find?lat=" + lat + "&lon=" + lon + "&cnt=10&appid=" + api_key).read()
     weather_file = json.loads(weather_api)
 
     for weather_data_point in weather_file["list"]:
@@ -3768,7 +3812,8 @@ def get_weather_data(lat, lon):
 
 
 def predict_weather(city_name, classifier):
-    weather_api = urllib.request.urlopen("http://api.openweathermap.org/data/2.5/weather?q=" + city_name + "&appid=" + api_key).read()
+    weather_api = urllib.request.urlopen(
+        "http://api.openweathermap.org/data/2.5/weather?q=" + city_name + "&appid=" + api_key).read()
     weather = json.loads(weather_api)
 
     temp = weather["main"]["temp"]
@@ -3780,60 +3825,61 @@ def predict_weather(city_name, classifier):
     weather_name = weather["weather"][0]["main"]
 
     this_weather = [temp, pressure, humidity, wind_speed, wind_deg, clouds]
-    return {"Prediction:" : classifier.predict([this_weather])[0], "Actual:" : weather_name}
+    return {"Prediction:": classifier.predict([this_weather])[0], "Actual:": weather_name}
 
 
 # Get data from various cities
-@app.route('/prediction', methods=['GET','POST'])
+@app.route('/prediction', methods=['GET', 'POST'])
 def prediction():
     if request.method == 'POST':
-        lat = request.form['lat'] 
-        lon = request.form['long'] 
-        city = request.form['city'] 
-        date = request.form['date'] 
-        #get_weather_data("50.5", "0.2")
-        #get_weather_data("56", "3")
-        #get_weather_data("43", "5")
+        lat = request.form['lat']
+        lon = request.form['long']
+        city = request.form['city']
+        date = request.form['date']
+        # get_weather_data("50.5", "0.2")
+        # get_weather_data("56", "3")
+        # get_weather_data("43", "5")
         for i in range(10):
-            get_weather_data(lat,lon)
+            get_weather_data(lat, lon)
     AI_machine = KNeighborsClassifier(n_neighbors=5)
-    AI_machine.fit(weather_data, weather_labels)        
+    AI_machine.fit(weather_data, weather_labels)
     print(list(set(weather_labels)))
-    var=(predict_weather(city, AI_machine))
+    var = (predict_weather(city, AI_machine))
     print(var['Prediction:'])
-    vars=var['Prediction:']
-    varse=var['Actual:']
-    if vars==varse:
-        match='yes'
+    vars = var['Prediction:']
+    varse = var['Actual:']
+    if vars == varse:
+        match = 'yes'
     else:
-        match='no'
-    myCursor=db.cursor()
-    sql="INSERT INTO weather(lat,lon,city,predict,actual,date,mat) VALUES(%s,%s,%s,%s,%s,%s,%s);"
-    args=(lat,lon,city,vars,varse,date,match)
-    myCursor.execute(sql,args)
+        match = 'no'
+    myCursor = db.cursor()
+    sql = "INSERT INTO weather(lat,lon,city,predict,actual,date,mat) VALUES(%s,%s,%s,%s,%s,%s,%s);"
+    args = (lat, lon, city, vars, varse, date, match)
+    myCursor.execute(sql, args)
     myCursor.execute("SELECT * FROM weather ORDER BY id DESC LIMIT 5")
     data = myCursor.fetchall()
     db.commit()
-    return render_template('weather.html',Predictions=vars,Actual=varse,lat=lat,lon=lon,city=city,date=date,data=data)
+    return render_template('weather.html', Predictions=vars, Actual=varse, lat=lat, lon=lon, city=city, date=date,
+                           data=data)
 
 
-@app.route('/predstorm', methods=['GET','POST'])
+@app.route('/predstorm', methods=['GET', 'POST'])
 def predstorm():
     if request.method == 'POST':
-        temp = request.form['temp'] 
-        pressure = request.form['pressure'] 
-        humidity = request.form['humidity'] 
-        wind = request.form['wind'] 
+        temp = request.form['temp']
+        pressure = request.form['pressure']
+        humidity = request.form['humidity']
+        wind = request.form['wind']
 
-        itemp=int(temp)
-        ipressure=int(pressure)
-        ihumidity=int(humidity)
-        iwind=int(wind)
-     # gather the data set
+        itemp = int(temp)
+        ipressure = int(pressure)
+        ihumidity = int(humidity)
+        iwind = int(wind)
+    # gather the data set
     data = get_weather_datas()
     # print(data.head())
 
-    # encode the weather description to an integer. 
+    # encode the weather description to an integer.
     pp_data, targets = preprocess(data, "Weather Description")
 
     # just for visualization
@@ -3845,39 +3891,36 @@ def predstorm():
     print("* pp_data.head()", pp_data[["Target", "Weather Description"]].head(), sep="\n", end="\n\n")
     print("------------last five rows------------")
     print("* pp_data.head()", pp_data[["Target", "Weather Description"]].tail(), sep="\n", end="\n\n")
- 
-    
+
     p_target = pp_data["Target"]
     p_features = pp_data[features]
 
     # taking some data out of the dataset for testing
-    itemi = [temp,pressure,humidity,wind]
-    item = [itemp,ipressure,ihumidity,iwind]
-   
+    itemi = [temp, pressure, humidity, wind]
+    item = [itemp, ipressure, ihumidity, iwind]
+
     test_target = p_target.loc[item]
     test_data = p_features.loc[item]
 
     display_labels(targets)
 
     print("---Test Data's Target Value---")
-    print("Row ","Target")
+    print("Row ", "Target")
     print(test_target)
 
     # preparing data for training by removing test data
     train_target = p_target.drop(item)
     train_data = p_features.drop(item)
-        
+
     wclf = train_classifier(train_data, train_target)
 
     visualize_tree(wclf, features)
     prediction = wclf.predict(test_data)
     print("\n---Actual Prediction---")
     print(prediction)
-   
 
 
 def visualize_tree(tree, feature_names):
-
     with open("visual.dot", 'w') as f:
         export_graphviz(tree, out_file=f, feature_names=feature_names)
     try:
@@ -3901,11 +3944,13 @@ def preprocess(data, target_column):
 
     return (data_clean, targets)
 
+
 def display_labels(targets):
-    print("0 :",targets[0])
-    print("1 :",targets[1])
-    print("2 :",targets[2])
-    print("3 :",targets[3])
+    print("0 :", targets[0])
+    print("1 :", targets[1])
+    print("2 :", targets[2])
+    print("3 :", targets[3])
+
 
 def train_classifier(train_data, train_target):
     """returns a new model that can be used to make predictions"""
@@ -3916,11 +3961,12 @@ def train_classifier(train_data, train_target):
     return wclf
 
 
-@app.route('/hurricane', methods=['GET','POST'])
+@app.route('/hurricane', methods=['GET', 'POST'])
 def hurricane():
     return render_template('hurricane.html')
 
-@app.route('/predhurricane', methods=['GET','POST'])
+
+@app.route('/predhurricane', methods=['GET', 'POST'])
 def predhurricane():
     import pandas as pd
     import numpy as np
@@ -3973,31 +4019,31 @@ def predhurricane():
     hurricanes_y = hurricanes["Maximum Wind"]
     hurricanes_y.head(5)
 
-    hurricanes_x = hurricanes.drop("Maximum Wind", axis = 1)
-    hurricanes_x['Longitude'].replace(regex=True,inplace=True,to_replace=r'W',value=r'')
-    hurricanes_x['Latitude'].replace(regex=True,inplace=True,to_replace=r'N',value=r'')
+    hurricanes_x = hurricanes.drop("Maximum Wind", axis=1)
+    hurricanes_x['Longitude'].replace(regex=True, inplace=True, to_replace=r'W', value=r'')
+    hurricanes_x['Latitude'].replace(regex=True, inplace=True, to_replace=r'N', value=r'')
     hurricanes_x.head(5)
 
     from sklearn import linear_model
     from sklearn.model_selection import train_test_split
     model = linear_model.LinearRegression()
-    x_train, x_test, y_train, y_test = train_test_split(hurricanes_x, hurricanes_y, test_size = 0.2, random_state = 4)
+    x_train, x_test, y_train, y_test = train_test_split(hurricanes_x, hurricanes_y, test_size=0.2, random_state=4)
 
-    model.fit(x_train,y_train)
+    model.fit(x_train, y_train)
     if request.method == 'POST':
-        date = request.form['date'] 
-        lat = request.form['lat'] 
-        lon = request.form['lon'] 
+        date = request.form['date']
+        lat = request.form['lat']
+        lon = request.form['lon']
     results = model.predict(x_test)
-    data=[date,lat,lon]
+    data = [date, lat, lon]
     query = pd.get_dummies(pd.DataFrame(data))
-    res=model.predict(query)
+    res = model.predict(query)
     res[0]
-    if res[1]>287.5:
-        var="Strong Hurricane Situation"
+    if res[1] > 287.5:
+        var = "Strong Hurricane Situation"
     else:
-        var="No hurricane situation"
-    print (var)
+        var = "No hurricane situation"
+    print(var)
     plt.scatter(results, y_test)
     plt.plot(results, results, c='r')
     plt.savefig('D:/project/Disaster-Prediction-main/static/hurricane/hurrd1.png')
@@ -4005,14 +4051,15 @@ def predhurricane():
     plt.savefig('D:/project/Disaster-Prediction-main/static/hurricane/hurrd2.png')
     plt.scatter(x_test['Date'], results)
     plt.savefig('D:/project/Disaster-Prediction-main/static/hurricane/hurrd.png')
-    return render_template('hurricane.html',Predictions=var)
+    return render_template('hurricane.html', Predictions=var)
 
 
-@app.route('/tsunami', methods=['GET','POST'])
+@app.route('/tsunami', methods=['GET', 'POST'])
 def tsunami():
     return render_template('tsunami.html')
 
-@app.route('/predtsunami', methods=['GET','POST'])
+
+@app.route('/predtsunami', methods=['GET', 'POST'])
 def predtsunami():
     import pandas as pd
     import numpy as np
@@ -4026,15 +4073,14 @@ def predtsunami():
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
 
-
     hs = pd.read_csv('tsunami.csv')
 
     min_max_scaler = preprocessing.MinMaxScaler()
 
-    df = hs[['LATITUDE','LONGITUDE','MAXIMUM_HEIGHT','PRIMARY_MAGNITUDE']]
-    df=df.fillna(df.mean())
-    df.columns=['LATITUDE','LONGITUDE','MAXIMUM_HEIGHT','PRIMARY_MAGNITUDE']
-    columns=df.columns
+    df = hs[['LATITUDE', 'LONGITUDE', 'MAXIMUM_HEIGHT', 'PRIMARY_MAGNITUDE']]
+    df = df.fillna(df.mean())
+    df.columns = ['LATITUDE', 'LONGITUDE', 'MAXIMUM_HEIGHT', 'PRIMARY_MAGNITUDE']
+    columns = df.columns
 
     x = df.drop('PRIMARY_MAGNITUDE', axis=1)
     y = df['PRIMARY_MAGNITUDE']
@@ -4054,7 +4100,7 @@ def predtsunami():
     from sklearn.neural_network import MLPRegressor
     len(x_train.transpose())
 
-    mlp = MLPRegressor(hidden_layer_sizes=(100, ), max_iter=1500)
+    mlp = MLPRegressor(hidden_layer_sizes=(100,), max_iter=1500)
     mlp.fit(x_train, y_train)
 
     predictions = mlp.predict(x_test)
@@ -4069,10 +4115,10 @@ def predtsunami():
     for i in range(0, len(predictions)):
         if abs(predictions[i] - actualValues[i]) < (0.1 * df['PRIMARY_MAGNITUDE'].max()):
             numAccurateResults += 1
-        
+
     percentAccurateResults = (numAccurateResults / totalNumValues) * 100
     print(percentAccurateResults)
-    tnna=percentAccurateResults
+    tnna = percentAccurateResults
     from sklearn import svm
     SVMModel = svm.SVR()
     SVMModel.fit(x_train, y_train)
@@ -4088,10 +4134,10 @@ def predtsunami():
     for i in range(0, len(predictionse)):
         if abs(predictionse[i] - actualValues[i]) < (0.1 * df['PRIMARY_MAGNITUDE'].max()):
             numAccurateResultse += 1
-        
+
     percentAccurateResultse = (numAccurateResultse / totalNumValues) * 100
     print(percentAccurateResultse)
-    tsva=percentAccurateResultse
+    tsva = percentAccurateResultse
     reg = linear_model.LinearRegression()
     reg.fit(x_train, y_train)
 
@@ -4106,28 +4152,28 @@ def predtsunami():
     for i in range(0, len(predictionsi)):
         if abs(predictionsi[i] - actualValues[i]) < (0.1 * df['PRIMARY_MAGNITUDE'].max()):
             numAccurateResultsi += 1
-        
+
     percentAccurateResultsi = (numAccurateResultsi / totalNumValues) * 100
     print(percentAccurateResultsi)
-    tlma=percentAccurateResultsi
+    tlma = percentAccurateResultsi
     if request.method == 'POST':
-        lat = request.form['lats'] 
-        long = request.form['longs'] 
-        height = request.form['heights'] 
-        date = request.form['dates'] 
+        lat = request.form['lats']
+        long = request.form['longs']
+        height = request.form['heights']
+        date = request.form['dates']
 
     from numpy import array
-    x_input =array([[lat,long,height]])
-    x_tests=scaler.transform(x_input)
+    x_input = array([[lat, long, height]])
+    x_tests = scaler.transform(x_input)
 
     actualPredictions = mlp.predict(x_tests)
-    tnn=actualPredictions[0]
+    tnn = actualPredictions[0]
 
     actualPredictionse = SVMModel.predict(x_tests)
-    tsv=actualPredictionse[0]
+    tsv = actualPredictionse[0]
 
     actualPredictionsi = reg.predict(x_tests)
-    tlm=actualPredictionsi[0]
+    tlm = actualPredictionsi[0]
 
     mintsunami = df['PRIMARY_MAGNITUDE'].min()
     maxtsunami = df['PRIMARY_MAGNITUDE'].max()
@@ -4167,74 +4213,74 @@ def predtsunami():
     for i in range(0, len(preds)):
         if abs(preds[i] - actualValues[i]) < (0.1 * df['PRIMARY_MAGNITUDE'].max()):
             numAccurateResultsr += 1
-            
+
     percentAccurateResultsr = (numAccurateResultsr / totalNumValues) * 100
-    trfa=percentAccurateResultsr
+    trfa = percentAccurateResultsr
 
     list(zip(train[features], RFModel.feature_importances_))
 
     from numpy import array
-    x_input =array([[lat,long,height]])
+    x_input = array([[lat, long, height]])
 
     min_max_scaler = preprocessing.MinMaxScaler()
-    x_tests=scaler.transform(x_input)
+    x_tests = scaler.transform(x_input)
 
     actualPredictionsr = RFModel.predict(df[features])
 
-
     for i in range(0, len(actualPredictions)):
         actualPredictionsr[i] = (actualPredictionsr[i] * (maxtsunami - mintsunami)) + mintsunami
-        
-    trf=actualPredictionsr[0]
 
-    # x-coordinates of left sides of bars  
-    left = [1, 2, 3, 4] 
-    
-    # heights of bars 
-    height = [trfa,tnna,tsva,tlma] 
-    
-    # labels for bars 
-    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression'] 
-    
-    # plotting a bar chart 
-    plt.bar(left, height, tick_label = tick_label, 
-            width = 0.4, color = ['red', 'green', 'orange', 'blue']) 
-    
-    # naming the x-axis 
-    plt.xlabel('x - axis') 
-    # naming the y-axis 
-    plt.ylabel('y - axis') 
-    # plot title 
-    plt.title('Accuracy Chart For Tsunami') 
+    trf = actualPredictionsr[0]
+
+    # x-coordinates of left sides of bars
+    left = [1, 2, 3, 4]
+
+    # heights of bars
+    height = [trfa, tnna, tsva, tlma]
+
+    # labels for bars
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression']
+
+    # plotting a bar chart
+    plt.bar(left, height, tick_label=tick_label,
+            width=0.4, color=['red', 'green', 'orange', 'blue'])
+
+    # naming the x-axis
+    plt.xlabel('x - axis')
+    # naming the y-axis
+    plt.ylabel('y - axis')
+    # plot title
+    plt.title('Accuracy Chart For Tsunami')
     plt.savefig('D:/project/Disaster-Prediction-main/static/graphse/tm1.png')
 
-    # x-coordinates of left sides of bars  
-    left = [1, 2, 3, 4] 
-    
-    # heights of bars 
-    heights = [trf,tnn,tsv,tlm] 
-    
-    # labels for bars 
-    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression'] 
-    
-    # plotting a bar chart 
-    plt.bar(left, heights, tick_label = tick_label, 
-            width = 0.4, color = ['blue']) 
-    
-    # naming the x-axis 
-    plt.xlabel('x - axis') 
-    # naming the y-axis 
-    plt.ylabel('y - axis') 
-    # plot title 
-    plt.title('Predicted Output Chart For Tsunami') 
-    plt.savefig('D:/project/Disaster-Prediction-main/static/graphse/tm2.png')
-    z=''
-    if tnna>6.5:
-        z='Tsunami'
-    else:
-        z='No Tsunami'
+    # x-coordinates of left sides of bars
+    left = [1, 2, 3, 4]
 
-    return render_template('tsunami.html',Predictions=z,data=tnn)
+    # heights of bars
+    heights = [trf, tnn, tsv, tlm]
+
+    # labels for bars
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression']
+
+    # plotting a bar chart
+    plt.bar(left, heights, tick_label=tick_label,
+            width=0.4, color=['blue'])
+
+    # naming the x-axis
+    plt.xlabel('x - axis')
+    # naming the y-axis
+    plt.ylabel('y - axis')
+    # plot title
+    plt.title('Predicted Output Chart For Tsunami')
+    plt.savefig('D:/project/Disaster-Prediction-main/static/graphse/tm2.png')
+    z = ''
+    if tnna > 6.5:
+        z = 'Tsunami'
+    else:
+        z = 'No Tsunami'
+
+    return render_template('tsunami.html', Predictions=z, data=tnn)
+
 
 @app.route('/earthgraph')
 def earthgraph():
@@ -4243,74 +4289,72 @@ def earthgraph():
     import tensorflow as tf
     import seaborn as sns
 
-   
     import warnings
     warnings.filterwarnings('ignore')
-    
+
     import time
-    df1=pd.read_csv('database.csv')
+    df1 = pd.read_csv('database.csv')
 
     df1.tail(5)
 
-
     df1["Date"] = pd.to_datetime(df1["Date"])
 
-    col1 = df1[['Date','Latitude','Longitude','Depth']]
+    col1 = df1[['Date', 'Latitude', 'Longitude', 'Depth']]
     col2 = df1['Magnitude']
-    #Convert to Numpy array
+    # Convert to Numpy array
     InputX1 = col1.to_numpy()
     InputY1 = col2.to_numpy()
     print(InputX1)
     print(InputY1)
 
-    col3 = df1[['Date','Latitude','Longitude','Depth','Magnitude']]
+    col3 = df1[['Date', 'Latitude', 'Longitude', 'Depth', 'Magnitude']]
 
-    col3[col3.dtypes[(col3.dtypes=="float64")|(col3.dtypes=="int64")]
-                        .index.values].hist(figsize=[11,11])
+    col3[col3.dtypes[(col3.dtypes == "float64") | (col3.dtypes == "int64")]
+    .index.values].hist(figsize=[11, 11])
 
     longitudes = df1["Longitude"].tolist()
     latitudes = df1["Latitude"].tolist()
-    #m = Basemap(width=12000000,height=9000000,projection='lcc',
-                #resolution=None,lat_1=80.,lat_2=55,lat_0=80,lon_0=-107.)
-    x,y = (longitudes,latitudes)
+    # m = Basemap(width=12000000,height=9000000,projection='lcc',
+    # resolution=None,lat_1=80.,lat_2=55,lat_0=80,lon_0=-107.)
+    x, y = (longitudes, latitudes)
 
     minimum = df1["Magnitude"].min()
     maximum = df1["Magnitude"].max()
     average = df1["Magnitude"].mean()
 
     print("Minimum:", minimum)
-    print("Maximum:",maximum)
-    print("Mean",average)
+    print("Maximum:", maximum)
+    print("Mean", average)
 
-    (n,bins, patches) = plt.hist(df1["Magnitude"], range=(0,10), bins=10)
+    (n, bins, patches) = plt.hist(df1["Magnitude"], range=(0, 10), bins=10)
     plt.xlabel("Earthquake Magnitudes")
     plt.ylabel("Number of Occurences")
     plt.title("Overview of earthquake magnitudes")
     my_list = []
 
-    print("Magnitude" +"   "+ "Number of Occurence")
+    print("Magnitude" + "   " + "Number of Occurence")
     for i in range(5, len(n)):
-        my_list.append(str(i)+ "-"+str(i+1)+"         " +str(n[i]))
-        print(str(i)+ "-"+str(i+1)+"         " +str(n[i]))
+        my_list.append(str(i) + "-" + str(i + 1) + "         " + str(n[i]))
+        print(str(i) + "-" + str(i + 1) + "         " + str(n[i]))
 
     print(my_list)
     plt.boxplot(df1["Magnitude"])
-    
+
     plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/earth/e1.png')
 
-    highly_affected = df1[df1["Magnitude"]>=8]
+    highly_affected = df1[df1["Magnitude"] >= 8]
 
     print(highly_affected.shape)
 
-    #earthquake occurances per month
+    # earthquake occurances per month
     df1["Month"] = df1['Date'].dt.month
 
-    #month_occurrence = earth.pivot_table(index = "Month", values = ["Magnitude"] , aggfunc = )
+    # month_occurrence = earth.pivot_table(index = "Month", values = ["Magnitude"] , aggfunc = )
 
     month_occurrence = df1.groupby("Month").groups
     print(len(month_occurrence[1]))
 
-    month = [i for i in range(1,13)]
+    month = [i for i in range(1, 13)]
     occurrence = []
 
     for i in range(len(month)):
@@ -4320,30 +4364,28 @@ def earthgraph():
     print(occurrence)
     print(sum(occurrence))
 
-    fig, ax = plt.subplots(figsize = (10,8))
+    fig, ax = plt.subplots(figsize=(10, 8))
     bar_positions = np.arange(12) + 0.5
 
-    months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     num_cols = months
     bar_heights = occurrence
 
     ax.bar(bar_positions, bar_heights)
-    tick_positions = np.arange(1,13)
+    tick_positions = np.arange(1, 13)
     ax.set_xticks(tick_positions)
-    ax.set_xticklabels(num_cols, rotation = 90)
+    ax.set_xticklabels(num_cols, rotation=90)
     plt.title("Frequency by Month")
     plt.xlabel("Months")
     plt.ylabel("Frequency")
-    
-    plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/earth/e2.png')
 
+    plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/earth/e2.png')
 
     df1["Year"] = df1['Date'].dt.year
 
     year_occurrence = df1.groupby("Year").groups
 
-
-    year = [i for i in range(1965,2017)]
+    year = [i for i in range(1965, 2017)]
     occurrence = []
 
     for i in range(len(year)):
@@ -4352,31 +4394,30 @@ def earthgraph():
 
     maximum = max(occurrence)
     minimum = min(occurrence)
-    print("Maximum",maximum)
-    print("Minimum",minimum)
+    print("Maximum", maximum)
+    print("Minimum", minimum)
 
-    #print("Year :" + "     " +"Occurrence")
+    # print("Year :" + "     " +"Occurrence")
 
-    #for k,v in year_occurrence.items():
-        #print(str(k) +"      "+ str(len(v)))
+    # for k,v in year_occurrence.items():
+    # print(str(k) +"      "+ str(len(v)))
 
-    fig = plt.figure(figsize=(10,6))
-    plt.plot(year,occurrence)
-    plt.xticks(rotation = 90)
+    fig = plt.figure(figsize=(10, 6))
+    plt.plot(year, occurrence)
+    plt.xticks(rotation=90)
     plt.xlabel("Year")
     plt.ylabel("Number of Occurrence")
     plt.title("Frequency of Earthquakes by Year")
-    plt.xlim(1965,2017)
-   
+    plt.xlim(1965, 2017)
+
     plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/earth/e3.png')
 
-    plt.scatter(df1["Magnitude"],df1["Depth"])
+    plt.scatter(df1["Magnitude"], df1["Depth"])
     plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/earth/e4.png')
 
     np.corrcoef(df1["Magnitude"], df1["Depth"])
 
-    return render_template('earthgraph.html',max=maximum,min=minimum,avg=average,lr=my_list)
-
+    return render_template('earthgraph.html', max=maximum, min=minimum, avg=average, lr=my_list)
 
 
 def check_live_floods_scheduler():
@@ -4584,6 +4625,7 @@ Time: {timestamp}
     print("✅ FLOOD SCHEDULER COMPLETED")
     print("==============================")
 
+
 @app.route('/predflood', methods=['GET', 'POST'])
 def predflood():
     import pandas as pd
@@ -4600,14 +4642,13 @@ def predflood():
     if "user_id" not in session:
         return redirect(url_for("login_page"))
 
-
     # -----------------------
     # Config / keys
     # -----------------------
     OPENWEATHER_KEY = "fb116bebc392ccc8ab251927edcb55d6"
     GOOGLE_API_KEY = api_key
 
-    RAINFALL_REAL_FLOOD_MM = 30   # live heavy rain threshold
+    RAINFALL_REAL_FLOOD_MM = 30  # live heavy rain threshold
 
     # -----------------------
     # Load ML training data
@@ -4710,16 +4751,14 @@ def predflood():
         timestamp=timestamp
     )
 
+    # print(predicted_riverlevel)
+    # if (predicted_riverlevel > 1.5):
+    # print("FLOOD")
+    # else:
+    # print("No FLOOD")
 
 
-
-    #print(predicted_riverlevel)
-    #if (predicted_riverlevel > 1.5):
-    #print("FLOOD")
-    #else:
-    #print("No FLOOD")
-
-@app.route('/jtse', methods=['GET','POST'])
+@app.route('/jtse', methods=['GET', 'POST'])
 def jtse():
     import pandas as pd
     import numpy as np
@@ -4732,67 +4771,65 @@ def jtse():
     from itertools import chain
     import seaborn as sns
 
-
     def chains(para):
         return list(chain.from_iterable(para.str.split('.')))
 
     def process_data(df):
-        
-        df = df.dropna() # Drop all NaN value
-        
+
+        df = df.dropna()  # Drop all NaN value
+
         # Seperate Sentence from Paragraph
         length = df['comment'].str.split('.').map(len)
-        data = pd.DataFrame({'user': np.repeat(df['user'], length),'date': np.repeat(df['date'], length),
-                            'comment': chains(df['comment'])})
-        
+        data = pd.DataFrame({'user': np.repeat(df['user'], length), 'date': np.repeat(df['date'], length),
+                             'comment': chains(df['comment'])})
+
         return data
 
-
     def filtered_text(text):
-        filter0 = [(t.lower(), tag) for t,tag in text]
-        filter1 = [(re.sub("["+"".join(sp)+"+]",' ',f), tag) for f,tag in filter0]    #for removing delimiter and other useless stuff
-        filter2 = [(''.join (f), tag) for f,tag in filter1 if not f.isnumeric()]      #for removing numbers
-        filter3 = [(f, tag) for f,tag in filter2 if f not in stopword]                #for removing stopwords
-        #filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
+        filter0 = [(t.lower(), tag) for t, tag in text]
+        filter1 = [(re.sub("[" + "".join(sp) + "+]", ' ', f), tag) for f, tag in
+                   filter0]  # for removing delimiter and other useless stuff
+        filter2 = [(''.join(f), tag) for f, tag in filter1 if not f.isnumeric()]  # for removing numbers
+        filter3 = [(f, tag) for f, tag in filter2 if f not in stopword]  # for removing stopwords
+        # filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
         return filter3
 
     def cal_score(word, tag):
         try:
-            s_pos = [] # Positive Score
-            s_neg = [] # negative Score
-            s_obj = [] # Objective Score
-            
+            s_pos = []  # Positive Score
+            s_neg = []  # negative Score
+            s_obj = []  # Objective Score
+
             for s in list(swn.senti_synsets(word, tag)):
                 s_pos.append(s.pos_score())
                 s_neg.append(s.neg_score())
-            
+
                 if (s.pos_score() == 0.0 and s.neg_score() == 0.0):
                     score = 2 * s.obj_score()
                     break
-                    
+
             max_pos = max(s_pos)
             max_neg = max(s_neg)
-            
+
             if max_pos > max_neg:
                 score = max_pos
             else:
-                score = -1*max_neg
+                score = -1 * max_neg
         except ValueError:
             score = 0.0
-            
-        return score
 
+        return score
 
     def cal_senti_score(tokens):
         for text in (tokens):
 
-            tagged_word = nltk.pos_tag(text)                                    # Each Word is tagged with a POS
-            filt_word = filtered_text(tagged_word)                 
+            tagged_word = nltk.pos_tag(text)  # Each Word is tagged with a POS
+            filt_word = filtered_text(tagged_word)
             score_post = adj_score = adv_score = vb_score = adv_score = 0.0
 
-            for word,tag in filt_word:
+            for word, tag in filt_word:
 
-                if tag in adv:                                                  # To find Adverb Score
+                if tag in adv:  # To find Adverb Score
                     if tag == 'RBS':
                         adv_score = adv_score + (1.5 * cal_score(word, 'r'))
                     elif tag == 'RBR':
@@ -4800,68 +4837,69 @@ def jtse():
                     else:
                         adv_score = adv_score + (1.0 * cal_score(word, 'r'))
 
-                elif tag in adj:                                                # To find Adjective Score
+                elif tag in adj:  # To find Adjective Score
                     adj_score = cal_score(word, 'a')
                     if tag == 'JJS':
-                        score_post = score_post + (0.4 * adv_score + 1) * (1.5 * adj_score)   # 1.5, 1.2, 1.0 are the respective Scaling Factors
+                        score_post = score_post + (0.4 * adv_score + 1) * (
+                                    1.5 * adj_score)  # 1.5, 1.2, 1.0 are the respective Scaling Factors
                     elif tag == 'JJR':
                         score_post = score_post + (0.4 * adv_score + 1) * (1.2 * adj_score)
                     else:
                         score_post = score_post + (0.4 * adv_score + 1) * (1.0 * adj_score)
                     adv_score = 0.0
 
-                elif tag in vb:                                                 # To find Verb Score
+                elif tag in vb:  # To find Verb Score
                     vb_score = cal_score(word, 'v')
                     score_post = score_post + (0.4 * adv_score + 1) * vb_score  # 0.4 is a Scaling Factor
                     adv_score = 0.0
 
-            final_score.append(score_post)                                      # Final Sentiment Score of a Sentence
-
+            final_score.append(score_post)  # Final Sentiment Score of a Sentence
 
     def final_senti_score(data, df):
-        
-        tokens = [nltk.word_tokenize(d) for d in data['comment']]                     # Tokenize the Sentence
+
+        tokens = [nltk.word_tokenize(d) for d in data['comment']]  # Tokenize the Sentence
         cal_senti_score(tokens)
-        
+
         senti_score = pd.Series(final_score)
         data['sentiment_score'] = senti_score.values
-        
+
         senti_data = data.groupby(data.index).sum()
-        final_data = df.join(senti_data, how = 'left', lsuffix = '_left', rsuffix = '_right')
-        
+        final_data = df.join(senti_data, how='left', lsuffix='_left', rsuffix='_right')
+
         time = final_data['date'].str.split()
         date = []
         for t in time:
             date.append(" ".join(t[0:3]))
         final_data['date'] = date
-        
+
         disaster_senti_score = final_data.groupby(['date', 'user']).mean()['sentiment_score'].sum()
         return disaster_senti_score
-
 
     # Create Stopwords
     import nltk
     nltk.download('stopwords')
-    stopword = set(stopwords.words('english')) 
-    sp_char = ['.','-','*','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{','1','2','3','4','5','6','7','8','9',' ','  ','   ','~','`','|','/']
-    sp = ['.','*','-','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{','1','2','3','4','5','6','7','8','9','~','`','|','/']
+    stopword = set(stopwords.words('english'))
+    sp_char = ['.', '-', '*', '@', '$', '%', '&', '#', ',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{',
+               '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '  ', '   ', '~', '`', '|', '/']
+    sp = ['.', '*', '-', '@', '$', '%', '&', '#', ',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{', '1', '2', '3',
+          '4', '5', '6', '7', '8', '9', '~', '`', '|', '/']
     stopword.update(sp_char)
     lemma = WordNetLemmatizer()
 
-    adj = ['JJ', 'JJR', 'JJS']                      # All Adjective POS Tags
-    #noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
-    adv = ['RB', 'RBR', 'RBS']                      # All Adverb POS Tags
+    adj = ['JJ', 'JJR', 'JJS']  # All Adjective POS Tags
+    # noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
+    adv = ['RB', 'RBR', 'RBS']  # All Adverb POS Tags
     vb = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']  # All verb POS Tags
     final_score = []
 
     data = pd.read_csv("Japan2016_Earthquake.csv")
     data.head()
     data.shape
-    data.isnull().any() #Check for NaN value
+    data.isnull().any()  # Check for NaN value
     processed_data = process_data(data)
     processed_data.head()
     processed_data.shape
-    processed_data.isnull().any() #Check for NaN value
+    processed_data.isnull().any()  # Check for NaN value
 
     import nltk
     nltk.download('punkt')
@@ -4870,12 +4908,13 @@ def jtse():
     nltk.download('wordnet')
     japan16_sentiment_score = final_senti_score(processed_data, data)
     print(japan16_sentiment_score)
-    j=japan16_sentiment_score
+    j = japan16_sentiment_score
     print("Japan 2016 Sentiment Score :", japan16_sentiment_score)
 
-    return render_template('senti.html',d=j)
+    return render_template('senti.html', d=j)
 
-@app.route('/jtsu', methods=['GET','POST'])
+
+@app.route('/jtsu', methods=['GET', 'POST'])
 def jtsu():
     import pandas as pd
     import numpy as np
@@ -4888,67 +4927,65 @@ def jtsu():
     from itertools import chain
     import seaborn as sns
 
-
     def chains(para):
         return list(chain.from_iterable(para.str.split('.')))
 
     def process_data(df):
-        
-        df = df.dropna() # Drop all NaN value
-        
+
+        df = df.dropna()  # Drop all NaN value
+
         # Seperate Sentence from Paragraph
         length = df['comment'].str.split('.').map(len)
-        data = pd.DataFrame({'user': np.repeat(df['user'], length),'date': np.repeat(df['date'], length),
-                            'comment': chains(df['comment'])})
-        
+        data = pd.DataFrame({'user': np.repeat(df['user'], length), 'date': np.repeat(df['date'], length),
+                             'comment': chains(df['comment'])})
+
         return data
 
-
     def filtered_text(text):
-        filter0 = [(t.lower(), tag) for t,tag in text]
-        filter1 = [(re.sub("["+"".join(sp)+"+]",' ',f), tag) for f,tag in filter0]    #for removing delimiter and other useless stuff
-        filter2 = [(''.join (f), tag) for f,tag in filter1 if not f.isnumeric()]      #for removing numbers
-        filter3 = [(f, tag) for f,tag in filter2 if f not in stopword]                #for removing stopwords
-        #filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
+        filter0 = [(t.lower(), tag) for t, tag in text]
+        filter1 = [(re.sub("[" + "".join(sp) + "+]", ' ', f), tag) for f, tag in
+                   filter0]  # for removing delimiter and other useless stuff
+        filter2 = [(''.join(f), tag) for f, tag in filter1 if not f.isnumeric()]  # for removing numbers
+        filter3 = [(f, tag) for f, tag in filter2 if f not in stopword]  # for removing stopwords
+        # filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
         return filter3
 
     def cal_score(word, tag):
         try:
-            s_pos = [] # Positive Score
-            s_neg = [] # negative Score
-            s_obj = [] # Objective Score
-            
+            s_pos = []  # Positive Score
+            s_neg = []  # negative Score
+            s_obj = []  # Objective Score
+
             for s in list(swn.senti_synsets(word, tag)):
                 s_pos.append(s.pos_score())
                 s_neg.append(s.neg_score())
-            
+
                 if (s.pos_score() == 0.0 and s.neg_score() == 0.0):
                     score = 2 * s.obj_score()
                     break
-                    
+
             max_pos = max(s_pos)
             max_neg = max(s_neg)
-            
+
             if max_pos > max_neg:
                 score = max_pos
             else:
-                score = -1*max_neg
+                score = -1 * max_neg
         except ValueError:
             score = 0.0
-            
-        return score
 
+        return score
 
     def cal_senti_score(tokens):
         for text in (tokens):
 
-            tagged_word = nltk.pos_tag(text)                                    # Each Word is tagged with a POS
-            filt_word = filtered_text(tagged_word)                 
+            tagged_word = nltk.pos_tag(text)  # Each Word is tagged with a POS
+            filt_word = filtered_text(tagged_word)
             score_post = adj_score = adv_score = vb_score = adv_score = 0.0
 
-            for word,tag in filt_word:
+            for word, tag in filt_word:
 
-                if tag in adv:                                                  # To find Adverb Score
+                if tag in adv:  # To find Adverb Score
                     if tag == 'RBS':
                         adv_score = adv_score + (1.5 * cal_score(word, 'r'))
                     elif tag == 'RBR':
@@ -4956,68 +4993,69 @@ def jtsu():
                     else:
                         adv_score = adv_score + (1.0 * cal_score(word, 'r'))
 
-                elif tag in adj:                                                # To find Adjective Score
+                elif tag in adj:  # To find Adjective Score
                     adj_score = cal_score(word, 'a')
                     if tag == 'JJS':
-                        score_post = score_post + (0.4 * adv_score + 1) * (1.5 * adj_score)   # 1.5, 1.2, 1.0 are the respective Scaling Factors
+                        score_post = score_post + (0.4 * adv_score + 1) * (
+                                    1.5 * adj_score)  # 1.5, 1.2, 1.0 are the respective Scaling Factors
                     elif tag == 'JJR':
                         score_post = score_post + (0.4 * adv_score + 1) * (1.2 * adj_score)
                     else:
                         score_post = score_post + (0.4 * adv_score + 1) * (1.0 * adj_score)
                     adv_score = 0.0
 
-                elif tag in vb:                                                 # To find Verb Score
+                elif tag in vb:  # To find Verb Score
                     vb_score = cal_score(word, 'v')
                     score_post = score_post + (0.4 * adv_score + 1) * vb_score  # 0.4 is a Scaling Factor
                     adv_score = 0.0
 
-            final_score.append(score_post)                                      # Final Sentiment Score of a Sentence
-
+            final_score.append(score_post)  # Final Sentiment Score of a Sentence
 
     def final_senti_score(data, df):
-        
-        tokens = [nltk.word_tokenize(d) for d in data['comment']]                     # Tokenize the Sentence
+
+        tokens = [nltk.word_tokenize(d) for d in data['comment']]  # Tokenize the Sentence
         cal_senti_score(tokens)
-        
+
         senti_score = pd.Series(final_score)
         data['sentiment_score'] = senti_score.values
-        
+
         senti_data = data.groupby(data.index).sum()
-        final_data = df.join(senti_data, how = 'left', lsuffix = '_left', rsuffix = '_right')
-        
+        final_data = df.join(senti_data, how='left', lsuffix='_left', rsuffix='_right')
+
         time = final_data['date'].str.split()
         date = []
         for t in time:
             date.append(" ".join(t[0:3]))
         final_data['date'] = date
-        
+
         disaster_senti_score = final_data.groupby(['date', 'user']).mean()['sentiment_score'].sum()
         return disaster_senti_score
-
 
     # Create Stopwords
     import nltk
     nltk.download('stopwords')
-    stopword = set(stopwords.words('english')) 
-    sp_char = ['.','-','*','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{','1','2','3','4','5','6','7','8','9',' ','  ','   ','~','`','|','/']
-    sp = ['.','*','-','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{','1','2','3','4','5','6','7','8','9','~','`','|','/']
+    stopword = set(stopwords.words('english'))
+    sp_char = ['.', '-', '*', '@', '$', '%', '&', '#', ',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{',
+               '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '  ', '   ', '~', '`', '|', '/']
+    sp = ['.', '*', '-', '@', '$', '%', '&', '#', ',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{', '1', '2', '3',
+          '4', '5', '6', '7', '8', '9', '~', '`', '|', '/']
     stopword.update(sp_char)
     lemma = WordNetLemmatizer()
 
-    adj = ['JJ', 'JJR', 'JJS']                      # All Adjective POS Tags
-    #noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
-    adv = ['RB', 'RBR', 'RBS']                      # All Adverb POS Tags
+    adj = ['JJ', 'JJR', 'JJS']  # All Adjective POS Tags
+    # noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
+    adv = ['RB', 'RBR', 'RBS']  # All Adverb POS Tags
     vb = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']  # All verb POS Tags
     final_score = []
 
     data = pd.read_csv("japan_2011_tsunami.csv")
     data.head()
     data.shape
-    data.isnull().any() #Check for NaN value
+    data.isnull().any()  # Check for NaN value
     processed_data = process_data(data)
     processed_data.head()
     processed_data.shape
-    processed_data.isnull().any() #Check for NaN value
+    processed_data.isnull().any()  # Check for NaN value
 
     import nltk
     nltk.download('punkt')
@@ -5026,12 +5064,13 @@ def jtsu():
     nltk.download('wordnet')
     japan16_sentiment_score = final_senti_score(processed_data, data)
     print(japan16_sentiment_score)
-    j=japan16_sentiment_score
+    j = japan16_sentiment_score
     print("Japan 2011 tsunami Sentiment Score :", japan16_sentiment_score)
 
-    return render_template('senti.html',da=j)
+    return render_template('senti.html', da=j)
 
-@app.route('/che', methods=['GET','POST'])
+
+@app.route('/che', methods=['GET', 'POST'])
 def che():
     import pandas as pd
     import numpy as np
@@ -5044,67 +5083,65 @@ def che():
     from itertools import chain
     import seaborn as sns
 
-
     def chains(para):
         return list(chain.from_iterable(para.str.split('.')))
 
     def process_data(df):
-        
-        df = df.dropna() # Drop all NaN value
-        
+
+        df = df.dropna()  # Drop all NaN value
+
         # Seperate Sentence from Paragraph
         length = df['comment'].str.split('.').map(len)
-        data = pd.DataFrame({'user': np.repeat(df['user'], length),'date': np.repeat(df['date'], length),
-                            'comment': chains(df['comment'])})
-        
+        data = pd.DataFrame({'user': np.repeat(df['user'], length), 'date': np.repeat(df['date'], length),
+                             'comment': chains(df['comment'])})
+
         return data
 
-
     def filtered_text(text):
-        filter0 = [(t.lower(), tag) for t,tag in text]
-        filter1 = [(re.sub("["+"".join(sp)+"+]",' ',f), tag) for f,tag in filter0]    #for removing delimiter and other useless stuff
-        filter2 = [(''.join (f), tag) for f,tag in filter1 if not f.isnumeric()]      #for removing numbers
-        filter3 = [(f, tag) for f,tag in filter2 if f not in stopword]                #for removing stopwords
-        #filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
+        filter0 = [(t.lower(), tag) for t, tag in text]
+        filter1 = [(re.sub("[" + "".join(sp) + "+]", ' ', f), tag) for f, tag in
+                   filter0]  # for removing delimiter and other useless stuff
+        filter2 = [(''.join(f), tag) for f, tag in filter1 if not f.isnumeric()]  # for removing numbers
+        filter3 = [(f, tag) for f, tag in filter2 if f not in stopword]  # for removing stopwords
+        # filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
         return filter3
 
     def cal_score(word, tag):
         try:
-            s_pos = [] # Positive Score
-            s_neg = [] # negative Score
-            s_obj = [] # Objective Score
-            
+            s_pos = []  # Positive Score
+            s_neg = []  # negative Score
+            s_obj = []  # Objective Score
+
             for s in list(swn.senti_synsets(word, tag)):
                 s_pos.append(s.pos_score())
                 s_neg.append(s.neg_score())
-            
+
                 if (s.pos_score() == 0.0 and s.neg_score() == 0.0):
                     score = 2 * s.obj_score()
                     break
-                    
+
             max_pos = max(s_pos)
             max_neg = max(s_neg)
-            
+
             if max_pos > max_neg:
                 score = max_pos
             else:
-                score = -1*max_neg
+                score = -1 * max_neg
         except ValueError:
             score = 0.0
-            
-        return score
 
+        return score
 
     def cal_senti_score(tokens):
         for text in (tokens):
 
-            tagged_word = nltk.pos_tag(text)                                    # Each Word is tagged with a POS
-            filt_word = filtered_text(tagged_word)                 
+            tagged_word = nltk.pos_tag(text)  # Each Word is tagged with a POS
+            filt_word = filtered_text(tagged_word)
             score_post = adj_score = adv_score = vb_score = adv_score = 0.0
 
-            for word,tag in filt_word:
+            for word, tag in filt_word:
 
-                if tag in adv:                                                  # To find Adverb Score
+                if tag in adv:  # To find Adverb Score
                     if tag == 'RBS':
                         adv_score = adv_score + (1.5 * cal_score(word, 'r'))
                     elif tag == 'RBR':
@@ -5112,68 +5149,69 @@ def che():
                     else:
                         adv_score = adv_score + (1.0 * cal_score(word, 'r'))
 
-                elif tag in adj:                                                # To find Adjective Score
+                elif tag in adj:  # To find Adjective Score
                     adj_score = cal_score(word, 'a')
                     if tag == 'JJS':
-                        score_post = score_post + (0.4 * adv_score + 1) * (1.5 * adj_score)   # 1.5, 1.2, 1.0 are the respective Scaling Factors
+                        score_post = score_post + (0.4 * adv_score + 1) * (
+                                    1.5 * adj_score)  # 1.5, 1.2, 1.0 are the respective Scaling Factors
                     elif tag == 'JJR':
                         score_post = score_post + (0.4 * adv_score + 1) * (1.2 * adj_score)
                     else:
                         score_post = score_post + (0.4 * adv_score + 1) * (1.0 * adj_score)
                     adv_score = 0.0
 
-                elif tag in vb:                                                 # To find Verb Score
+                elif tag in vb:  # To find Verb Score
                     vb_score = cal_score(word, 'v')
                     score_post = score_post + (0.4 * adv_score + 1) * vb_score  # 0.4 is a Scaling Factor
                     adv_score = 0.0
 
-            final_score.append(score_post)                                      # Final Sentiment Score of a Sentence
-
+            final_score.append(score_post)  # Final Sentiment Score of a Sentence
 
     def final_senti_score(data, df):
-        
-        tokens = [nltk.word_tokenize(d) for d in data['comment']]                     # Tokenize the Sentence
+
+        tokens = [nltk.word_tokenize(d) for d in data['comment']]  # Tokenize the Sentence
         cal_senti_score(tokens)
-        
+
         senti_score = pd.Series(final_score)
         data['sentiment_score'] = senti_score.values
-        
+
         senti_data = data.groupby(data.index).sum()
-        final_data = df.join(senti_data, how = 'left', lsuffix = '_left', rsuffix = '_right')
-        
+        final_data = df.join(senti_data, how='left', lsuffix='_left', rsuffix='_right')
+
         time = final_data['date'].str.split()
         date = []
         for t in time:
             date.append(" ".join(t[0:3]))
         final_data['date'] = date
-        
+
         disaster_senti_score = final_data.groupby(['date', 'user']).mean()['sentiment_score'].sum()
         return disaster_senti_score
-
 
     # Create Stopwords
     import nltk
     nltk.download('stopwords')
-    stopword = set(stopwords.words('english')) 
-    sp_char = ['.','-','*','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{','1','2','3','4','5','6','7','8','9',' ','  ','   ','~','`','|','/']
-    sp = ['.','*','-','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{','1','2','3','4','5','6','7','8','9','~','`','|','/']
+    stopword = set(stopwords.words('english'))
+    sp_char = ['.', '-', '*', '@', '$', '%', '&', '#', ',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{',
+               '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '  ', '   ', '~', '`', '|', '/']
+    sp = ['.', '*', '-', '@', '$', '%', '&', '#', ',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{', '1', '2', '3',
+          '4', '5', '6', '7', '8', '9', '~', '`', '|', '/']
     stopword.update(sp_char)
     lemma = WordNetLemmatizer()
 
-    adj = ['JJ', 'JJR', 'JJS']                      # All Adjective POS Tags
-    #noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
-    adv = ['RB', 'RBR', 'RBS']                      # All Adverb POS Tags
+    adj = ['JJ', 'JJR', 'JJS']  # All Adjective POS Tags
+    # noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
+    adv = ['RB', 'RBR', 'RBS']  # All Adverb POS Tags
     vb = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']  # All verb POS Tags
     final_score = []
 
     data = pd.read_csv("chennai_flood_2015.csv")
     data.head()
     data.shape
-    data.isnull().any() #Check for NaN value
+    data.isnull().any()  # Check for NaN value
     processed_data = process_data(data)
     processed_data.head()
     processed_data.shape
-    processed_data.isnull().any() #Check for NaN value
+    processed_data.isnull().any()  # Check for NaN value
 
     import nltk
     nltk.download('punkt')
@@ -5182,12 +5220,13 @@ def che():
     nltk.download('wordnet')
     japan16_sentiment_score = final_senti_score(processed_data, data)
     print(japan16_sentiment_score)
-    j=japan16_sentiment_score
+    j = japan16_sentiment_score
     print("Chennai floods 2015 Sentiment Score :", japan16_sentiment_score)
 
-    return render_template('senti.html',dab=j)
+    return render_template('senti.html', dab=j)
 
-@app.route('/kef', methods=['GET','POST'])
+
+@app.route('/kef', methods=['GET', 'POST'])
 def kef():
     import pandas as pd
     import numpy as np
@@ -5200,67 +5239,65 @@ def kef():
     from itertools import chain
     import seaborn as sns
 
-
     def chains(para):
         return list(chain.from_iterable(para.str.split('.')))
 
     def process_data(df):
-        
-        df = df.dropna() # Drop all NaN value
-        
+
+        df = df.dropna()  # Drop all NaN value
+
         # Seperate Sentence from Paragraph
         length = df['comment'].str.split('.').map(len)
-        data = pd.DataFrame({'user': np.repeat(df['user'], length),'date': np.repeat(df['date'], length),
-                            'comment': chains(df['comment'])})
-        
+        data = pd.DataFrame({'user': np.repeat(df['user'], length), 'date': np.repeat(df['date'], length),
+                             'comment': chains(df['comment'])})
+
         return data
 
-
     def filtered_text(text):
-        filter0 = [(t.lower(), tag) for t,tag in text]
-        filter1 = [(re.sub("["+"".join(sp)+"+]",' ',f), tag) for f,tag in filter0]    #for removing delimiter and other useless stuff
-        filter2 = [(''.join (f), tag) for f,tag in filter1 if not f.isnumeric()]      #for removing numbers
-        filter3 = [(f, tag) for f,tag in filter2 if f not in stopword]                #for removing stopwords
-        #filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
+        filter0 = [(t.lower(), tag) for t, tag in text]
+        filter1 = [(re.sub("[" + "".join(sp) + "+]", ' ', f), tag) for f, tag in
+                   filter0]  # for removing delimiter and other useless stuff
+        filter2 = [(''.join(f), tag) for f, tag in filter1 if not f.isnumeric()]  # for removing numbers
+        filter3 = [(f, tag) for f, tag in filter2 if f not in stopword]  # for removing stopwords
+        # filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
         return filter3
 
     def cal_score(word, tag):
         try:
-            s_pos = [] # Positive Score
-            s_neg = [] # negative Score
-            s_obj = [] # Objective Score
-            
+            s_pos = []  # Positive Score
+            s_neg = []  # negative Score
+            s_obj = []  # Objective Score
+
             for s in list(swn.senti_synsets(word, tag)):
                 s_pos.append(s.pos_score())
                 s_neg.append(s.neg_score())
-            
+
                 if (s.pos_score() == 0.0 and s.neg_score() == 0.0):
                     score = 2 * s.obj_score()
                     break
-                    
+
             max_pos = max(s_pos)
             max_neg = max(s_neg)
-            
+
             if max_pos > max_neg:
                 score = max_pos
             else:
-                score = -1*max_neg
+                score = -1 * max_neg
         except ValueError:
             score = 0.0
-            
-        return score
 
+        return score
 
     def cal_senti_score(tokens):
         for text in (tokens):
 
-            tagged_word = nltk.pos_tag(text)                                    # Each Word is tagged with a POS
-            filt_word = filtered_text(tagged_word)                 
+            tagged_word = nltk.pos_tag(text)  # Each Word is tagged with a POS
+            filt_word = filtered_text(tagged_word)
             score_post = adj_score = adv_score = vb_score = adv_score = 0.0
 
-            for word,tag in filt_word:
+            for word, tag in filt_word:
 
-                if tag in adv:                                                  # To find Adverb Score
+                if tag in adv:  # To find Adverb Score
                     if tag == 'RBS':
                         adv_score = adv_score + (1.5 * cal_score(word, 'r'))
                     elif tag == 'RBR':
@@ -5268,68 +5305,69 @@ def kef():
                     else:
                         adv_score = adv_score + (1.0 * cal_score(word, 'r'))
 
-                elif tag in adj:                                                # To find Adjective Score
+                elif tag in adj:  # To find Adjective Score
                     adj_score = cal_score(word, 'a')
                     if tag == 'JJS':
-                        score_post = score_post + (0.4 * adv_score + 1) * (1.5 * adj_score)   # 1.5, 1.2, 1.0 are the respective Scaling Factors
+                        score_post = score_post + (0.4 * adv_score + 1) * (
+                                    1.5 * adj_score)  # 1.5, 1.2, 1.0 are the respective Scaling Factors
                     elif tag == 'JJR':
                         score_post = score_post + (0.4 * adv_score + 1) * (1.2 * adj_score)
                     else:
                         score_post = score_post + (0.4 * adv_score + 1) * (1.0 * adj_score)
                     adv_score = 0.0
 
-                elif tag in vb:                                                 # To find Verb Score
+                elif tag in vb:  # To find Verb Score
                     vb_score = cal_score(word, 'v')
                     score_post = score_post + (0.4 * adv_score + 1) * vb_score  # 0.4 is a Scaling Factor
                     adv_score = 0.0
 
-            final_score.append(score_post)                                      # Final Sentiment Score of a Sentence
-
+            final_score.append(score_post)  # Final Sentiment Score of a Sentence
 
     def final_senti_score(data, df):
-        
-        tokens = [nltk.word_tokenize(d) for d in data['comment']]                     # Tokenize the Sentence
+
+        tokens = [nltk.word_tokenize(d) for d in data['comment']]  # Tokenize the Sentence
         cal_senti_score(tokens)
-        
+
         senti_score = pd.Series(final_score)
         data['sentiment_score'] = senti_score.values
-        
+
         senti_data = data.groupby(data.index).sum()
-        final_data = df.join(senti_data, how = 'left', lsuffix = '_left', rsuffix = '_right')
-        
+        final_data = df.join(senti_data, how='left', lsuffix='_left', rsuffix='_right')
+
         time = final_data['date'].str.split()
         date = []
         for t in time:
             date.append(" ".join(t[0:3]))
         final_data['date'] = date
-        
+
         disaster_senti_score = final_data.groupby(['date', 'user']).mean()['sentiment_score'].sum()
         return disaster_senti_score
-
 
     # Create Stopwords
     import nltk
     nltk.download('stopwords')
-    stopword = set(stopwords.words('english')) 
-    sp_char = ['.','-','*','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{','1','2','3','4','5','6','7','8','9',' ','  ','   ','~','`','|','/']
-    sp = ['.','*','-','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{','1','2','3','4','5','6','7','8','9','~','`','|','/']
+    stopword = set(stopwords.words('english'))
+    sp_char = ['.', '-', '*', '@', '$', '%', '&', '#', ',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{',
+               '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '  ', '   ', '~', '`', '|', '/']
+    sp = ['.', '*', '-', '@', '$', '%', '&', '#', ',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{', '1', '2', '3',
+          '4', '5', '6', '7', '8', '9', '~', '`', '|', '/']
     stopword.update(sp_char)
     lemma = WordNetLemmatizer()
 
-    adj = ['JJ', 'JJR', 'JJS']                      # All Adjective POS Tags
-    #noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
-    adv = ['RB', 'RBR', 'RBS']                      # All Adverb POS Tags
+    adj = ['JJ', 'JJR', 'JJS']  # All Adjective POS Tags
+    # noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
+    adv = ['RB', 'RBR', 'RBS']  # All Adverb POS Tags
     vb = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']  # All verb POS Tags
     final_score = []
 
     data = pd.read_csv("kerala_flood_2018.csv")
     data.head()
     data.shape
-    data.isnull().any() #Check for NaN value
+    data.isnull().any()  # Check for NaN value
     processed_data = process_data(data)
     processed_data.head()
     processed_data.shape
-    processed_data.isnull().any() #Check for NaN value
+    processed_data.isnull().any()  # Check for NaN value
 
     import nltk
     nltk.download('punkt')
@@ -5338,13 +5376,13 @@ def kef():
     nltk.download('wordnet')
     japan16_sentiment_score = final_senti_score(processed_data, data)
     print(japan16_sentiment_score)
-    j=japan16_sentiment_score
+    j = japan16_sentiment_score
     print("kerala floods 2018 Sentiment Score :", japan16_sentiment_score)
 
-    return render_template('senti.html',dabc=j)
+    return render_template('senti.html', dabc=j)
 
 
-@app.route('/nep', methods=['GET','POST'])
+@app.route('/nep', methods=['GET', 'POST'])
 def nep():
     import pandas as pd
     import numpy as np
@@ -5357,67 +5395,65 @@ def nep():
     from itertools import chain
     import seaborn as sns
 
-
     def chains(para):
         return list(chain.from_iterable(para.str.split('.')))
 
     def process_data(df):
-        
-        df = df.dropna() # Drop all NaN value
-        
+
+        df = df.dropna()  # Drop all NaN value
+
         # Seperate Sentence from Paragraph
         length = df['comment'].str.split('.').map(len)
-        data = pd.DataFrame({'user': np.repeat(df['user'], length),'date': np.repeat(df['date'], length),
-                            'comment': chains(df['comment'])})
-        
+        data = pd.DataFrame({'user': np.repeat(df['user'], length), 'date': np.repeat(df['date'], length),
+                             'comment': chains(df['comment'])})
+
         return data
 
-
     def filtered_text(text):
-        filter0 = [(t.lower(), tag) for t,tag in text]
-        filter1 = [(re.sub("["+"".join(sp)+"+]",' ',f), tag) for f,tag in filter0]    #for removing delimiter and other useless stuff
-        filter2 = [(''.join (f), tag) for f,tag in filter1 if not f.isnumeric()]      #for removing numbers
-        filter3 = [(f, tag) for f,tag in filter2 if f not in stopword]                #for removing stopwords
-        #filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
+        filter0 = [(t.lower(), tag) for t, tag in text]
+        filter1 = [(re.sub("[" + "".join(sp) + "+]", ' ', f), tag) for f, tag in
+                   filter0]  # for removing delimiter and other useless stuff
+        filter2 = [(''.join(f), tag) for f, tag in filter1 if not f.isnumeric()]  # for removing numbers
+        filter3 = [(f, tag) for f, tag in filter2 if f not in stopword]  # for removing stopwords
+        # filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
         return filter3
 
     def cal_score(word, tag):
         try:
-            s_pos = [] # Positive Score
-            s_neg = [] # negative Score
-            s_obj = [] # Objective Score
-            
+            s_pos = []  # Positive Score
+            s_neg = []  # negative Score
+            s_obj = []  # Objective Score
+
             for s in list(swn.senti_synsets(word, tag)):
                 s_pos.append(s.pos_score())
                 s_neg.append(s.neg_score())
-            
+
                 if (s.pos_score() == 0.0 and s.neg_score() == 0.0):
                     score = 2 * s.obj_score()
                     break
-                    
+
             max_pos = max(s_pos)
             max_neg = max(s_neg)
-            
+
             if max_pos > max_neg:
                 score = max_pos
             else:
-                score = -1*max_neg
+                score = -1 * max_neg
         except ValueError:
             score = 0.0
-            
-        return score
 
+        return score
 
     def cal_senti_score(tokens):
         for text in (tokens):
 
-            tagged_word = nltk.pos_tag(text)                                    # Each Word is tagged with a POS
-            filt_word = filtered_text(tagged_word)                 
+            tagged_word = nltk.pos_tag(text)  # Each Word is tagged with a POS
+            filt_word = filtered_text(tagged_word)
             score_post = adj_score = adv_score = vb_score = adv_score = 0.0
 
-            for word,tag in filt_word:
+            for word, tag in filt_word:
 
-                if tag in adv:                                                  # To find Adverb Score
+                if tag in adv:  # To find Adverb Score
                     if tag == 'RBS':
                         adv_score = adv_score + (1.5 * cal_score(word, 'r'))
                     elif tag == 'RBR':
@@ -5425,68 +5461,69 @@ def nep():
                     else:
                         adv_score = adv_score + (1.0 * cal_score(word, 'r'))
 
-                elif tag in adj:                                                # To find Adjective Score
+                elif tag in adj:  # To find Adjective Score
                     adj_score = cal_score(word, 'a')
                     if tag == 'JJS':
-                        score_post = score_post + (0.4 * adv_score + 1) * (1.5 * adj_score)   # 1.5, 1.2, 1.0 are the respective Scaling Factors
+                        score_post = score_post + (0.4 * adv_score + 1) * (
+                                    1.5 * adj_score)  # 1.5, 1.2, 1.0 are the respective Scaling Factors
                     elif tag == 'JJR':
                         score_post = score_post + (0.4 * adv_score + 1) * (1.2 * adj_score)
                     else:
                         score_post = score_post + (0.4 * adv_score + 1) * (1.0 * adj_score)
                     adv_score = 0.0
 
-                elif tag in vb:                                                 # To find Verb Score
+                elif tag in vb:  # To find Verb Score
                     vb_score = cal_score(word, 'v')
                     score_post = score_post + (0.4 * adv_score + 1) * vb_score  # 0.4 is a Scaling Factor
                     adv_score = 0.0
 
-            final_score.append(score_post)                                      # Final Sentiment Score of a Sentence
-
+            final_score.append(score_post)  # Final Sentiment Score of a Sentence
 
     def final_senti_score(data, df):
-        
-        tokens = [nltk.word_tokenize(d) for d in data['comment']]                     # Tokenize the Sentence
+
+        tokens = [nltk.word_tokenize(d) for d in data['comment']]  # Tokenize the Sentence
         cal_senti_score(tokens)
-        
+
         senti_score = pd.Series(final_score)
         data['sentiment_score'] = senti_score.values
-        
+
         senti_data = data.groupby(data.index).sum()
-        final_data = df.join(senti_data, how = 'left', lsuffix = '_left', rsuffix = '_right')
-        print("date", time = final_data['date'])
+        final_data = df.join(senti_data, how='left', lsuffix='_left', rsuffix='_right')
+        print("date", time=final_data['date'])
         time = final_data['date'].str.split()
         date = []
         for t in time:
             date.append(" ".join(t[0:3]))
         final_data['date'] = date
-        
+
         disaster_senti_score = final_data.groupby(['date', 'user']).mean()['sentiment_score'].sum()
         return disaster_senti_score
-
 
     # Create Stopwords
     import nltk
     nltk.download('stopwords')
-    stopword = set(stopwords.words('english')) 
-    sp_char = ['.','-','*','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{','1','2','3','4','5','6','7','8','9',' ','  ','   ','~','`','|','/']
-    sp = ['.','*','-','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{','1','2','3','4','5','6','7','8','9','~','`','|','/']
+    stopword = set(stopwords.words('english'))
+    sp_char = ['.', '-', '*', '@', '$', '%', '&', '#', ',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{',
+               '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '  ', '   ', '~', '`', '|', '/']
+    sp = ['.', '*', '-', '@', '$', '%', '&', '#', ',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{', '1', '2', '3',
+          '4', '5', '6', '7', '8', '9', '~', '`', '|', '/']
     stopword.update(sp_char)
     lemma = WordNetLemmatizer()
 
-    adj = ['JJ', 'JJR', 'JJS']                      # All Adjective POS Tags
-    #noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
-    adv = ['RB', 'RBR', 'RBS']                      # All Adverb POS Tags
+    adj = ['JJ', 'JJR', 'JJS']  # All Adjective POS Tags
+    # noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
+    adv = ['RB', 'RBR', 'RBS']  # All Adverb POS Tags
     vb = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']  # All verb POS Tags
     final_score = []
 
     data = pd.read_csv("Nepal_Earthquake_2015.csv")
     data.head()
     data.shape
-    data.isnull().any() #Check for NaN value
+    data.isnull().any()  # Check for NaN value
     processed_data = process_data(data)
     processed_data.head()
     processed_data.shape
-    processed_data.isnull().any() #Check for NaN value
+    processed_data.isnull().any()  # Check for NaN value
 
     import nltk
     nltk.download('punkt')
@@ -5495,12 +5532,13 @@ def nep():
     nltk.download('wordnet')
     japan16_sentiment_score = final_senti_score(processed_data, data)
     print(japan16_sentiment_score)
-    j=japan16_sentiment_score
+    j = japan16_sentiment_score
     print("Nepal Earthquake 2015 Sentiment Score :", japan16_sentiment_score)
 
-    return render_template('senti.html',dabcd=j)
+    return render_template('senti.html', dabcd=j)
 
-@app.route('/Intu', methods=['GET','POST'])
+
+@app.route('/Intu', methods=['GET', 'POST'])
 def Intu():
     import pandas as pd
     import numpy as np
@@ -5513,67 +5551,65 @@ def Intu():
     from itertools import chain
     import seaborn as sns
 
-
     def chains(para):
         return list(chain.from_iterable(para.str.split('.')))
 
     def process_data(df):
-        
-        df = df.dropna() # Drop all NaN value
-        
+
+        df = df.dropna()  # Drop all NaN value
+
         # Seperate Sentence from Paragraph
         length = df['comment'].str.split('.').map(len)
-        data = pd.DataFrame({'user': np.repeat(df['user'], length),'date': np.repeat(df['date'], length),
-                            'comment': chains(df['comment'])})
-        
+        data = pd.DataFrame({'user': np.repeat(df['user'], length), 'date': np.repeat(df['date'], length),
+                             'comment': chains(df['comment'])})
+
         return data
 
-
     def filtered_text(text):
-        filter0 = [(t.lower(), tag) for t,tag in text]
-        filter1 = [(re.sub("["+"".join(sp)+"+]",' ',f), tag) for f,tag in filter0]    #for removing delimiter and other useless stuff
-        filter2 = [(''.join (f), tag) for f,tag in filter1 if not f.isnumeric()]      #for removing numbers
-        filter3 = [(f, tag) for f,tag in filter2 if f not in stopword]                #for removing stopwords
-        #filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
+        filter0 = [(t.lower(), tag) for t, tag in text]
+        filter1 = [(re.sub("[" + "".join(sp) + "+]", ' ', f), tag) for f, tag in
+                   filter0]  # for removing delimiter and other useless stuff
+        filter2 = [(''.join(f), tag) for f, tag in filter1 if not f.isnumeric()]  # for removing numbers
+        filter3 = [(f, tag) for f, tag in filter2 if f not in stopword]  # for removing stopwords
+        # filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
         return filter3
 
     def cal_score(word, tag):
         try:
-            s_pos = [] # Positive Score
-            s_neg = [] # negative Score
-            s_obj = [] # Objective Score
-            
+            s_pos = []  # Positive Score
+            s_neg = []  # negative Score
+            s_obj = []  # Objective Score
+
             for s in list(swn.senti_synsets(word, tag)):
                 s_pos.append(s.pos_score())
                 s_neg.append(s.neg_score())
-            
+
                 if (s.pos_score() == 0.0 and s.neg_score() == 0.0):
                     score = 2 * s.obj_score()
                     break
-                    
+
             max_pos = max(s_pos)
             max_neg = max(s_neg)
-            
+
             if max_pos > max_neg:
                 score = max_pos
             else:
-                score = -1*max_neg
+                score = -1 * max_neg
         except ValueError:
             score = 0.0
-            
-        return score
 
+        return score
 
     def cal_senti_score(tokens):
         for text in (tokens):
 
-            tagged_word = nltk.pos_tag(text)                                    # Each Word is tagged with a POS
-            filt_word = filtered_text(tagged_word)                 
+            tagged_word = nltk.pos_tag(text)  # Each Word is tagged with a POS
+            filt_word = filtered_text(tagged_word)
             score_post = adj_score = adv_score = vb_score = adv_score = 0.0
 
-            for word,tag in filt_word:
+            for word, tag in filt_word:
 
-                if tag in adv:                                                  # To find Adverb Score
+                if tag in adv:  # To find Adverb Score
                     if tag == 'RBS':
                         adv_score = adv_score + (1.5 * cal_score(word, 'r'))
                     elif tag == 'RBR':
@@ -5581,68 +5617,69 @@ def Intu():
                     else:
                         adv_score = adv_score + (1.0 * cal_score(word, 'r'))
 
-                elif tag in adj:                                                # To find Adjective Score
+                elif tag in adj:  # To find Adjective Score
                     adj_score = cal_score(word, 'a')
                     if tag == 'JJS':
-                        score_post = score_post + (0.4 * adv_score + 1) * (1.5 * adj_score)   # 1.5, 1.2, 1.0 are the respective Scaling Factors
+                        score_post = score_post + (0.4 * adv_score + 1) * (
+                                    1.5 * adj_score)  # 1.5, 1.2, 1.0 are the respective Scaling Factors
                     elif tag == 'JJR':
                         score_post = score_post + (0.4 * adv_score + 1) * (1.2 * adj_score)
                     else:
                         score_post = score_post + (0.4 * adv_score + 1) * (1.0 * adj_score)
                     adv_score = 0.0
 
-                elif tag in vb:                                                 # To find Verb Score
+                elif tag in vb:  # To find Verb Score
                     vb_score = cal_score(word, 'v')
                     score_post = score_post + (0.4 * adv_score + 1) * vb_score  # 0.4 is a Scaling Factor
                     adv_score = 0.0
 
-            final_score.append(score_post)                                      # Final Sentiment Score of a Sentence
-
+            final_score.append(score_post)  # Final Sentiment Score of a Sentence
 
     def final_senti_score(data, df):
-        
-        tokens = [nltk.word_tokenize(d) for d in data['comment']]                     # Tokenize the Sentence
+
+        tokens = [nltk.word_tokenize(d) for d in data['comment']]  # Tokenize the Sentence
         cal_senti_score(tokens)
-        
+
         senti_score = pd.Series(final_score)
         data['sentiment_score'] = senti_score.values
-        
+
         senti_data = data.groupby(data.index).sum()
-        final_data = df.join(senti_data, how = 'left', lsuffix = '_left', rsuffix = '_right')
-        
+        final_data = df.join(senti_data, how='left', lsuffix='_left', rsuffix='_right')
+
         time = final_data['date'].str.split()
         date = []
         for t in time:
             date.append(" ".join(t[0:3]))
         final_data['date'] = date
-        
+
         disaster_senti_score = final_data.groupby(['date', 'user']).mean()['sentiment_score'].sum()
         return disaster_senti_score
-
 
     # Create Stopwords
     import nltk
     nltk.download('stopwords')
-    stopword = set(stopwords.words('english')) 
-    sp_char = ['.','-','*','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{','1','2','3','4','5','6','7','8','9',' ','  ','   ','~','`','|','/']
-    sp = ['.','*','-','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{','1','2','3','4','5','6','7','8','9','~','`','|','/']
+    stopword = set(stopwords.words('english'))
+    sp_char = ['.', '-', '*', '@', '$', '%', '&', '#', ',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{',
+               '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '  ', '   ', '~', '`', '|', '/']
+    sp = ['.', '*', '-', '@', '$', '%', '&', '#', ',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{', '1', '2', '3',
+          '4', '5', '6', '7', '8', '9', '~', '`', '|', '/']
     stopword.update(sp_char)
     lemma = WordNetLemmatizer()
 
-    adj = ['JJ', 'JJR', 'JJS']                      # All Adjective POS Tags
-    #noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
-    adv = ['RB', 'RBR', 'RBS']                      # All Adverb POS Tags
+    adj = ['JJ', 'JJR', 'JJS']  # All Adjective POS Tags
+    # noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
+    adv = ['RB', 'RBR', 'RBS']  # All Adverb POS Tags
     vb = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']  # All verb POS Tags
     final_score = []
 
     data = pd.read_csv("paul_Indonesia_tsunami_2018.csv")
     data.head()
     data.shape
-    data.isnull().any() #Check for NaN value
+    data.isnull().any()  # Check for NaN value
     processed_data = process_data(data)
     processed_data.head()
     processed_data.shape
-    processed_data.isnull().any() #Check for NaN value
+    processed_data.isnull().any()  # Check for NaN value
 
     import nltk
     nltk.download('punkt')
@@ -5651,12 +5688,13 @@ def Intu():
     nltk.download('wordnet')
     japan16_sentiment_score = final_senti_score(processed_data, data)
     print(japan16_sentiment_score)
-    j=japan16_sentiment_score
+    j = japan16_sentiment_score
     print("Indonesia tsunami 2018 Sentiment Score :", japan16_sentiment_score)
 
-    return render_template('senti.html',dabcde=j)
+    return render_template('senti.html', dabcde=j)
 
-@app.route('/phacy', methods=['GET','POST'])
+
+@app.route('/phacy', methods=['GET', 'POST'])
 def phacy():
     import pandas as pd
     import numpy as np
@@ -5669,67 +5707,65 @@ def phacy():
     from itertools import chain
     import seaborn as sns
 
-
     def chains(para):
         return list(chain.from_iterable(para.str.split('.')))
 
     def process_data(df):
-        
-        df = df.dropna() # Drop all NaN value
-        
+
+        df = df.dropna()  # Drop all NaN value
+
         # Seperate Sentence from Paragraph
         length = df['comment'].str.split('.').map(len)
-        data = pd.DataFrame({'user': np.repeat(df['user'], length),'date': np.repeat(df['date'], length),
-                            'comment': chains(df['comment'])})
-        
+        data = pd.DataFrame({'user': np.repeat(df['user'], length), 'date': np.repeat(df['date'], length),
+                             'comment': chains(df['comment'])})
+
         return data
 
-
     def filtered_text(text):
-        filter0 = [(t.lower(), tag) for t,tag in text]
-        filter1 = [(re.sub("["+"".join(sp)+"+]",' ',f), tag) for f,tag in filter0]    #for removing delimiter and other useless stuff
-        filter2 = [(''.join (f), tag) for f,tag in filter1 if not f.isnumeric()]      #for removing numbers
-        filter3 = [(f, tag) for f,tag in filter2 if f not in stopword]                #for removing stopwords
-        #filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
+        filter0 = [(t.lower(), tag) for t, tag in text]
+        filter1 = [(re.sub("[" + "".join(sp) + "+]", ' ', f), tag) for f, tag in
+                   filter0]  # for removing delimiter and other useless stuff
+        filter2 = [(''.join(f), tag) for f, tag in filter1 if not f.isnumeric()]  # for removing numbers
+        filter3 = [(f, tag) for f, tag in filter2 if f not in stopword]  # for removing stopwords
+        # filter4 = [(lemma.lemmatize(f), tag) for f,tag in filter3]                   #for lemmatizing the words
         return filter3
 
     def cal_score(word, tag):
         try:
-            s_pos = [] # Positive Score
-            s_neg = [] # negative Score
-            s_obj = [] # Objective Score
-            
+            s_pos = []  # Positive Score
+            s_neg = []  # negative Score
+            s_obj = []  # Objective Score
+
             for s in list(swn.senti_synsets(word, tag)):
                 s_pos.append(s.pos_score())
                 s_neg.append(s.neg_score())
-            
+
                 if (s.pos_score() == 0.0 and s.neg_score() == 0.0):
                     score = 2 * s.obj_score()
                     break
-                    
+
             max_pos = max(s_pos)
             max_neg = max(s_neg)
-            
+
             if max_pos > max_neg:
                 score = max_pos
             else:
-                score = -1*max_neg
+                score = -1 * max_neg
         except ValueError:
             score = 0.0
-            
-        return score
 
+        return score
 
     def cal_senti_score(tokens):
         for text in (tokens):
 
-            tagged_word = nltk.pos_tag(text)                                    # Each Word is tagged with a POS
-            filt_word = filtered_text(tagged_word)                 
+            tagged_word = nltk.pos_tag(text)  # Each Word is tagged with a POS
+            filt_word = filtered_text(tagged_word)
             score_post = adj_score = adv_score = vb_score = adv_score = 0.0
 
-            for word,tag in filt_word:
+            for word, tag in filt_word:
 
-                if tag in adv:                                                  # To find Adverb Score
+                if tag in adv:  # To find Adverb Score
                     if tag == 'RBS':
                         adv_score = adv_score + (1.5 * cal_score(word, 'r'))
                     elif tag == 'RBR':
@@ -5737,68 +5773,69 @@ def phacy():
                     else:
                         adv_score = adv_score + (1.0 * cal_score(word, 'r'))
 
-                elif tag in adj:                                                # To find Adjective Score
+                elif tag in adj:  # To find Adjective Score
                     adj_score = cal_score(word, 'a')
                     if tag == 'JJS':
-                        score_post = score_post + (0.4 * adv_score + 1) * (1.5 * adj_score)   # 1.5, 1.2, 1.0 are the respective Scaling Factors
+                        score_post = score_post + (0.4 * adv_score + 1) * (
+                                    1.5 * adj_score)  # 1.5, 1.2, 1.0 are the respective Scaling Factors
                     elif tag == 'JJR':
                         score_post = score_post + (0.4 * adv_score + 1) * (1.2 * adj_score)
                     else:
                         score_post = score_post + (0.4 * adv_score + 1) * (1.0 * adj_score)
                     adv_score = 0.0
 
-                elif tag in vb:                                                 # To find Verb Score
+                elif tag in vb:  # To find Verb Score
                     vb_score = cal_score(word, 'v')
                     score_post = score_post + (0.4 * adv_score + 1) * vb_score  # 0.4 is a Scaling Factor
                     adv_score = 0.0
 
-            final_score.append(score_post)                                      # Final Sentiment Score of a Sentence
-
+            final_score.append(score_post)  # Final Sentiment Score of a Sentence
 
     def final_senti_score(data, df):
-        
-        tokens = [nltk.word_tokenize(d) for d in data['comment']]                     # Tokenize the Sentence
+
+        tokens = [nltk.word_tokenize(d) for d in data['comment']]  # Tokenize the Sentence
         cal_senti_score(tokens)
-        
+
         senti_score = pd.Series(final_score)
         data['sentiment_score'] = senti_score.values
-        
+
         senti_data = data.groupby(data.index).sum()
-        final_data = df.join(senti_data, how = 'left', lsuffix = '_left', rsuffix = '_right')
-        
+        final_data = df.join(senti_data, how='left', lsuffix='_left', rsuffix='_right')
+
         time = final_data['date'].str.split()
         date = []
         for t in time:
             date.append(" ".join(t[0:3]))
         final_data['date'] = date
-        
+
         disaster_senti_score = final_data.groupby(['date', 'user']).mean()['sentiment_score'].sum()
         return disaster_senti_score
-
 
     # Create Stopwords
     import nltk
     nltk.download('stopwords')
-    stopword = set(stopwords.words('english')) 
-    sp_char = ['.','-','*','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{','1','2','3','4','5','6','7','8','9',' ','  ','   ','~','`','|','/']
-    sp = ['.','*','-','@','$','%','&', '#',',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{','1','2','3','4','5','6','7','8','9','~','`','|','/']
+    stopword = set(stopwords.words('english'))
+    sp_char = ['.', '-', '*', '@', '$', '%', '&', '#', ',', '"', "'", '?', '!', ':', ';', ')', ']', '[', '(', '}', '{',
+               '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '  ', '   ', '~', '`', '|', '/']
+    sp = ['.', '*', '-', '@', '$', '%', '&', '#', ',', '"', "'", '?', '!', ':', ';', ')', '(', '}', '{', '1', '2', '3',
+          '4', '5', '6', '7', '8', '9', '~', '`', '|', '/']
     stopword.update(sp_char)
     lemma = WordNetLemmatizer()
 
-    adj = ['JJ', 'JJR', 'JJS']                      # All Adjective POS Tags
-    #noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
-    adv = ['RB', 'RBR', 'RBS']                      # All Adverb POS Tags
+    adj = ['JJ', 'JJR', 'JJS']  # All Adjective POS Tags
+    # noun = ['NN', 'NNP', 'NNPS', 'NNS']            # All Noun POS Tags
+    adv = ['RB', 'RBR', 'RBS']  # All Adverb POS Tags
     vb = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']  # All verb POS Tags
     final_score = []
 
     data = pd.read_csv("phailin_cyclone_2013.csv")
     data.head()
     data.shape
-    data.isnull().any() #Check for NaN value
+    data.isnull().any()  # Check for NaN value
     processed_data = process_data(data)
     processed_data.head()
     processed_data.shape
-    processed_data.isnull().any() #Check for NaN value
+    processed_data.isnull().any()  # Check for NaN value
 
     import nltk
     nltk.download('punkt')
@@ -5807,10 +5844,11 @@ def phacy():
     nltk.download('wordnet')
     japan16_sentiment_score = final_senti_score(processed_data, data)
     print(japan16_sentiment_score)
-    j=japan16_sentiment_score
+    j = japan16_sentiment_score
     print("phailin cyclone 2013 Sentiment Score :", japan16_sentiment_score)
 
-    return render_template('senti.html',dabcdef=j)
+    return render_template('senti.html', dabcdef=j)
+
 
 @app.route('/mont')
 def mont():
@@ -5818,15 +5856,16 @@ def mont():
     import numpy as np
     import seaborn as sns
     impact = [112.72, 0.655, 360, 42.04, 1.21, 0.013, 0.0131]
-    #sentiments = [kerala_sentiment_score, phailin_sentiment_score, japan11_sentiment_score, chennai_sentiment_score,
+    # sentiments = [kerala_sentiment_score, phailin_sentiment_score, japan11_sentiment_score, chennai_sentiment_score,
     #            japan16_sentiment_score, nepal_sentiment_score, indonesia_sentiment_score]
-    sentiments = [-126.872672,-11.243073931277056,-343.84144343,-46.1974479,-25.591042,-15.122639,-6.971875]
+    sentiments = [-126.872672, -11.243073931277056, -343.84144343, -46.1974479, -25.591042, -15.122639, -6.971875]
     sentiment_result = pd.DataFrame({'Sentiment Score of Natural Disasters': sentiments, 'Monetary Impacts': impact})
-    fig=sns.lmplot(x = 'Sentiment Score of Natural Disasters', y = 'Monetary Impacts', data = sentiment_result)
+    fig = sns.lmplot(x='Sentiment Score of Natural Disasters', y='Monetary Impacts', data=sentiment_result)
     fig.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/senimg/mont.jpg')
-    return render_template('senti.html',das=sentiments[0])
+    return render_template('senti.html', das=sentiments[0])
 
-@app.route('/predfloods', methods=['GET','POST'])
+
+@app.route('/predfloods', methods=['GET', 'POST'])
 def predfloods():
     from math import sqrt
     from numpy import concatenate
@@ -5840,7 +5879,7 @@ def predfloods():
     from keras.models import Sequential
     from keras.layers import Dense
     from keras.layers import LSTM
-    #from pandas import read_csv
+    # from pandas import read_csv
     from datetime import datetime
 
     def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
@@ -5850,14 +5889,14 @@ def predfloods():
         # input sequence (t-n, ... t-1)
         for i in range(n_in, 0, -1):
             cols.append(df.shift(i))
-            names += [('var%d(t-%d)' % (j+1, i)) for j in range(n_vars)]
+            names += [('var%d(t-%d)' % (j + 1, i)) for j in range(n_vars)]
         # forecast sequence (t, t+1, ... t+n)
         for i in range(0, n_out):
             cols.append(df.shift(-i))
             if i == 0:
-                names += [('var%d(t)' % (j+1)) for j in range(n_vars)]
+                names += [('var%d(t)' % (j + 1)) for j in range(n_vars)]
             else:
-                names += [('var%d(t+%d)' % (j+1, i)) for j in range(n_vars)]
+                names += [('var%d(t+%d)' % (j + 1, i)) for j in range(n_vars)]
         # put it all together
         agg = concat(cols, axis=1)
         agg.columns = names
@@ -5869,14 +5908,11 @@ def predfloods():
     def parse(x):
         return datetime.strptime(x, '%Y %m %d %H')
 
-
-
-
-    dataset = read_csv('data.csv',  parse_dates = [['year', 'month', 'day', 'hour']], index_col=0, date_parser=parse)
+    dataset = read_csv('data.csv', parse_dates=[['year', 'month', 'day', 'hour']], index_col=0, date_parser=parse)
 
     dataset.drop('No', axis=1, inplace=True)
 
-    dataset.columns = ['Rainfall','Dam cap','Forestcov','Flointen']
+    dataset.columns = ['Rainfall', 'Dam cap', 'Forestcov', 'Flointen']
     dataset.index.name = 'date'
 
     dataset = dataset[24:]
@@ -5885,11 +5921,10 @@ def predfloods():
 
     dataset.to_csv('flood1.csv')
 
-
     dataset = read_csv('flood1.csv', header=0, index_col=0)
     values = dataset.values
     encoder = LabelEncoder()
-    values[:,1] = encoder.fit_transform(values[:,1])
+    values[:, 1] = encoder.fit_transform(values[:, 1])
     # ensure all data is float
     values = values.astype('float32')
     scaler = MinMaxScaler(feature_range=(0, 1))
@@ -5898,7 +5933,7 @@ def predfloods():
     n_features = 4
     reframed = series_to_supervised(scaled, n_hours, 1)
     values = reframed.values
-    n_train_hours = 4*12
+    n_train_hours = 4 * 12
     train = values[:n_train_hours, :]
     test = values[n_train_hours:, :]
     # split into input and outputs
@@ -5913,38 +5948,40 @@ def predfloods():
     model.add(Dense(1))
     model.compile(loss='mae', optimizer='adam')
     # fit network
-    history = model.fit(train_X, train_y, epochs=10, batch_size=2, validation_data=(test_X, test_y), verbose=2, shuffle=False)
+    history = model.fit(train_X, train_y, epochs=10, batch_size=2, validation_data=(test_X, test_y), verbose=2,
+                        shuffle=False)
 
     pyplot.plot(history.history['loss'], label='train')
     pyplot.plot(history.history['val_loss'], label='test')
     pyplot.legend()
     pyplot.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/flood2/fl1.png')
-    
+
     yhat = model.predict(test_X)
-    test_X = test_X.reshape((test_X.shape[0], n_hours*n_features))
+    test_X = test_X.reshape((test_X.shape[0], n_hours * n_features))
     # invert scaling for forecast
     inv_yhat = concatenate((yhat, test_X[:, -3:]), axis=1)
     inv_yhat = scaler.inverse_transform(inv_yhat)
-    inv_yhat = inv_yhat[:,0]
+    inv_yhat = inv_yhat[:, 0]
     # invert scaling for actual
     test_y = test_y.reshape((len(test_y), 1))
     inv_y = concatenate((test_y, test_X[:, -3:]), axis=1)
     inv_y = scaler.inverse_transform(inv_y)
-    inv_y = inv_y[:,0]
+    inv_y = inv_y[:, 0]
     # calculate RMSE
-    yhat=8*yhat-0.2
+    yhat = 8 * yhat - 0.2
     rmse = sqrt(mean_squared_error(inv_y, inv_yhat))
     print('Test RMSE: %.3f' % rmse)
 
-    from matplotlib import pyplot 
+    from matplotlib import pyplot
     pyplot.plot(test_y)
     pyplot.plot(yhat)
     pyplot.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/flood2/fl2.png')
-    return render_template('flood2.html',Predictions=rmse)
+    return render_template('flood2.html', Predictions=rmse)
 
-@app.route('/comprede', methods=['GET','POST'])
+
+@app.route('/comprede', methods=['GET', 'POST'])
 def comprede():
-    #earthquake all models
+    # earthquake all models
     import pandas as pd
     import numpy as np
     from sklearn.ensemble import RandomForestRegressor
@@ -5959,9 +5996,9 @@ def comprede():
 
     min_max_scaler = preprocessing.MinMaxScaler()
 
-    df = hs[['Latitude','Longitude','Depth','Magnitude']]
-    df.columns=['Latitude','Longitude','Depth','Magnitude']
-    columns=df.columns
+    df = hs[['Latitude', 'Longitude', 'Depth', 'Magnitude']]
+    df.columns = ['Latitude', 'Longitude', 'Depth', 'Magnitude']
+    columns = df.columns
 
     x = df.drop('Magnitude', axis=1)
     y = df['Magnitude']
@@ -5981,7 +6018,7 @@ def comprede():
     from sklearn.neural_network import MLPRegressor
     len(x_train.transpose())
 
-    mlp = MLPRegressor(hidden_layer_sizes=(100, ), max_iter=1500)
+    mlp = MLPRegressor(hidden_layer_sizes=(100,), max_iter=1500)
     mlp.fit(x_train, y_train)
 
     predictions = mlp.predict(x_test)
@@ -5996,16 +6033,14 @@ def comprede():
     for i in range(0, len(predictions)):
         if abs(predictions[i] - actualValues[i]) < (0.1 * df['Magnitude'].max()):
             numAccurateResults += 1
-        
+
     percentAccurateResults = (numAccurateResults / totalNumValues) * 100
     print(percentAccurateResults)
-    nna=percentAccurateResults
-
+    nna = percentAccurateResults
 
     from sklearn import svm
     SVMModel = svm.SVR()
     SVMModel.fit(x_train, y_train)
-
 
     predictionse = SVMModel.predict(x_test)
     print(predictionse)
@@ -6018,18 +6053,16 @@ def comprede():
     for i in range(0, len(predictionse)):
         if abs(predictionse[i] - actualValues[i]) < (0.1 * df['Magnitude'].max()):
             numAccurateResultse += 1
-        
+
     percentAccurateResultse = (numAccurateResultse / totalNumValues) * 100
     print(percentAccurateResultse)
-    sva=percentAccurateResultse
+    sva = percentAccurateResultse
 
     reg = linear_model.LinearRegression()
     reg.fit(x_train, y_train)
 
-
     predictionsi = reg.predict(x_test)
     print(predictionsi)
-
 
     actualValues = y_test.values
     totalNumValues = len(y_test)
@@ -6039,28 +6072,27 @@ def comprede():
     for i in range(0, len(predictionsi)):
         if abs(predictionsi[i] - actualValues[i]) < (0.1 * df['Magnitude'].max()):
             numAccurateResultsi += 1
-        
-    percentAccurateResultsi = (numAccurateResultsi / totalNumValues) * 100
-    print (percentAccurateResultsi)
-    lma=percentAccurateResultsi
-    if request.method == 'POST':
-        lat = request.form['lat'] 
-        long = request.form['long'] 
-        depth = request.form['depth'] 
-        date = request.form['date'] 
-    from numpy import array
-    x_input =array([[lat,long,depth]])
-    x_tests=scaler.transform(x_input)
 
+    percentAccurateResultsi = (numAccurateResultsi / totalNumValues) * 100
+    print(percentAccurateResultsi)
+    lma = percentAccurateResultsi
+    if request.method == 'POST':
+        lat = request.form['lat']
+        long = request.form['long']
+        depth = request.form['depth']
+        date = request.form['date']
+    from numpy import array
+    x_input = array([[lat, long, depth]])
+    x_tests = scaler.transform(x_input)
 
     actualPredictions = mlp.predict(x_tests)
-    nn=actualPredictions[0]
+    nn = actualPredictions[0]
 
     actualPredictionse = SVMModel.predict(x_tests)
-    sv=actualPredictionse[0]
+    sv = actualPredictionse[0]
 
     actualPredictionsi = reg.predict(x_tests)
-    lm=actualPredictionsi[0]
+    lm = actualPredictionsi[0]
 
     minearth = df['Magnitude'].min()
     maxearth = df['Magnitude'].max()
@@ -6069,9 +6101,7 @@ def comprede():
         x_scaled = min_max_scaler.fit_transform(df[[columns[i]]].values.astype(float))
         df[columns[i]] = pd.DataFrame(x_scaled)
 
-
     df['is_earthquake'] = np.random.uniform(0, 1, len(df)) <= .75
-
 
     train, test = df[df['is_earthquake'] == True], df[df['is_earthquake'] == False]
 
@@ -6102,79 +6132,80 @@ def comprede():
     for i in range(0, len(preds)):
         if abs(preds[i] - actualValues[i]) < (0.1 * df['Magnitude'].max()):
             numAccurateResultsr += 1
-            
+
     percentAccurateResultsr = (numAccurateResultsr / totalNumValues) * 100
     print(percentAccurateResultsr)
-    rfa=percentAccurateResultsr
+    rfa = percentAccurateResultsr
 
     list(zip(train[features], RFModel.feature_importances_))
-    
+
     from numpy import array
-    x_input =array([[lat,long,depth]])
+    x_input = array([[lat, long, depth]])
 
     min_max_scaler = preprocessing.MinMaxScaler()
-    x_tests=scaler.transform(x_input)
+    x_tests = scaler.transform(x_input)
 
     actualPredictionsr = RFModel.predict(df[features])
 
-
     for i in range(0, len(actualPredictions)):
         actualPredictionsr[i] = (actualPredictionsr[i] * (maxearth - minearth)) + minearth
-        
+
     print(actualPredictionsr[0])
-    rf=(actualPredictionsr[0])
-    lsa=nna+0.3
-    ls=nn+0.5
+    rf = (actualPredictionsr[0])
+    lsa = nna + 0.3
+    ls = nn + 0.5
 
-    import matplotlib.pyplot as plt 
+    import matplotlib.pyplot as plt
 
-    # x-coordinates of left sides of bars  
-    left = [1, 2, 3, 4,5] 
-    
-    # heights of bars 
-    height = [rfa,nna,sva,lma,lsa] 
-    
-    # labels for bars 
-    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression','lstm'] 
-    
-    # plotting a bar chart 
-    plt.bar(left, height, tick_label = tick_label, 
-            width = 0.2, color = ['red', 'green', 'orange', 'blue','pink']) 
-    
-    # naming the x-axis 
-    plt.xlabel('x - axis') 
-    # naming the y-axis 
-    plt.ylabel('y - axis') 
-    # plot title 
-    plt.title('Accuracy Chart For Hurricane') 
+    # x-coordinates of left sides of bars
+    left = [1, 2, 3, 4, 5]
+
+    # heights of bars
+    height = [rfa, nna, sva, lma, lsa]
+
+    # labels for bars
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression', 'lstm']
+
+    # plotting a bar chart
+    plt.bar(left, height, tick_label=tick_label,
+            width=0.2, color=['red', 'green', 'orange', 'blue', 'pink'])
+
+    # naming the x-axis
+    plt.xlabel('x - axis')
+    # naming the y-axis
+    plt.ylabel('y - axis')
+    # plot title
+    plt.title('Accuracy Chart For Hurricane')
     plt.savefig('D:/project/Disaster-Prediction-main/static/graphs/em1.png')
 
-    # x-coordinates of left sides of bars  
-    left = [1, 2, 3, 4,5] 
-    
-    # heights of bars 
-    heights = [rf,nn,sv,lm,ls] 
-    
-    # labels for bars 
-    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression','lstm'] 
-    
-    # plotting a bar chart 
-    plt.bar(left, heights, tick_label = tick_label, 
-            width = 0.2, color = ['red', 'green', 'orange', 'blue','pink']) 
-    
-    # naming the x-axis 
-    plt.xlabel('x - axis') 
-    # naming the y-axis 
-    plt.ylabel('y - axis') 
-    # plot title 
-    plt.title('Predicted Output Chart For Earthquake') 
+    # x-coordinates of left sides of bars
+    left = [1, 2, 3, 4, 5]
+
+    # heights of bars
+    heights = [rf, nn, sv, lm, ls]
+
+    # labels for bars
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression', 'lstm']
+
+    # plotting a bar chart
+    plt.bar(left, heights, tick_label=tick_label,
+            width=0.2, color=['red', 'green', 'orange', 'blue', 'pink'])
+
+    # naming the x-axis
+    plt.xlabel('x - axis')
+    # naming the y-axis
+    plt.ylabel('y - axis')
+    # plot title
+    plt.title('Predicted Output Chart For Earthquake')
     plt.savefig('D:/project/Disaster-Prediction-main/static/graphs/em2.png')
 
-    return render_template('comp.html',rf=rf,rfa=rfa,nn=nn,sv=sv,lm=lm,nna=nna,sva=sva,lma=lma,lsa=lsa,ls=ls,lat=lat,long=long,date=date)
+    return render_template('comp.html', rf=rf, rfa=rfa, nn=nn, sv=sv, lm=lm, nna=nna, sva=sva, lma=lma, lsa=lsa, ls=ls,
+                           lat=lat, long=long, date=date)
 
-@app.route('/compredt', methods=['GET','POST'])
+
+@app.route('/compredt', methods=['GET', 'POST'])
 def compredt():
-    #TSUNAMI all models
+    # TSUNAMI all models
     import pandas as pd
     import numpy as np
     from sklearn.ensemble import RandomForestRegressor
@@ -6185,15 +6216,14 @@ def compredt():
     warnings.filterwarnings("ignore")
     np.random.seed(0)
 
-
     hs = pd.read_csv('tsunami.csv')
 
     min_max_scaler = preprocessing.MinMaxScaler()
 
-    df = hs[['LATITUDE','LONGITUDE','MAXIMUM_HEIGHT','PRIMARY_MAGNITUDE']]
-    df=df.fillna(df.mean())
-    df.columns=['LATITUDE','LONGITUDE','MAXIMUM_HEIGHT','PRIMARY_MAGNITUDE']
-    columns=df.columns
+    df = hs[['LATITUDE', 'LONGITUDE', 'MAXIMUM_HEIGHT', 'PRIMARY_MAGNITUDE']]
+    df = df.fillna(df.mean())
+    df.columns = ['LATITUDE', 'LONGITUDE', 'MAXIMUM_HEIGHT', 'PRIMARY_MAGNITUDE']
+    columns = df.columns
 
     x = df.drop('PRIMARY_MAGNITUDE', axis=1)
     y = df['PRIMARY_MAGNITUDE']
@@ -6213,7 +6243,7 @@ def compredt():
     from sklearn.neural_network import MLPRegressor
     len(x_train.transpose())
 
-    mlp = MLPRegressor(hidden_layer_sizes=(100, ), max_iter=1500)
+    mlp = MLPRegressor(hidden_layer_sizes=(100,), max_iter=1500)
     mlp.fit(x_train, y_train)
 
     predictions = mlp.predict(x_test)
@@ -6228,10 +6258,10 @@ def compredt():
     for i in range(0, len(predictions)):
         if abs(predictions[i] - actualValues[i]) < (0.1 * df['PRIMARY_MAGNITUDE'].max()):
             numAccurateResults += 1
-        
+
     percentAccurateResults = (numAccurateResults / totalNumValues) * 100
     print(percentAccurateResults)
-    tnna=percentAccurateResults
+    tnna = percentAccurateResults
     from sklearn import svm
     SVMModel = svm.SVR()
     SVMModel.fit(x_train, y_train)
@@ -6247,10 +6277,10 @@ def compredt():
     for i in range(0, len(predictionse)):
         if abs(predictionse[i] - actualValues[i]) < (0.1 * df['PRIMARY_MAGNITUDE'].max()):
             numAccurateResultse += 1
-        
+
     percentAccurateResultse = (numAccurateResultse / totalNumValues) * 100
     print(percentAccurateResultse)
-    tsva=percentAccurateResultse
+    tsva = percentAccurateResultse
     reg = linear_model.LinearRegression()
     reg.fit(x_train, y_train)
 
@@ -6265,28 +6295,28 @@ def compredt():
     for i in range(0, len(predictionsi)):
         if abs(predictionsi[i] - actualValues[i]) < (0.1 * df['PRIMARY_MAGNITUDE'].max()):
             numAccurateResultsi += 1
-        
+
     percentAccurateResultsi = (numAccurateResultsi / totalNumValues) * 100
     print(percentAccurateResultsi)
-    tlma=percentAccurateResultsi
+    tlma = percentAccurateResultsi
     if request.method == 'POST':
-        lat = request.form['lats'] 
-        long = request.form['longs'] 
-        height = request.form['heights'] 
-        date = request.form['dates'] 
+        lat = request.form['lats']
+        long = request.form['longs']
+        height = request.form['heights']
+        date = request.form['dates']
 
     from numpy import array
-    x_input =array([[lat,long,height]])
-    x_tests=scaler.transform(x_input)
+    x_input = array([[lat, long, height]])
+    x_tests = scaler.transform(x_input)
 
     actualPredictions = mlp.predict(x_tests)
-    tnn=actualPredictions[0]
+    tnn = actualPredictions[0]
 
     actualPredictionse = SVMModel.predict(x_tests)
-    tsv=actualPredictionse[0]
+    tsv = actualPredictionse[0]
 
     actualPredictionsi = reg.predict(x_tests)
-    tlm=actualPredictionsi[0]
+    tlm = actualPredictionsi[0]
 
     mintsunami = df['PRIMARY_MAGNITUDE'].min()
     maxtsunami = df['PRIMARY_MAGNITUDE'].max()
@@ -6326,74 +6356,74 @@ def compredt():
     for i in range(0, len(preds)):
         if abs(preds[i] - actualValues[i]) < (0.1 * df['PRIMARY_MAGNITUDE'].max()):
             numAccurateResultsr += 1
-            
+
     percentAccurateResultsr = (numAccurateResultsr / totalNumValues) * 100
-    trfa=percentAccurateResultsr
+    trfa = percentAccurateResultsr
 
     list(zip(train[features], RFModel.feature_importances_))
 
     from numpy import array
-    x_input =array([[lat,long,height]])
+    x_input = array([[lat, long, height]])
 
     min_max_scaler = preprocessing.MinMaxScaler()
-    x_tests=scaler.transform(x_input)
+    x_tests = scaler.transform(x_input)
 
     actualPredictionsr = RFModel.predict(df[features])
 
-
     for i in range(0, len(actualPredictions)):
         actualPredictionsr[i] = (actualPredictionsr[i] * (maxtsunami - mintsunami)) + mintsunami
-        
-    trf=actualPredictionsr[0]
 
-    # x-coordinates of left sides of bars  
-    left = [1, 2, 3, 4] 
-    
-    # heights of bars 
-    height = [trfa,tnna,tsva,tlma] 
-    
-    # labels for bars 
-    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression'] 
-    
-    # plotting a bar chart 
-    plt.bar(left, height, tick_label = tick_label, 
-            width = 0.4, color = ['red', 'green', 'orange', 'blue']) 
-    
-    # naming the x-axis 
-    plt.xlabel('x - axis') 
-    # naming the y-axis 
-    plt.ylabel('y - axis') 
-    # plot title 
-    plt.title('Accuracy Chart For Tsunami') 
+    trf = actualPredictionsr[0]
+
+    # x-coordinates of left sides of bars
+    left = [1, 2, 3, 4]
+
+    # heights of bars
+    height = [trfa, tnna, tsva, tlma]
+
+    # labels for bars
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression']
+
+    # plotting a bar chart
+    plt.bar(left, height, tick_label=tick_label,
+            width=0.4, color=['red', 'green', 'orange', 'blue'])
+
+    # naming the x-axis
+    plt.xlabel('x - axis')
+    # naming the y-axis
+    plt.ylabel('y - axis')
+    # plot title
+    plt.title('Accuracy Chart For Tsunami')
     plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/graphse/tm1.png')
 
-    # x-coordinates of left sides of bars  
-    left = [1, 2, 3, 4] 
-    
-    # heights of bars 
-    heights = [trf,tnn,tsv,tlm] 
-    
-    # labels for bars 
-    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression'] 
-    
-    # plotting a bar chart 
-    plt.bar(left, heights, tick_label = tick_label, 
-            width = 0.4, color = ['blue']) 
-    
-    # naming the x-axis 
-    plt.xlabel('x - axis') 
-    # naming the y-axis 
-    plt.ylabel('y - axis') 
-    # plot title 
-    plt.title('Predicted Output Chart For Tsunami') 
+    # x-coordinates of left sides of bars
+    left = [1, 2, 3, 4]
+
+    # heights of bars
+    heights = [trf, tnn, tsv, tlm]
+
+    # labels for bars
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression']
+
+    # plotting a bar chart
+    plt.bar(left, heights, tick_label=tick_label,
+            width=0.4, color=['blue'])
+
+    # naming the x-axis
+    plt.xlabel('x - axis')
+    # naming the y-axis
+    plt.ylabel('y - axis')
+    # plot title
+    plt.title('Predicted Output Chart For Tsunami')
     plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/graphse/tm2.png')
 
+    return render_template('comp.html', trf=trf, trfa=trfa, tnn=tnn, tsv=tsv, tlm=tlm, tnna=tnna, tsva=tsva, tlma=tlma,
+                           lat=lat, long=long, date=date)
 
-    return render_template('comp.html',trf=trf,trfa=trfa,tnn=tnn,tsv=tsv,tlm=tlm,tnna=tnna,tsva=tsva,tlma=tlma,lat=lat,long=long,date=date)
 
-@app.route('/compredf', methods=['GET','POST'])
+@app.route('/compredf', methods=['GET', 'POST'])
 def compredf():
-    #floods all models
+    # floods all models
     import pandas as pd
     import numpy as np
     from sklearn.ensemble import RandomForestRegressor
@@ -6408,10 +6438,10 @@ def compredf():
     df_level = pd.read_csv("Hoppers Crossing-Hourly-River-Level.csv")
 
     df = pd.merge(df_rain, df_level, how='outer', on=['Date/Time'])
-    df = df[['Current rainfall (mm)','Cumulative rainfall (mm)','Level (m)']]
-    df.columns=['Current rainfall (mm)','Cumulative rainfall (mm)','Level (m)']
-    df=df.fillna(df.mean())
-    columns=df.columns
+    df = df[['Current rainfall (mm)', 'Cumulative rainfall (mm)', 'Level (m)']]
+    df.columns = ['Current rainfall (mm)', 'Cumulative rainfall (mm)', 'Level (m)']
+    df = df.fillna(df.mean())
+    columns = df.columns
 
     df['Cumulative rainfall (mm)'] = df['Cumulative rainfall (mm)'].fillna(0)
     df['Level (m)'] = df['Level (m)'].fillna(0)
@@ -6435,7 +6465,7 @@ def compredf():
     from sklearn.neural_network import MLPRegressor
     len(x_train.transpose())
 
-    mlp = MLPRegressor(hidden_layer_sizes=(100, ), max_iter=1500)
+    mlp = MLPRegressor(hidden_layer_sizes=(100,), max_iter=1500)
     mlp.fit(x_train, y_train)
 
     predictions = mlp.predict(x_test)
@@ -6450,10 +6480,10 @@ def compredf():
     for i in range(0, len(predictions)):
         if abs(predictions[i] - actualValues[i]) < (0.1 * df['Level (m)'].max()):
             numAccurateResults += 1
-        
+
     percentAccurateResults = (numAccurateResults / totalNumValues) * 100
     print(percentAccurateResults)
-    fnna=percentAccurateResults
+    fnna = percentAccurateResults
 
     from sklearn import svm
     SVMModel = svm.SVR()
@@ -6470,10 +6500,10 @@ def compredf():
     for i in range(0, len(predictionse)):
         if abs(predictionse[i] - actualValues[i]) < (0.1 * df['Level (m)'].max()):
             numAccurateResultse += 1
-        
+
     percentAccurateResultse = (numAccurateResultse / totalNumValues) * 100
     print(percentAccurateResultse)
-    fsva=percentAccurateResultse
+    fsva = percentAccurateResultse
 
     reg = linear_model.LinearRegression()
     reg.fit(x_train, y_train)
@@ -6489,29 +6519,28 @@ def compredf():
     for i in range(0, len(predictionsi)):
         if abs(predictionsi[i] - actualValues[i]) < (0.1 * df['Level (m)'].max()):
             numAccurateResultsi += 1
-        
+
     percentAccurateResultsi = (numAccurateResultsi / totalNumValues) * 100
     print(percentAccurateResultsi)
-    flma=percentAccurateResultsi
+    flma = percentAccurateResultsi
 
     if request.method == 'POST':
-        crf = request.form['crf'] 
-        cmf = request.form['cmf'] 
-        date = request.form['dates'] 
+        crf = request.form['crf']
+        cmf = request.form['cmf']
+        date = request.form['dates']
 
     from numpy import array
-    x_input =array([[crf,cmf]])
-    x_tests=scaler.transform(x_input)
+    x_input = array([[crf, cmf]])
+    x_tests = scaler.transform(x_input)
 
     actualPredictions = mlp.predict(x_tests)
-    fnn=actualPredictions[0]
+    fnn = actualPredictions[0]
 
     actualPredictionse = SVMModel.predict(x_tests)
-    fsv=actualPredictionse[0]
-
+    fsv = actualPredictionse[0]
 
     actualPredictionsi = reg.predict(x_tests)
-    flm=actualPredictionsi[0]
+    flm = actualPredictionsi[0]
 
     minflood = df['Level (m)'].min()
     maxflood = df['Level (m)'].max()
@@ -6520,24 +6549,18 @@ def compredf():
         x_scaled = min_max_scaler.fit_transform(df[[columns[i]]].values.astype(float))
         df[columns[i]] = pd.DataFrame(x_scaled)
 
-
     df['is_flood'] = np.random.uniform(0, 1, len(df)) <= .75
-
 
     train, test = df[df['is_flood'] == True], df[df['is_flood'] == False]
 
-
     print('Number of observations in the training data:', len(train))
     print('Number of observations in the test data:', len(test))
-
 
     features = df.columns[0:-1]
     features = features.delete(2)
     features
 
-
     yr = train['Level (m)']
-
 
     RFModel = RandomForestRegressor(n_jobs=2, random_state=0)
 
@@ -6557,73 +6580,72 @@ def compredf():
     for i in range(0, len(preds)):
         if abs(preds[i] - actualValues[i]) < (0.1 * df['Level (m)'].max()):
             numAccurateResultsr += 1
-            
+
     percentAccurateResultsr = (numAccurateResultsr / totalNumValues) * 100
     print(percentAccurateResultsr)
-    frfa=percentAccurateResultsr
-
-   
+    frfa = percentAccurateResultsr
 
     from numpy import array
-    x_input =array([[crf,cmf]])
+    x_input = array([[crf, cmf]])
 
     min_max_scaler = preprocessing.MinMaxScaler()
-    x_tests=scaler.transform(x_input)
+    x_tests = scaler.transform(x_input)
 
     actualPredictionsr = RFModel.predict(df[features])
 
-
     for i in range(0, len(actualPredictions)):
         actualPredictionsr[i] = (actualPredictionsr[i] * (maxflood - minflood)) + minflood
-        
-    frf=actualPredictionsr[0]
+
+    frf = actualPredictionsr[0]
     print(actualPredictionsr[0])
 
-    # x-coordinates of left sides of bars  
-    left = [1, 2, 3, 4] 
-    
-    # heights of bars 
-    height = [frfa,fnna,fsva,flma] 
-    
-    # labels for bars 
-    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression'] 
-    
-    # plotting a bar chart 
-    plt.bar(left, height, tick_label = tick_label, 
-            width = 0.4, color = ['red', 'green', 'orange', 'blue']) 
-    
-    # naming the x-axis 
-    plt.xlabel('x - axis') 
-    # naming the y-axis 
-    plt.ylabel('y - axis') 
-    # plot title 
-    plt.title('Accuracy Chart For Flood') 
+    # x-coordinates of left sides of bars
+    left = [1, 2, 3, 4]
+
+    # heights of bars
+    height = [frfa, fnna, fsva, flma]
+
+    # labels for bars
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression']
+
+    # plotting a bar chart
+    plt.bar(left, height, tick_label=tick_label,
+            width=0.4, color=['red', 'green', 'orange', 'blue'])
+
+    # naming the x-axis
+    plt.xlabel('x - axis')
+    # naming the y-axis
+    plt.ylabel('y - axis')
+    # plot title
+    plt.title('Accuracy Chart For Flood')
     plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/graphsi/fm1.png')
 
-    # x-coordinates of left sides of bars  
-    left = [1, 2, 3, 4] 
-    
-    # heights of bars 
-    heights = [frf,fnn,fsv,flm] 
-    
-    # labels for bars 
-    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression'] 
-    
-    # plotting a bar chart 
-    plt.bar(left, heights, tick_label = tick_label, 
-            width = 0.4, color = ['blue']) 
-    
-    # naming the x-axis 
-    plt.xlabel('x - axis') 
-    # naming the y-axis 
-    plt.ylabel('y - axis') 
-    # plot title 
-    plt.title('Predicted Output Chart For Flood') 
+    # x-coordinates of left sides of bars
+    left = [1, 2, 3, 4]
+
+    # heights of bars
+    heights = [frf, fnn, fsv, flm]
+
+    # labels for bars
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression']
+
+    # plotting a bar chart
+    plt.bar(left, heights, tick_label=tick_label,
+            width=0.4, color=['blue'])
+
+    # naming the x-axis
+    plt.xlabel('x - axis')
+    # naming the y-axis
+    plt.ylabel('y - axis')
+    # plot title
+    plt.title('Predicted Output Chart For Flood')
     plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/graphsi/fm2.png')
 
-    return render_template('comp.html',frf=frf,frfa=frfa,fnn=fnn,fsv=fsv,flm=flm,fnna=fnna,fsva=fsva,flma=flma,crf=crf,cmf=cmf,date=date)
+    return render_template('comp.html', frf=frf, frfa=frfa, fnn=fnn, fsv=fsv, flm=flm, fnna=fnna, fsva=fsva, flma=flma,
+                           crf=crf, cmf=cmf, date=date)
 
-@app.route('/compredh', methods=['GET','POST'])
+
+@app.route('/compredh', methods=['GET', 'POST'])
 def compredh():
     import pandas as pd
     import numpy as np
@@ -6643,9 +6665,9 @@ def compredh():
     hurricanes = shuffle(hurricanes)
 
     hurricanes = hurricanes[["Date", "Latitude", "Longitude", "Maximum Wind"]].copy()
-    hurricanes.columns=["Date", "Latitude", "Longitude", "Maximum Wind"]
-    hurricanes=hurricanes.fillna(hurricanes.mean())
-    columns=hurricanes.columns
+    hurricanes.columns = ["Date", "Latitude", "Longitude", "Maximum Wind"]
+    hurricanes = hurricanes.fillna(hurricanes.mean())
+    columns = hurricanes.columns
     hurricanes = hurricanes[pd.notnull(hurricanes['Maximum Wind'])]
 
     lon = hurricanes['Longitude']
@@ -6678,12 +6700,12 @@ def compredh():
     hurricanes_y = hurricanes["Maximum Wind"]
     hurricanes_y.head(5)
 
-    hurricanes_x = hurricanes.drop("Maximum Wind", axis = 1)
-    hurricanes_x['Longitude'].replace(regex=True,inplace=True,to_replace=r'W',value=r'')
-    hurricanes_x['Latitude'].replace(regex=True,inplace=True,to_replace=r'N',value=r'')
+    hurricanes_x = hurricanes.drop("Maximum Wind", axis=1)
+    hurricanes_x['Longitude'].replace(regex=True, inplace=True, to_replace=r'W', value=r'')
+    hurricanes_x['Latitude'].replace(regex=True, inplace=True, to_replace=r'N', value=r'')
 
     from sklearn.model_selection import train_test_split
-    x_train, x_test, y_train, y_test = train_test_split(hurricanes_x,hurricanes_y)
+    x_train, x_test, y_train, y_test = train_test_split(hurricanes_x, hurricanes_y)
 
     from sklearn.preprocessing import StandardScaler
     scaler = StandardScaler()
@@ -6697,7 +6719,7 @@ def compredh():
     from sklearn.neural_network import MLPRegressor
     len(x_train.transpose())
 
-    mlp = MLPRegressor(hidden_layer_sizes=(100, ), max_iter=1500)
+    mlp = MLPRegressor(hidden_layer_sizes=(100,), max_iter=1500)
     mlp.fit(x_train, y_train)
 
     predictions = mlp.predict(x_test)
@@ -6712,10 +6734,10 @@ def compredh():
     for i in range(0, len(predictions)):
         if abs(predictions[i] - actualValues[i]) < (0.1 * hurricanes['Maximum Wind'].max()):
             numAccurateResults += 1
-        
+
     percentAccurateResults = (numAccurateResults / totalNumValues) * 100
     print(percentAccurateResults)
-    hnna=percentAccurateResults
+    hnna = percentAccurateResults
 
     from sklearn import svm
     SVMModel = svm.SVR()
@@ -6732,10 +6754,10 @@ def compredh():
     for i in range(0, len(predictionse)):
         if abs(predictionse[i] - actualValues[i]) < (0.1 * hurricanes['Maximum Wind'].max()):
             numAccurateResultse += 1
-        
+
     percentAccurateResultse = (numAccurateResultse / totalNumValues) * 100
     print(percentAccurateResultse)
-    hsva=percentAccurateResultse
+    hsva = percentAccurateResultse
 
     reg = linear_model.LinearRegression()
     reg.fit(x_train, y_train)
@@ -6751,27 +6773,27 @@ def compredh():
     for i in range(0, len(predictionsi)):
         if abs(predictionsi[i] - actualValues[i]) < (0.1 * hurricanes['Maximum Wind'].max()):
             numAccurateResultsi += 1
-        
+
     percentAccurateResultsi = (numAccurateResultsi / totalNumValues) * 100
-    hlma=percentAccurateResultsi
+    hlma = percentAccurateResultsi
     print(percentAccurateResultsi)
     if request.method == 'POST':
-        lati = request.form['lati'] 
-        longi = request.form['longi']  
-        date = request.form['dates'] 
+        lati = request.form['lati']
+        longi = request.form['longi']
+        date = request.form['dates']
 
     from numpy import array
-    x_input =array([[date,lati,longi]])
-    x_tests=scaler.transform(x_input)
+    x_input = array([[date, lati, longi]])
+    x_tests = scaler.transform(x_input)
 
     actualPredictions = mlp.predict(x_tests)
-    hnn=actualPredictions[0]
+    hnn = actualPredictions[0]
 
     actualPredictionse = SVMModel.predict(x_tests)
-    hsv=actualPredictionse[0]
+    hsv = actualPredictionse[0]
 
     actualPredictionsi = reg.predict(x_tests)
-    hlm=actualPredictionsi[0]
+    hlm = actualPredictionsi[0]
 
     minhurricane = hurricanes['Maximum Wind'].min()
     maxhurricane = hurricanes['Maximum Wind'].max()
@@ -6782,7 +6804,6 @@ def compredh():
         hurricanes[columns[i]] = pd.DataFrame(x_scaled)
 
     hurricanes['is_hurricane'] = np.random.uniform(0, 1, len(hurricanes)) <= .75
-
 
     train, test = hurricanes[hurricanes['is_hurricane'] == True], hurricanes[hurricanes['is_hurricane'] == False]
 
@@ -6803,7 +6824,6 @@ def compredh():
 
     preds = RFModel.predict(test[features])
 
-
     preds
 
     actualValues = test['Maximum Wind'].values
@@ -6814,71 +6834,70 @@ def compredh():
     for i in range(0, len(preds)):
         if abs(preds[i] - actualValues[i]) < (0.1 * hurricanes['Maximum Wind'].max()):
             numAccurateResultsr += 1
-            
+
     percentAccurateResultsr = (numAccurateResultsr / totalNumValues) * 100
     print(percentAccurateResultsr)
-    hrfa=percentAccurateResultsr
+    hrfa = percentAccurateResultsr
 
     list(zip(train[features], RFModel.feature_importances_))
 
     from numpy import array
-    x_input =array([[date,lati,longi]])
+    x_input = array([[date, lati, longi]])
 
     min_max_scaler = preprocessing.MinMaxScaler()
-    x_tests=scaler.transform(x_input)
-
+    x_tests = scaler.transform(x_input)
 
     actualPredictionsr = RFModel.predict(hurricanes[features])
 
-
     for i in range(0, len(actualPredictions)):
         actualPredictionsr[i] = (actualPredictionsr[i] * (maxhurricane - minhurricane)) + minhurricane
-        
-    hrf=actualPredictionsr[0]+5
 
-    # x-coordinates of left sides of bars  
-    left = [1, 2, 3, 4] 
-    
-    # heights of bars 
-    height = [hrfa,hnna,hsva,hlma] 
-    
-    # labels for bars 
-    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression'] 
-    
-    # plotting a bar chart 
-    plt.bar(left, height, tick_label = tick_label, 
-            width = 0.4, color = ['red', 'green', 'orange', 'blue']) 
-    
-    # naming the x-axis 
-    plt.xlabel('x - axis') 
-    # naming the y-axis 
-    plt.ylabel('y - axis') 
-    # plot title 
-    plt.title('Accuracy Chart For Hurricane') 
+    hrf = actualPredictionsr[0] + 5
+
+    # x-coordinates of left sides of bars
+    left = [1, 2, 3, 4]
+
+    # heights of bars
+    height = [hrfa, hnna, hsva, hlma]
+
+    # labels for bars
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression']
+
+    # plotting a bar chart
+    plt.bar(left, height, tick_label=tick_label,
+            width=0.4, color=['red', 'green', 'orange', 'blue'])
+
+    # naming the x-axis
+    plt.xlabel('x - axis')
+    # naming the y-axis
+    plt.ylabel('y - axis')
+    # plot title
+    plt.title('Accuracy Chart For Hurricane')
     plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/graphsr/hm1.jpg')
 
-    # x-coordinates of left sides of bars  
-    left = [1, 2, 3, 4] 
-    
-    # heights of bars 
-    heights = [hrf,hnn,hsv,hlm] 
-    
-    # labels for bars 
-    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression'] 
-    
-    # plotting a bar chart 
-    plt.bar(left, heights, tick_label = tick_label, 
-            width = 0.4, color = ['blue']) 
-    
-    # naming the x-axis 
-    plt.xlabel('x - axis') 
-    # naming the y-axis 
-    plt.ylabel('y - axis') 
-    # plot title 
-    plt.title('Predicted Output Chart For Hurricane') 
+    # x-coordinates of left sides of bars
+    left = [1, 2, 3, 4]
+
+    # heights of bars
+    heights = [hrf, hnn, hsv, hlm]
+
+    # labels for bars
+    tick_label = ['random_forest', 'neural_network', 'svm', 'linear_regression']
+
+    # plotting a bar chart
+    plt.bar(left, heights, tick_label=tick_label,
+            width=0.4, color=['blue'])
+
+    # naming the x-axis
+    plt.xlabel('x - axis')
+    # naming the y-axis
+    plt.ylabel('y - axis')
+    # plot title
+    plt.title('Predicted Output Chart For Hurricane')
     plt.savefig('C:/Users/Tanvi/Downloads/capstone/capstone/static/graphsr/hm2.png')
 
-    return render_template('comp.html',hrf=hrf,hrfa=hrfa,hnn=hnn,hsv=hsv,hlm=hlm,hnna=hnna,hsva=hsva,hlma=hlma,lat=lati,long=longi,date=date)
+    return render_template('comp.html', hrf=hrf, hrfa=hrfa, hnn=hnn, hsv=hsv, hlm=hlm, hnna=hnna, hsva=hsva, hlma=hlma,
+                           lat=lati, long=longi, date=date)
 
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -6897,15 +6916,14 @@ scheduler.start()
 # shutdown safely when app stops
 atexit.register(lambda: scheduler.shutdown())
 
-
-print("🔄 Loading ML model...")
-lr = joblib.load("model.pkl")
-model_columns = joblib.load("model_columns.pkl")
-print("✅ ML model loaded")
-
-
 if __name__ == "__main__":
+    lr = joblib.load("model.pkl")  # Load "model.pkl"
+    print('Model loaded')
+    model_columns = joblib.load("model_columns.pkl")  # Load "model_columns.pkl"
+    print('Model columns loaded')
     app.run(debug=True)
+
+
 
 
 

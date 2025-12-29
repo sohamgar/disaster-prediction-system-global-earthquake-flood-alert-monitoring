@@ -172,14 +172,15 @@
   <form method="POST" id="otpForm">
     <div class="toggle-otp" id="toggleOtpBtn"><i class="fa fa-eye"></i> Show OTP</div>
 
-    <div class="otp-group">
-      <input type="password" maxlength="1" class="otp-box" name="o1">
-      <input type="password" maxlength="1" class="otp-box" name="o2">
-      <input type="password" maxlength="1" class="otp-box" name="o3">
-      <input type="password" maxlength="1" class="otp-box" name="o4">
-      <input type="password" maxlength="1" class="otp-box" name="o5">
-      <input type="password" maxlength="1" class="otp-box" name="o6">
-    </div>
+<div class="otp-group">
+  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-box" name="o1">
+  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-box" name="o2">
+  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-box" name="o3">
+  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-box" name="o4">
+  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-box" name="o5">
+  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-box" name="o6">
+</div>
+
 
     <input type="hidden" name="otp" id="fullOtp">
 

@@ -249,9 +249,18 @@ h3 {
 <div class="col input-wrapper" style="position: relative;">
   <!-- Country code / globe icon inside input -->
   <i class="fa fa-globe input-icon"></i>
+<input
+  id="mobile"
+  name="mobile"
+  type="tel"
+  inputmode="numeric"
+  pattern="[0-9]*"
+  class="form-control phone-input"
+  placeholder="Phone Number"
+  required
+/>
+<div id="mobile_status" class="status-text"></div>
 
-  <input id="mobile" name="mobile" class="form-control phone-input" placeholder="Phone Number" required />
-  <div id="mobile_status" class="status-text"></div>
 </div>
 
 
@@ -274,16 +283,36 @@ h3 {
                 </div>
 
                 <!-- LATITUDE -->
-                <div class="col input-wrapper">
-                    <i class="fa fa-map input-icon"></i>
-                    <input id="lat" name="lat" class="form-control" placeholder="Latitude (e.g., 18.5204)" required />
-                </div>
+          <!-- LATITUDE -->
+<div class="col input-wrapper">
+    <i class="fa fa-map input-icon"></i>
+    <input
+        id="lat"
+        name="lat"
+        type="number"
+        step="any"
+        inputmode="decimal"
+        class="form-control"
+        placeholder="Latitude (e.g., 18.5204)"
+        required
+    />
+</div>
 
-                <!-- LONGITUDE -->
-                <div class="col input-wrapper">
-                    <i class="fa fa-map-location-dot input-icon"></i>
-                    <input id="lng" name="lng" class="form-control" placeholder="Longitude (e.g., 73.8567)" required />
-                </div>
+<!-- LONGITUDE -->
+<div class="col input-wrapper">
+    <i class="fa fa-map-location-dot input-icon"></i>
+    <input
+        id="lng"
+        name="lng"
+        type="number"
+        step="any"
+        inputmode="decimal"
+        class="form-control"
+        placeholder="Longitude (e.g., 73.8567)"
+        required
+    />
+</div>
+
 
             </div>
 
@@ -435,9 +464,17 @@ nameInput.addEventListener("input", () => {
 
 
 
+let usernameController = null;
+
 usernameInput.addEventListener("input", async () => {
     const val = usernameInput.value.trim();
     const status = document.getElementById("username_status");
+
+    // Abort previous request
+    if (usernameController) {
+        usernameController.abort();
+    }
+    usernameController = new AbortController();
 
     // Clear if empty
     if (!val) {
@@ -447,10 +484,8 @@ usernameInput.addEventListener("input", async () => {
         return;
     }
 
-    // Strict pattern: only letters, numbers, underscore; no spaces, no special chars
     const usernamePattern = /^[a-zA-Z0-9_]+$/;
 
-    // Minimum / Maximum length check
     if (val.length < 3) {
         showStatus(status, "Too short (min 3 characters)", "danger");
         usernameInput.dataset.valid = "false";
@@ -465,7 +500,6 @@ usernameInput.addEventListener("input", async () => {
         return;
     }
 
-    // Pattern validation (strict)
     if (!usernamePattern.test(val)) {
         showStatus(status, "Invalid characters (letters, numbers, _ only)", "danger");
         usernameInput.dataset.valid = "false";
@@ -473,7 +507,6 @@ usernameInput.addEventListener("input", async () => {
         return;
     }
 
-    // Prevent all-numeric usernames
     if (/^\d+$/.test(val)) {
         showStatus(status, "Cannot be only numbers", "danger");
         usernameInput.dataset.valid = "false";
@@ -481,7 +514,6 @@ usernameInput.addEventListener("input", async () => {
         return;
     }
 
-    // Prevent all-letter usernames
     if (/^[a-zA-Z]+$/.test(val)) {
         showStatus(status, "Cannot be only letters", "danger");
         usernameInput.dataset.valid = "false";
@@ -489,26 +521,22 @@ usernameInput.addEventListener("input", async () => {
         return;
     }
 
-    // Prevent usernames starting or ending with underscore
-    if (/^_|_$/.test(val)) {
+    if (/^_|_$/.test(val) || /__/.test(val)) {
         showStatus(status, "Invalid characters (letters, numbers, _ only)", "danger");
         usernameInput.dataset.valid = "false";
         enableRegister();
         return;
     }
 
-    // Prevent consecutive underscores
-    if (/__/.test(val)) {
-        showStatus(status, "Invalid characters (letters, numbers, _ only)", "danger");
-        usernameInput.dataset.valid = "false";
-        enableRegister();
-        return;
-    }
-
-    // Server-side availability check
     try {
-        const res = await fetch(`/check_username?username=${encodeURIComponent(val)}`);
+        const res = await fetch(
+            `/check_username?username=${encodeURIComponent(val)}`,
+            { signal: usernameController.signal }
+        );
         const data = await res.json();
+
+        // Extra safety: input still same?
+        if (usernameInput.value.trim() !== val) return;
 
         if (data.available) {
             showStatus(status, "✔ Available", "success");
@@ -517,9 +545,11 @@ usernameInput.addEventListener("input", async () => {
             showStatus(status, "✖ Already taken", "danger");
             usernameInput.dataset.valid = "false";
         }
-    } catch {
-        showStatus(status, "⚠ Error checking username", "warning");
-        usernameInput.dataset.valid = "false";
+    } catch (err) {
+        if (err.name !== "AbortError") {
+            showStatus(status, "⚠ Error checking username", "warning");
+            usernameInput.dataset.valid = "false";
+        }
     }
 
     enableRegister();
@@ -527,38 +557,60 @@ usernameInput.addEventListener("input", async () => {
 
 
         // -------------------- EMAIL CHECK --------------------
-        emailInput.addEventListener("input", async () => {
-            const val = emailInput.value.trim();
-            const status = document.getElementById("email_status");
-            if (!val) {
-                status.textContent = "";
-                emailInput.dataset.valid = "false";
-                enableRegister();
-                return;
-            }
-            const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-            if (!emailPattern.test(val)) {
-                showStatus(status, "Invalid email format", "danger");
-                emailInput.dataset.valid = "false";
-                enableRegister();
-                return;
-            }
-            try {
-                const res = await fetch(`/check_email?email=${val}`);
-                const data = await res.json();
-                if (data.available) {
-                    showStatus(status, "✔ Available", "success");
-                    emailInput.dataset.valid = "true";
-                } else {
-                    showStatus(status, "✖ Already registered", "danger");
-                    emailInput.dataset.valid = "false";
-                }
-            } catch {
-                showStatus(status, "⚠ Error checking email", "warning");
-                emailInput.dataset.valid = "false";
-            }
-            enableRegister();
-        });
+ let emailController = null;
+
+emailInput.addEventListener("input", async () => {
+    const val = emailInput.value.trim();
+    const status = document.getElementById("email_status");
+
+    // Abort previous request
+    if (emailController) {
+        emailController.abort();
+    }
+    emailController = new AbortController();
+
+    if (!val) {
+        status.textContent = "";
+        emailInput.dataset.valid = "false";
+        enableRegister();
+        return;
+    }
+
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    if (!emailPattern.test(val)) {
+        showStatus(status, "Invalid email format", "danger");
+        emailInput.dataset.valid = "false";
+        enableRegister();
+        return;
+    }
+
+    try {
+        const res = await fetch(
+            `/check_email?email=${encodeURIComponent(val)}`,
+            { signal: emailController.signal }
+        );
+        const data = await res.json();
+
+        // Extra safety: input abhi bhi same hai ya nahi
+        if (emailInput.value.trim() !== val) return;
+
+        if (data.available) {
+            showStatus(status, "✔ Available", "success");
+            emailInput.dataset.valid = "true";
+        } else {
+            showStatus(status, "✖ Already registered", "danger");
+            emailInput.dataset.valid = "false";
+        }
+    } catch (err) {
+        if (err.name !== "AbortError") {
+            showStatus(status, "⚠ Error checking email", "warning");
+            emailInput.dataset.valid = "false";
+        }
+    }
+
+    enableRegister();
+});
 
         // -------------------- MOBILE CHECK --------------------
 

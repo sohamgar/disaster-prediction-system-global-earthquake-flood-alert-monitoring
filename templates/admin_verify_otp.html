@@ -188,14 +188,15 @@
       <i class="fa fa-eye toggle-otp" id="toggleOtp" title="Show/Hide OTP"></i>
     </div>
 
-    <div class="otp-box-container">
-      <input type="password" maxlength="1" class="otp-input" name="d1" required>
-      <input type="password" maxlength="1" class="otp-input" name="d2" required>
-      <input type="password" maxlength="1" class="otp-input" name="d3" required>
-      <input type="password" maxlength="1" class="otp-input" name="d4" required>
-      <input type="password" maxlength="1" class="otp-input" name="d5" required>
-      <input type="password" maxlength="1" class="otp-input" name="d6" required>
-    </div>
+<div class="otp-box-container">
+  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input" name="d1" required>
+  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input" name="d2" required>
+  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input" name="d3" required>
+  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input" name="d4" required>
+  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input" name="d5" required>
+  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input" name="d6" required>
+</div>
+
 
     <input type="hidden" name="otp" id="finalOtp">
 
