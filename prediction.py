@@ -82,6 +82,12 @@ app.config['MAIL_USE_TLS'] = os.environ.get("MAIL_USE_TLS") == "True"
 app.config['MAIL_USERNAME'] = os.environ.get("MAIL_USERNAME")
 app.config['MAIL_PASSWORD'] = os.environ.get("MAIL_PASSWORD")
  # CHANGE
+print("APP_ENV:", os.getenv("APP_ENV"))
+print("MAIL_SERVER:", os.getenv("MAIL_SERVER"))
+print("MAIL_PORT:", os.getenv("MAIL_PORT"))
+print("MAIL_USERNAME:", os.getenv("MAIL_USERNAME"))
+print("MAIL_PASSWORD:", os.getenv("MAIL_PASSWORD"))
+
 serializer = URLSafeTimedSerializer(app.secret_key)
 
 
