@@ -127,6 +127,18 @@ def get_db_connection():
     )
 
 
+
+from threading import Thread
+
+def send_async_email(app, msg):
+    with app.app_context():
+        mail.send(msg)
+
+def send_email(msg):
+    Thread(target=send_async_email, args=(app, msg)).start()
+
+
+
 from flask import jsonify
 import csv
 
