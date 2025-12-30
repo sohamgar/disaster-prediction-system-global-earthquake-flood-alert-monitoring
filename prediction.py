@@ -62,8 +62,17 @@ db = pymysql.connect(
     password=os.environ["MYSQL_PASSWORD"],
     database=os.environ["MYSQL_DATABASE"],
     port=int(os.environ.get("MYSQL_PORT", "3306")),
-    connect_timeout=10
+    connect_timeout=10,
+    autocommit=True,
+    charset="utf8mb4",
+    cursorclass=pymysql.cursors.DictCursor
 )
+
+try:
+    db.ping(reconnect=True)
+except:
+    pass
+
 print("RENDER =", os.getenv("RENDER"))
 print("MYSQL_HOST =", os.getenv("MYSQL_HOST"))
 
