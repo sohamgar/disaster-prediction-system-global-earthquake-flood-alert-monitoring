@@ -64,14 +64,14 @@ db = pymysql.connect(
     port=int(os.environ.get("MYSQL_PORT", "3306")),
     connect_timeout=10,
     autocommit=True,
-    charset="utf8mb4",
-    cursorclass=pymysql.cursors.DictCursor
+    charset="utf8mb4"
 )
 
+# Auto-reconnect if connection drops (Render / Railway safe)
 try:
     db.ping(reconnect=True)
-except:
-    pass
+except Exception as e:
+    print("DB reconnect failed:", e)
 
 print("RENDER =", os.getenv("RENDER"))
 print("MYSQL_HOST =", os.getenv("MYSQL_HOST"))
@@ -691,7 +691,7 @@ def login_page():
         # ---------- SEND OTP EMAIL ----------
         msg = Message(
             "Your Login Verification Code",
-            sender="sohamgarud0806@gmail.com",
+            sender="disasterpredictionsystem@gmail.com",
             recipients=[user["email"]]
         )
 
@@ -841,7 +841,7 @@ def resend_otp():
     # ✅ Send OTP email
     msg = Message(
         subject="Your Login Verification Code (Resent)",
-        sender="sohamgarud0806@gmail.com",
+        sender="disasterpredictionsystem@gmail.com",
         recipients=[email]
     )
 
@@ -937,8 +937,8 @@ def admin_login():
             session["admin_otp_time"] = datetime.now().isoformat()
 
             # Send OTP email
-            sender_email = "sohamgarud0806@gmail.com"
-            sender_pass = "pwjdjogjwnzwuhle"  # Gmail App Password
+            sender_email = "disasterpredictionsystem@gmail.com"
+            sender_pass = "pqpbruceisevbjpd"  # Gmail App Password
             receiver_email = admin[3]
 
             message_body = textwrap.dedent(f"""
@@ -1062,7 +1062,7 @@ def admin_login_success():
     return render_template("admin_login_success.html")
 
 
-@app.route("/admin_resend_otp", methods=["POST"])
+@app.route("/admin_resend_otp")
 def admin_resend_otp():
     import random
     import smtplib
@@ -1111,8 +1111,8 @@ def admin_resend_otp():
 
     # Send email properly with MIME
     try:
-        sender_email = "sohamgarud0806@gmail.com"
-        sender_pass = "pwjdjogjwnzwuhle"
+        sender_email = "disasterpredictionsystem@gmail.com"
+        sender_pass = "pqpbruceisevbjpd"
 
         msg_body = textwrap.dedent(f"""
                         Hello {admin_name},
@@ -2059,8 +2059,8 @@ def is_valid_email(email):
 
 
 def send_flood_alert_email(email, name, message, rainfall, humidity, temperature):
-    sender = "sohamgarud0806@gmail.com"
-    password = "pwjdjogjwnzwuhle"
+    sender = "disasterpredictionsystem@gmail.com"
+    password = "pqpbruceisevbjpd"
 
     if not is_valid_email(email):
         print(f"❌ Invalid email: {email}")
@@ -2486,8 +2486,8 @@ def haversine(lat1, lon1, lat2, lon2):
 
 # Function to send email
 def send_email(to_email, subject, body):
-    sender_email = "sohamgarud0806@gmail.com"
-    sender_pass = "pwjdjogjwnzwuhle"
+    sender_email = "disasterpredictionsystem@gmail.com"
+    sender_pass = "pqpbruceisevbjpd"
 
     msg = MIMEText(body)
     msg["Subject"] = subject
@@ -3067,9 +3067,9 @@ def salert():
         import smtplib, ssl
         port = 465  # SSL port
         smtp_server = "smtp.gmail.com"
-        sender_email = "sohamgarud0806@gmail.com"  # Enter your Gmail
-        receiver_email = "sohamgarud0806@gmail.com"  # Enter receiver Gmail
-        password = "pwjdjogjwnzwuhle"
+        sender_email = "disasterpredictionsystem@gmail.com"  # Enter your Gmail
+        receiver_email = "disasterpredictionsystem@gmail.com"  # Enter receiver Gmail
+        password = "pqpbruceisevbjpd"
 
         message = f"""\
 Subject: Disaster Alert
@@ -3206,8 +3206,8 @@ def check_live_earthquakes():
         # ----------------- EMAIL -----------------
         SMTP_SERVER = "smtp.gmail.com"
         SMTP_PORT = 465
-        SMTP_SENDER = "sohamgarud0806@gmail.com"
-        SMTP_PASSWORD = "pwjdjogjwnzwuhle"
+        SMTP_SENDER = "disasterpredictionsystem@gmail.com"
+        SMTP_PASSWORD = "pqpbruceisevbjpd"
 
         print("\n📡 Checking for users near earthquake zones…")
 
@@ -3551,8 +3551,8 @@ def manual_alert():
 
     SMTP_SERVER = "smtp.gmail.com"
     SMTP_PORT = 465
-    SMTP_SENDER = "sohamgarud0806@gmail.com"
-    SMTP_PASSWORD = "pwjdjogjwnzwuhle"
+    SMTP_SENDER = "disasterpredictionsystem@gmail.com"
+    SMTP_PASSWORD = "pqpbruceisevbjpd"
 
     sent = 0
     matched = 0
@@ -3726,8 +3726,8 @@ def manual_flood_alert():
 
     SMTP_SERVER = "smtp.gmail.com"
     SMTP_PORT = 465
-    SMTP_SENDER = "sohamgarud0806@gmail.com"
-    SMTP_PASSWORD = "pwjdjogjwnzwuhle"
+    SMTP_SENDER = "disasterpredictionsystem@gmail.com"
+    SMTP_PASSWORD = "pqpbruceisevbjpd"
 
     sent_count = 0
     nearby_users_found = False
@@ -4465,8 +4465,8 @@ def check_live_floods_scheduler():
 
     OPENWEATHER_KEY = "fb116bebc392ccc8ab251927edcb55d6"
 
-    SMTP_SENDER = "sohamgarud0806@gmail.com"
-    SMTP_PASSWORD = "pwjdjogjwnzwuhle"
+    SMTP_SENDER = "disasterpredictionsystem@gmail.com"
+    SMTP_PASSWORD = "pqpbruceisevbjpd"
     SMTP_SERVER = "smtp.gmail.com"
     SMTP_PORT = 465
 
